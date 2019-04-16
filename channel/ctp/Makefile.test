@@ -1,0 +1,5 @@
+qt:main.cpp
+	g++ -g -L./ -lthostmduserapi -lthosttraderapi -o $@ $<
+#libthostmduserapi.so
+#libthosttraderapi.so
+#qt

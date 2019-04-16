@@ -1,0 +1,362 @@
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include "ctp_trade_channel.h"
+
+using namespace std;
+#define STRCPY(a,b) strncpy((a),(b),sizeof(a))
+CtpTradeChannel::CtpTradeChannel()
+{
+	trade_api_ = NULL;
+	cfg_ = NULL;
+	login_ok_ = false;
+	request_id_ = 0;
+
+	memset(investor_id_, 0, 13);
+	session_id_  = 0;
+	memset(max_order_ref_, 0, 13);
+	order_ref_init_ = 0;
+	order_ref_delta_ = 0;
+}
+
+bool CtpTradeChannel::open(Config* cfg)
+{
+	cfg_ = cfg;
+	int ret = 0;
+	ret = sem_init(&request_sem_, 0, 0);
+	if (ret != 0)return false;
+	ret = sem_init(&sem_, 0, 0);
+	if (ret != 0)return false;
+
+	trade_api_ = CThostFtdcTraderApi::CreateFtdcTraderApi();
+	if(trade_api_ == NULL){
+		return false;
+	}
+	trade_api_->RegisterSpi(this);
+	trade_api_->RegisterFront(cfg_->front);
+	trade_api_->SubscribePrivateTopic(THOST_TERT_QUICK);
+	trade_api_->SubscribePublicTopic(THOST_TERT_QUICK);
+	trade_api_->Init();
+
+	// wait 30 secs for channel open done
+	struct timespec ts;	
+	clock_gettime(CLOCK_REALTIME, &ts);
+	ts.tv_sec += 3;
+	ret = sem_timedwait(&sem_, &ts);
+	printf("ret status from channel: %d\n",ret);
+	perror("");
+	if(ret != 0){
+		return false;
+	}
+	return true;
+}
+
+bool CtpTradeChannel::close()
+{
+	return true;
+}
+
+bool CtpTradeChannel::submit(Order *o)
+{
+	CThostFtdcInputOrderField new_order;
+	NewOrder(&new_order);
+	
+	cout<<o->instrument<<endl;
+	STRCPY(new_order.InstrumentID, o->instrument);
+	new_order.LimitPrice = o->submit_price;
+	new_order.VolumeTotalOriginal = o->submit_volume;
+	
+	switch(o->long_short){
+		case E_LONG:
+			new_order.Direction = THOST_FTDC_D_Buy;
+			break;
+		case E_SHORT:
+			new_order.Direction = THOST_FTDC_D_Sell;
+			break;
+		default:
+			break;
+	}
+
+	switch(o->open_close){
+		case E_OPEN:
+			new_order.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+			break;
+		case E_CLOSE:
+			new_order.CombOffsetFlag[0] = THOST_FTDC_OF_Close;
+			break;
+		case E_CLOSE_T:
+			new_order.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;
+			break;
+		case E_CLOSE_Y:
+			new_order.CombOffsetFlag[0]= THOST_FTDC_OF_CloseYesterday;
+			break;
+		default:
+			break;
+	}
+	
+	int ret = 0;
+	ret = trade_api_->ReqOrderInsert(&new_order, request_id_++);
+	return ret == 0 ? true : false;
+}
+
+bool CtpTradeChannel::cancel(Order *o)
+{
+	CThostFtdcInputOrderActionField a = { 0 };
+	STRCPY(a.BrokerID, "9999");
+	STRCPY(a.InvestorID, "1000001");
+	STRCPY(a.UserID, "1000001");
+	STRCPY(a.OrderSysID, "         131");  //对应要撤报单的OrderSysID
+	STRCPY(a.ExchangeID, "SHFE");
+	STRCPY(a.InstrumentID, "rb1809");
+	a.ActionFlag = THOST_FTDC_AF_Delete;
+	return true;
+}
+
+void CtpTradeChannel::OnFrontConnected()
+{
+	if(login_ok_ == false){
+		CThostFtdcReqUserLoginField LoginField={0};
+		STRCPY(LoginField.BrokerID, cfg_->broker_id);
+		STRCPY(LoginField.UserID, cfg_->user);
+		STRCPY(LoginField.Password, cfg_->password);
+		
+		trade_api_->ReqUserLogin(&LoginField, request_id_++);
+	}
+	return;
+}
+
+void CtpTradeChannel::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+cout<<"TradingDay="<<pRspUserLogin->TradingDay;
+cout<<"LoginTime="<<pRspUserLogin->LoginTime;
+cout<<"BrokerID="<<pRspUserLogin->BrokerID;
+cout<<"UserID="<<pRspUserLogin->UserID;
+cout<<"SystemName="<<pRspUserLogin->SystemName;
+cout<<"FrontID="<<pRspUserLogin->FrontID;
+cout<<"SessionID=|"<<pRspUserLogin->SessionID;
+cout<<"MaxOrderRef="<<pRspUserLogin->MaxOrderRef;
+cout<<"SHFETime="<<pRspUserLogin->SHFETime;
+cout<<"DCETime="<<pRspUserLogin->DCETime;
+cout<<"CZCETime="<<pRspUserLogin->CZCETime;
+cout<<"FFEXTime="<<pRspUserLogin->FFEXTime;
+cout<<"INETime="<<pRspUserLogin->INETime;
+
+	session_id_ = pRspUserLogin->SessionID;
+cout<<"session_id_ is:"<<session_id_<<endl;;
+cout<<"time is:"<<time(NULL)<<endl;
+	STRCPY(max_order_ref_, pRspUserLogin->MaxOrderRef);
+	order_ref_init_ = atoi(max_order_ref_);
+	if(bIsLast == true){
+		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
+			CThostFtdcQryInvestorField QryInvestor={0};
+			trade_api_->ReqQryInvestor(&QryInvestor, request_id_++);	
+		}
+	}
+}
+
+void CtpTradeChannel::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+	printf(__FUNCTION__);
+	printf("\n");
+	if(pInputOrder != NULL){
+cout<<"BrokerID;="<<pInputOrder->BrokerID;
+cout<<"InvestorID;="<<pInputOrder->InvestorID;
+cout<<"InstrumentID;="<<pInputOrder->InstrumentID;
+cout<<"OrderRef;="<<pInputOrder->OrderRef;
+cout<<"UserID;="<<pInputOrder->UserID;
+cout<<"OrderPriceType;="<<pInputOrder->OrderPriceType;
+cout<<"Direction;="<<pInputOrder->Direction;
+cout<<"CombOffsetFlag;="<<pInputOrder->CombOffsetFlag;
+cout<<"CombHedgeFlag;="<<pInputOrder->CombHedgeFlag;
+cout<<"LimitPrice;="<<pInputOrder->LimitPrice;
+cout<<"VolumeTotalOriginal;="<<pInputOrder->VolumeTotalOriginal;
+cout<<"TimeCondition;="<<pInputOrder->TimeCondition;
+cout<<"GTDDate;="<<pInputOrder->GTDDate;
+cout<<"VolumeCondition;="<<pInputOrder->VolumeCondition;
+cout<<"MinVolume;="<<pInputOrder->MinVolume;
+cout<<"ContingentCondition;="<<pInputOrder->ContingentCondition;
+cout<<"StopPrice;="<<pInputOrder->StopPrice;
+cout<<"ForceCloseReason;="<<pInputOrder->ForceCloseReason;
+cout<<"IsAutoSuspend;="<<pInputOrder->IsAutoSuspend;
+cout<<"BusinessUnit;="<<pInputOrder->BusinessUnit;
+cout<<"RequestID;="<<pInputOrder->RequestID;
+cout<<"UserForceClose;="<<pInputOrder->UserForceClose;
+cout<<"IsSwapOrder;="<<pInputOrder->IsSwapOrder;
+cout<<"ExchangeID;="<<pInputOrder->ExchangeID;
+cout<<"InvestUnitID;="<<pInputOrder->InvestUnitID;
+cout<<"AccountID;="<<pInputOrder->AccountID;
+cout<<"CurrencyID;="<<pInputOrder->CurrencyID;
+cout<<"ClientID;="<<pInputOrder->ClientID;
+cout<<"IPAddress;="<<pInputOrder->IPAddress;
+cout<<"MacAddress;="<<pInputOrder->MacAddress;
+	}else{
+		cout<<"pInputOrder is NULL"<<endl;
+	}
+	if(pRspInfo != NULL){
+		cout<<"ErrorID="<<pRspInfo->ErrorID;
+		cout<<"ErrorMsg="<<pRspInfo->ErrorMsg;
+	}else{
+		cout<<"pRspInfo is NULL"<<endl;
+	}
+	cout.flush();
+}
+void CtpTradeChannel::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo)
+{
+cout<<"********************************************************************************"<<endl;
+	printf(__FUNCTION__);
+cout<<"BrokerID="<<pInputOrder->BrokerID;
+cout<<"InvestorID="<<pInputOrder->InvestorID;
+cout<<"InstrumentID="<<pInputOrder->InstrumentID;
+cout<<"OrderRef="<<pInputOrder->OrderRef;
+cout<<"UserID="<<pInputOrder->UserID;
+cout<<"OrderPriceType="<<pInputOrder->OrderPriceType;
+cout<<"Direction="<<pInputOrder->Direction;
+cout<<"CombOffsetFlag="<<pInputOrder->CombOffsetFlag;
+cout<<"CombHedgeFlag="<<pInputOrder->CombHedgeFlag;
+cout<<"LimitPrice="<<pInputOrder->LimitPrice;
+cout<<"VolumeTotalOriginal="<<pInputOrder->VolumeTotalOriginal;
+cout<<"TimeCondition="<<pInputOrder->TimeCondition;
+cout<<"GTDDate="<<pInputOrder->GTDDate;
+cout<<"VolumeCondition="<<pInputOrder->VolumeCondition;
+cout<<"MinVolume="<<pInputOrder->MinVolume;
+cout<<"ContingentCondition="<<pInputOrder->ContingentCondition;
+cout<<"StopPrice="<<pInputOrder->StopPrice;
+cout<<"ForceCloseReason="<<pInputOrder->ForceCloseReason;
+cout<<"IsAutoSuspend="<<pInputOrder->IsAutoSuspend;
+cout<<"BusinessUnit="<<pInputOrder->BusinessUnit;
+cout<<"RequestID="<<pInputOrder->RequestID;
+cout<<"UserForceClose="<<pInputOrder->UserForceClose;
+cout<<"IsSwapOrder="<<pInputOrder->IsSwapOrder;
+cout<<"ExchangeID="<<pInputOrder->ExchangeID;
+cout<<"InvestUnitID="<<pInputOrder->InvestUnitID;
+cout<<"AccountID="<<pInputOrder->AccountID;
+cout<<"CurrencyID="<<pInputOrder->CurrencyID;
+cout<<"ClientID="<<pInputOrder->ClientID;
+cout<<"IPAddress="<<pInputOrder->IPAddress;
+cout<<"MacAddress="<<pInputOrder->MacAddress;
+	printf("\n");
+
+	if(pRspInfo != NULL){
+		cout<<"ErrorID="<<pRspInfo->ErrorID;
+		cout<<"ErrorMsg="<<pRspInfo->ErrorMsg;
+	}else{
+		cout<<"pRspInfo is NULL"<<endl;
+	}
+	cout.flush();
+}
+
+void CtpTradeChannel::OnRtnOrder(CThostFtdcOrderField *pOrder)
+{
+	printf(__FUNCTION__);
+	printf("\n");
+}
+#if 0
+void CtpTradeChannel::OnRtnTrade(CThostFtdcTradeField *pTrade)
+{
+	printf(__FUNCTION__);
+	printf("\n");
+}
+#endif
+char* CtpTradeChannel::GetOrderRef()
+{
+	memset(order_ref_, 0 , 13);
+	sprintf(order_ref, "%012d%06d", session_id_, request_id_++);	
+	return order_ref_;
+}
+void CtpTradeChannel::NewOrder(CThostFtdcInputOrderField *o)
+{
+	///经纪公司代码
+	STRCPY(o->BrokerID, cfg_->broker_id);
+	///投资者代码
+	STRCPY(o->InvestorID, investor_id_);
+	///合约代码
+	//STRCPY(o->InstrumentID, "cu1905");
+	///报单引用
+	STRCPY(o->OrderRef, GetOrderRef());
+	cout<<"OrderRef is:"<<o->OrderRef<<endl;
+	///用户代码
+	STRCPY(o->UserID, cfg_->user);
+	///报单价格条件
+	o->OrderPriceType = THOST_FTDC_OPT_LimitPrice;///限价
+	///买卖方向
+	//	TThostFtdcDirectionType	Direction;
+	///组合开平标志
+	//	TThostFtdcCombOffsetFlagType	CombOffsetFlag;
+	///组合投机套保标志
+	o->CombHedgeFlag[0] =  THOST_FTDC_BHF_Speculation;
+	///价格
+	//	TThostFtdcPriceType	LimitPrice;
+	///数量
+	//TThostFtdcVolumeType	VolumeTotalOriginal;
+	///有效期类型
+	o->TimeCondition = THOST_FTDC_TC_GFD;
+	///GTD日期
+	TThostFtdcDateType	GTDDate;
+	///成交量类型
+	o->VolumeCondition = THOST_FTDC_VC_AV;
+	///最小成交量
+	o->MinVolume = 1;
+	///触发条件
+	o->ContingentCondition = THOST_FTDC_CC_Immediately;
+	///止损价
+	o->StopPrice = 0;
+	///强平原因
+	o->ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
+	///自动挂起标志
+	o->IsAutoSuspend = 0;
+	///业务单元
+	TThostFtdcBusinessUnitType	BusinessUnit;
+	///请求编号
+	TThostFtdcRequestIDType	RequestID;
+	///用户强评标志
+	TThostFtdcBoolType	UserForceClose;
+	///互换单标志
+	TThostFtdcBoolType	IsSwapOrder;
+	///交易所代码
+	TThostFtdcExchangeIDType	ExchangeID;
+	///投资单元代码
+	TThostFtdcInvestUnitIDType	InvestUnitID;
+	///资金账号
+	TThostFtdcAccountIDType	AccountID;
+	///币种代码
+	TThostFtdcCurrencyIDType	CurrencyID;
+	///交易编码
+	TThostFtdcClientIDType	ClientID;
+	///IP地址
+	TThostFtdcIPAddressType	IPAddress;
+	///Mac地址
+	TThostFtdcMacAddressType	MacAddress;
+}
+
+void CtpTradeChannel::OnRspQryInvestor(CThostFtdcInvestorField *pInvestor, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+
+	if(pInvestor != NULL){
+		STRCPY(investor_id_, pInvestor->InvestorID);
+	}
+	if(bIsLast == true){
+		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
+			login_ok_ = true;
+			sem_post(&sem_);
+		}
+	}
+
+#if 0
+cout<<"InvestorID="<<pInvestor->InvestorID;
+cout<<"BrokerID="<<pInvestor->BrokerID;
+cout<<"InvestorGroupID="<<pInvestor->InvestorGroupID;
+cout<<"InvestorName="<<pInvestor->InvestorName;
+cout<<"IdentifiedCardType="<<pInvestor->IdentifiedCardType;
+cout<<"IdentifiedCardNo="<<pInvestor->IdentifiedCardNo;
+cout<<"IsActive="<<pInvestor->IsActive;
+cout<<"Telephone="<<pInvestor->Telephone;
+cout<<"Address="<<pInvestor->Address;
+cout<<"OpenDate="<<pInvestor->OpenDate;
+cout<<"Mobile="<<pInvestor->Mobile;
+cout<<"CommModelID="<<pInvestor->CommModelID;
+cout<<"MarginModelID="<<pInvestor->MarginModelID;
+cout<<endl;
+#endif
+}

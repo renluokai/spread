@@ -1,0 +1,1 @@
+g++    -c -o ctp_quote_channel.o ctp_quote_channel.cpp

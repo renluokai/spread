@@ -1,0 +1,71 @@
+//#define SPIN_LOCK_
+#include <iostream>
+#include <typeinfo>
+#include <sys/time.h>
+
+#include "safe_list.h"
+using namespace  std;
+#define POOL_LEN 1000000
+struct test_t{
+	int a;
+	int b;
+};
+
+struct pool_t{
+	
+	safe_list_t<test_t> *my_data;
+	safe_list_t<test_t> *my_pool;
+
+};
+void* push_func(void *p)
+{
+	printf("p is %p\n",p);
+	safe_list_t<test_t> *my_test_pool = ((pool_t*)p)->my_pool;
+	safe_list_t<test_t> *my_test_data = ((pool_t*)p)->my_data;
+
+	for(int i=1; i<=POOL_LEN; i++){
+		test_t *tmp = my_test_pool->pop();
+		tmp->a = i;
+		tmp->b = i;
+		my_test_data->push(tmp);
+	}
+	return NULL;
+}
+void dis_tv(struct timeval *t)
+{
+	cout<<"time val is "<<t->tv_sec<<"."<<t->tv_usec<<endl;
+}
+
+int main()
+{
+
+	cout<<"Let's go"<<endl;
+
+	struct timeval  b, e;
+	gettimeofday(&b, NULL);
+	safe_list_t<test_t> *my_test_pool = new safe_list_t<test_t>(POOL_LEN);
+	safe_list_t<test_t> *my_test_data = new safe_list_t<test_t>(0);
+	pool_t pool;
+	pool.my_data = my_test_data;
+	pool.my_pool = my_test_pool;
+
+	pthread_t push_thread;
+	pthread_create(&push_thread, NULL, push_func, &pool);
+	
+	test_t* tmp=NULL;
+	while(1){
+		tmp = my_test_data->pop();
+		if (tmp->a == POOL_LEN)
+			break;
+		else
+			//cout<<"#"<<tmp->b<<"\t get!"<<endl;
+			;
+
+	}
+	gettimeofday(&e, NULL);
+
+	dis_tv(&b);
+	dis_tv(&e);
+	cout<<(e.tv_sec - b.tv_sec)*1000000 + e.tv_usec - b.tv_usec<<endl;
+	return 0;
+}
