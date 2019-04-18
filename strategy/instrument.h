@@ -29,8 +29,12 @@ private:
 	Quote		*lastQuote;
 
 	static double		spread;
+	static double		openThreshold;
+	static double		closeThreshold;
 	static InsType		openWith;
 	static InsType		closeWith; 
 	static Direction	direction;
+	static int			maxPosition;
+	static int			submitMax;
 };
 #endif /* INSTRUMENT_H__ */ 

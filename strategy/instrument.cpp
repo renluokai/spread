@@ -6,7 +6,14 @@
 using namespace std;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
 
-double Instrument::spread = 0.0;
+double 		Instrument::spread = 0.0;
+double		Instrument::openThreshold = 0.0;
+double		Instrument::closeThreshold = 0.0;
+InsType		Instrument::openWith = E_FORWARD;
+InsType		Instrument::closeWith = E_FORWARD; 
+Direction	Instrument::direction = E_UP;
+int			Instrument::maxPosition = 0;
+int			Instrument::submitMax = 0;
 
 Instrument::Instrument(char *ins_name)
 {

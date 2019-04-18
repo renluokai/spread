@@ -144,7 +144,6 @@ bool Dong0Strategy::on_init()
 {
 	bool ret = false;
 	ret = load_config();
-	cout<<"Please init strategy here"<<endl;
 	ret = quote_channel_->open(quote_cfg_, handler_);	
 	if(ret == false) return false;
 	ret = trade_channel_->open(trade_cfg_, handler_);	
@@ -162,27 +161,21 @@ bool Dong0Strategy::on_init()
 }
 void Dong0Strategy::on_order(Order *o)
 {
-	cout<<"CALLING: "<<__FUNCTION__<<endl;
 	Instrument *ins = instruments[o->instrument];
 	switch(o->state)
 	{
 		case E_ORIGINAL:
-			cout<<""<<endl;
 			break;
 		case E_INSERT:
-			cout<<"order inserted"<<endl;
 			ins->on_insert(o);
 			break;
 		case E_REJECT:
-			cout<<"order rejected"<<endl;
 			ins->on_reject(o);
 			break;
 		case E_CANCEL:
-			cout<<"order canceled"<<endl;
 			ins->on_cancel(o);
 			break;
 		case E_MATCH:
-			cout<<"order matched"<<endl;
 			ins->on_match(o);
 			break;
 	}
