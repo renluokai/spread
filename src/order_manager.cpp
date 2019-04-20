@@ -36,36 +36,57 @@ bool OrderManager::UpdateOrder(Order* o)
 	int id=0;
 	switch(o->state){
 		case E_ORIGINAL:
-			instrument_order_info[o->instrument].orders[o->open_close][o->long_short].insert(make_pair(o->order_local_id, o));
+		{
+			if(instrument_order_info.count(o->instrument) == 0){
+				Orders* orders = new Orders;
+				instrument_order_info.insert(make_pair(o->instrument, orders));
+			}
+			
+			instrument_order_info[o->instrument]->orders[o->open_close][o->long_short].insert(make_pair(o->order_local_id, o));
 			ocls.insert(make_pair(o->order_local_id, Ocls(o->open_close,o->long_short)));
-		break;
+			break;
+		}
 		case E_INSERT:
-
+			id = o->order_local_id;
+			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
+			tmp->state = E_INSERT;
+			STRCPY(tmp->state_msg, o->state_msg);
 		break;
 		case E_REJECT:
 			id = o->order_local_id;
-			tmp = instrument_order_info[o->instrument].orders[ocls[id].oc][ocls[id].ls][id];
+			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
 			tmp->state = E_REJECT;
 			STRCPY(tmp->state_msg, o->state_msg);
-		break;
+			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
+			return true;
 		case E_CANCEL:
+			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
+			return true;
 		break;
 		case E_MATCH:
+			id = o->order_local_id;
+			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
+			tmp->total_matched += o->match_volume;
+			if(tmp->total_matched == tmp->submit_volume){
+				instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
+				return true;
+			}
 		break;
 	}
+	return false;
 }
 void ShowOrder(std::pair<int, Order*> io)
 {
 	cout<<io.first<<"\t";io.second->ShowOrder();
 }
-void ShowOrdersInfo(std::pair<string, OrderManager::Orders> os)
+void ShowOrdersInfo(std::pair<string, OrderManager::Orders*> os)
 {
 	int oc;
 	int ls;	
 	for(oc=E_OPEN;oc<E_OPENCLOSE;oc+=1){
 		for(ls=E_LONG;ls<E_LONGSHORT;ls+=1){
-			for_each(os.second.orders[oc][ls].begin(),
-					os.second.orders[oc][ls].end(),
+			for_each(os.second->orders[oc][ls].begin(),
+					os.second->orders[oc][ls].end(),
 					ShowOrder);
 		}
 	}
@@ -78,4 +99,25 @@ void OrderManager::ShowOrders(const char *instrument)
 				ShowOrdersInfo);
 	}else{
 	}
+}
+
+bool OrderManager::HaveOrder(const char* ins)
+{
+	if(instrument_order_info.count(ins)==1){
+		return true;
+	}
+	return false;
+}
+int OrderManager::GetVolume(const char* ins, EOpenClose oc, ELongShort ls)
+{
+	int volume = 0;
+	if(HaveOrder(ins)){
+		Orders* ods = instrument_order_info[ins]->orders;
+		map<int, Order*>::iterator odIter = ods[oc][ls].begin();	
+		for(; odIter != ods[oc][ls].end(); odIter++){
+			Order* tmp = odIter.second;
+			volume += (tmp->submit_volume - tmp->total_matched);
+		}
+	}
+	return volume;
 }

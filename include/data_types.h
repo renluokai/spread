@@ -59,6 +59,8 @@ struct Order : public Data{
 		memset(order_system_id, 0, sizeof(order_system_id));
 		memset(state_msg, 0, sizeof(state_msg));
 		submit_price = 0.0;
+		total_matched = 0;
+		canceled_volume = 0;
 		open_close = E_OPENCLOSE;
 		long_short = E_LONGSHORT;
 		state = E_ORIGINAL;
@@ -76,6 +78,7 @@ struct Order : public Data{
 	char state_msg[96];
 	double submit_price;
 	int submit_volume;
+	int total_matched; //total matched volume
 	EOpenClose open_close;
 	ELongShort long_short;
 	EOrderState state;
@@ -83,11 +86,8 @@ struct Order : public Data{
 	int order_local_id;
 	int insert_date;
 	int insert_time;
-	
-	int match_price;
-	int match_volume;
-	int match_date;
-	int match_time;	
+
+	int match_volume;//each match volume
 	//traded_info_t *traded_info_;
 };
 

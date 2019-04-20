@@ -73,7 +73,9 @@ bool Trader::run(Strategy *s){
 		data = handler->pop();
 		switch(data->type){
 			case E_ORDER_TYPE:
-				orderManager->UpdateOrder((Order*)data);
+				if(orderManager->UpdateOrder((Order*)data)){
+					handler->back(data);
+				}
 				strategy->on_order((Order*)data);
 				break;
 			case E_QUOTE_TYPE:
