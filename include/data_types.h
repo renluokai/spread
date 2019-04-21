@@ -19,6 +19,15 @@ enum ELongShort
 	E_LONGSHORT,
 };
 
+enum EPositionType
+{
+	P_YESTERDAY_LONG,
+	P_YESTERDAY_SHORT,
+	P_TODAY_LONG,
+	P_TODAY_SHORT,
+	P_LONGSHORT,
+};
+
 enum EOrderState
 {
 	E_ORIGINAL,

@@ -68,13 +68,19 @@ bool Trader::run(Strategy *s){
 
 	size_t c=0;
 	Data *data = NULL;
+	Order* o = NULL;
 	while(1){
 		//cout<<"#"<<c++<<" run running..."<<endl;
 		data = handler->pop();
 		switch(data->type){
 			case E_ORDER_TYPE:
-				if(orderManager->UpdateOrder((Order*)data)){
+				o = (Order*)data;
+				if(orderManager->UpdateOrder(o)){
 					handler->back(data);
+				}
+				if(o->state == E_MATCH){
+					positionManager->UpdatePosition(o->instrument, o->open_close,
+												o->long_short, o->match_volume);
 				}
 				strategy->on_order((Order*)data);
 				break;
@@ -112,6 +118,9 @@ void Trader::process_command(Command* cmd)
 	}
 	else if(strcmp(cmd->buffer,":ls o\n") == 0){
 		orderManager->ShowOrders();	
+	}
+	else if(strcmp(cmd->buffer,":lsp\n")==0){
+		positionManager->ShowPosition(NULL);
 	}
 }
 

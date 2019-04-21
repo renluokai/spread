@@ -4,13 +4,16 @@ class Quote;
 class Order;
 enum InsType
 {
-	E_FORWARD,
-	E_RECCENT,
+	E_INS_INVALID,
+	E_INS_FORWARD,
+	E_INS_RECENT,
 };
 enum Direction
 {
-	E_UP,
-	E_DOWN,
+
+	E_DIR_INVALID,
+	E_DIR_UP,
+	E_DIR_DOWN,
 };
 class Instrument
 {
@@ -22,11 +25,13 @@ public:
 	void on_cancel(Order*);	
 	void on_insert(Order*);	
 	void ShowState();
-private:
+
 	char 		name[64];
 	bool 		reached;
 	InsType 	insType;
+	Instrument	*relativeIns;
 	Quote		*lastQuote;
+	int			cancelMax;
 
 	static double		spread;
 	static double		openThreshold;
@@ -34,7 +39,8 @@ private:
 	static InsType		openWith;
 	static InsType		closeWith; 
 	static Direction	direction;
-	static int			maxPosition;
-	static int			submitMax;
+	static int		maxPosition;
+	static int		submitMax;
+	static bool		loop;
 };
 #endif /* INSTRUMENT_H__ */ 

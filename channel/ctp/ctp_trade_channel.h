@@ -1,6 +1,7 @@
 #ifndef CTP_TRADE_CHANNEL_H__
 #define CTP_TRADE_CHANNEL_H__
 #include <map>
+#include <set>
 #include <string>
 #include <fstream>
 #include <semaphore.h>
@@ -61,6 +62,7 @@ private:
 	std::map<std::string, CThostFtdcInstrumentField*> ins_info_;
 	std::fstream				log_stream_;
 	std::map<std::string, int> order_ref_2_order_local_id;
+	std::set<std::string> order_ref_has_inserted;//avoid report repeatly
 private:
 	TThostFtdcInvestorIDType investor_id_; //char[13]
 	TThostFtdcSessionIDType session_id_; //int

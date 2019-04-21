@@ -3,3 +3,5 @@
 *.con
 *.swp
 src/t
+cscope.out
+cscope.files

@@ -9,11 +9,12 @@ using namespace std;
 double 		Instrument::spread = 0.0;
 double		Instrument::openThreshold = 0.0;
 double		Instrument::closeThreshold = 0.0;
-InsType		Instrument::openWith = E_FORWARD;
-InsType		Instrument::closeWith = E_FORWARD; 
-Direction	Instrument::direction = E_UP;
-int			Instrument::maxPosition = 0;
-int			Instrument::submitMax = 0;
+InsType		Instrument::openWith = E_INS_INVALID;
+InsType		Instrument::closeWith = E_INS_INVALID; 
+Direction	Instrument::direction = E_DIR_INVALID;
+int		Instrument::maxPosition = 0;
+int		Instrument::submitMax = 0;
+bool		Instrument::loop = true;
 
 Instrument::Instrument(char *ins_name)
 {
@@ -28,10 +29,12 @@ void Instrument::ShowState()
 
 void Instrument::on_quote(Quote *q)
 {
+	//save the last quote
+	*lastQuote = *q;
 	if(reached == false){
 		reached = true;
 	}
-	if(insType == E_FORWARD){
+	if(insType == E_INS_FORWARD){
 
 	}
 }

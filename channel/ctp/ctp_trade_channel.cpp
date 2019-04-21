@@ -8,7 +8,6 @@
 #include "ctp_trade_channel.h"
 
 using namespace std;
-#define FUNC_INFO cout<<"\n********************"<<__FUNCTION__<<endl;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
 CtpTradeChannel::CtpTradeChannel()
 {
@@ -345,7 +344,9 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 <<"MacAddress="<<pOrder->MacAddress<<endl;
 		Order o;
 		if(pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted
-		&& pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing){
+		&& pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing
+		&& order_ref_has_inserted.count(pOrder->OrderRef) == 0){
+			order_ref_has_inserted.insert(pOrder->OrderRef);
 			STRCPY(o.instrument, pOrder->InstrumentID);
 			o.state = E_INSERT;
 			o.order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
@@ -404,6 +405,35 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 	STRCPY(o.instrument, pTrade->InstrumentID);
 	o.order_local_id = order_ref_2_order_local_id[pTrade->OrderRef];	
 	o.match_volume = pTrade->Volume;
+
+	switch(pTrade->Direction){
+		case THOST_FTDC_D_Buy:
+			o.long_short = E_LONG;
+			break;
+		case THOST_FTDC_D_Sell:
+			o.long_short = E_SHORT;
+			break;
+		default:
+			cout<<"ERROR DIRECTION"<<endl;
+			break;
+	}
+	switch(pTrade->OffsetFlag){
+		case THOST_FTDC_OF_Open:
+			o.open_close = E_OPEN;
+			break;
+		case THOST_FTDC_OF_Close:
+			o.open_close = E_CLOSE;
+			break;
+		case THOST_FTDC_OF_CloseToday:
+			o.open_close = E_CLOSE_T;
+			break;
+		case THOST_FTDC_OF_CloseYesterday:
+			o.open_close = E_CLOSE_Y;
+			break;
+		default:
+			cout<<"ERROR LONG SHORT"<<endl;
+			break;
+	}
 	handler_->push(&o);
 }
 }
@@ -635,7 +665,6 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 
 bool CtpTradeChannel::DoSettlementInfoConfirm ()
 {
-	FUNC_INFO
 	CThostFtdcSettlementInfoConfirmField settl_cfm = {0};
 	STRCPY(settl_cfm.BrokerID, cfg_->broker_id);
 	STRCPY(settl_cfm.InvestorID, investor_id_);
@@ -649,7 +678,6 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 }
 
 void CtpTradeChannel::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
-	FUNC_INFO
 cout<<(bIsLast==true?"true":"false")<<endl;
 cout<<pRspInfo->ErrorID<<endl;
 cout<<pRspInfo->ErrorMsg<<endl;

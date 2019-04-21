@@ -21,14 +21,6 @@ Order* OrderManager::FillNewOrder(Order* o, const char* instrument, double price
 
 	return o;
 }
-bool OrderManager::ReportOrderState(Order* o)
-{
-	Order *tmp;
-	//tmp = instrument_order_info[o->instrument].orders[ocls[o->order_local_id].oc][ocls[o->order_local_id].ls][o->order_local_id];
-	tmp->state = o->state;
-	STRCPY(tmp->state_msg, o->state_msg);
-	return true;
-}
 
 bool OrderManager::UpdateOrder(Order* o)
 {
@@ -112,12 +104,23 @@ int OrderManager::GetVolume(const char* ins, EOpenClose oc, ELongShort ls)
 {
 	int volume = 0;
 	if(HaveOrder(ins)){
-		Orders* ods = instrument_order_info[ins]->orders;
-		map<int, Order*>::iterator odIter = ods[oc][ls].begin();	
-		for(; odIter != ods[oc][ls].end(); odIter++){
-			Order* tmp = odIter.second;
+		Orders* ods = instrument_order_info[ins];
+		map<int, Order*>::iterator odIter = ods->orders[oc][ls].begin();	
+		for(; odIter != ods->orders[oc][ls].end(); odIter++){
+			Order* tmp = odIter->second;
 			volume += (tmp->submit_volume - tmp->total_matched);
 		}
 	}
 	return volume;
+}
+void OrderManager::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec)
+{
+	if(HaveOrder(ins)){
+		Orders* ods = instrument_order_info[ins];
+		map<int, Order*>::iterator odIter = ods->orders[oc][ls].begin();
+		for(; odIter != ods->orders[oc][ls].end(); odIter++){
+			Order* tmp = odIter->second;
+			odVec.push_back(tmp);
+		}
+	}
 }

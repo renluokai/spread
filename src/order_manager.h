@@ -1,6 +1,7 @@
 #ifndef ORDER_MANAGE__
 #define ORDER_MANAGE__
 #include <map>
+#include <vector>
 #include <string>
 #include "../include/data_types.h"
 #include "../include/safe_list.h"
@@ -14,10 +15,10 @@ public:
 	}
 	Order* FillNewOrder(Order* o, const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 	bool UpdateOrder(Order* o);
-	bool ReportOrderState(Order* o);
 	bool HaveOrder(const char* ins);
 	void ShowOrders(const char* ins=NULL);
 	int GetVolume(const char* ins, EOpenClose oc, ELongShort ls);
+	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*> &ods);
 	struct Orders{
 		map<int, Order*> orders[E_OPENCLOSE][E_LONGSHORT];
 	};
