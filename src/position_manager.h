@@ -10,12 +10,11 @@ class PositionManager
 {
 public:
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume);
+	void ShowPosition(const char* ins=NULL);
+	int  GetPosition(const char* ins, EPositionType posType);
 private:
 	struct Positions{
-		int yesterday_long;
-		int yesterday_short;
-		int today_long;
-		int today_short;	
+		int position[P_LONGSHORT];	
 	};
 	map<string, Positions> instrument_position_info;
 };

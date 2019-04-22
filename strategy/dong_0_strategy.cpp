@@ -144,7 +144,6 @@ bool Dong0Strategy::on_init()
 {
 	bool ret = false;
 	ret = load_config();
-	cout<<"Please init strategy here"<<endl;
 	ret = quote_channel_->open(quote_cfg_, handler_);	
 	if(ret == false) return false;
 	ret = trade_channel_->open(trade_cfg_, handler_);	
@@ -154,6 +153,26 @@ bool Dong0Strategy::on_init()
 
 	Instrument *forward_ins = new Instrument(forward_contract_);
 	Instrument *recent_ins = new Instrument(recent_contract_);
+
+	forward_ins->insType = E_INS_FORWARD;
+	recent_ins->insType = E_INS_RECENT;
+
+	forward_ins->relativeIns = recent_ins;
+	recent_ins->relativeIns = forward_ins;
+
+	forward_ins->cancelMax = forward_cancel_max_;
+	recent_ins->cancelMax = recent_cancel_max_;
+	
+	Instrument::openThreshold =	open_threshold_;
+	Instrument::closeThreshold = close_threshold_;
+
+	Instrument::openWith = open_with_==0?E_INS_RECENT:E_INS_FORWARD;
+	Instrument::closeWith = close_with_==0?E_INS_RECENT:E_INS_FORWARD;
+	Instrument::submitMax = submit_max_;
+	Instrument::maxPosition = max_position_;
+	Instrument::direction = direction_==0 ? E_DIR_UP : E_DIR_DOWN;
+	Instrument::loop = true;
+
 	instruments.insert(make_pair(forward_contract_, forward_ins));
 	instruments.insert(make_pair(recent_contract_, recent_ins));
 	quote_channel_->subscribe(forward_contract_);
@@ -162,27 +181,21 @@ bool Dong0Strategy::on_init()
 }
 void Dong0Strategy::on_order(Order *o)
 {
-	cout<<"CALLING: "<<__FUNCTION__<<endl;
 	Instrument *ins = instruments[o->instrument];
 	switch(o->state)
 	{
 		case E_ORIGINAL:
-			cout<<""<<endl;
 			break;
 		case E_INSERT:
-			cout<<"order inserted"<<endl;
 			ins->on_insert(o);
 			break;
 		case E_REJECT:
-			cout<<"order rejected"<<endl;
 			ins->on_reject(o);
 			break;
 		case E_CANCEL:
-			cout<<"order canceled"<<endl;
 			ins->on_cancel(o);
 			break;
 		case E_MATCH:
-			cout<<"order matched"<<endl;
 			ins->on_match(o);
 			break;
 	}

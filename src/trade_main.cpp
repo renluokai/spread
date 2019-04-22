@@ -6,7 +6,10 @@ using namespace std;
 int main(int argc, char **argv)
 {
 	if(argc != 2){
-		cout<<"Usage:\n\t"<<argv[0]<<" <config file> !"<<endl;
+		cout<<"****************************************\n";
+		cout<<"Usage:\n\t"<<argv[0]<<" <config-file> !\n";
+		cout<<"****************************************"<<endl;
+		return 1;
 	}
 	cout<<"Let's go!"<<endl;
 
