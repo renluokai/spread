@@ -25,6 +25,9 @@ public:
 	void on_cancel(Order*);	
 	void on_insert(Order*);	
 	void ShowState();
+	void ShowQuote();
+
+	void CalcSpread(bool rct=true);
 
 	char 		name[64];
 	bool 		reached;
@@ -33,7 +36,8 @@ public:
 	Quote		*lastQuote;
 	int			cancelMax;
 
-	static double		spread;
+	static double		bidSpread;
+	static double		askSpread;
 	static double		openThreshold;
 	static double		closeThreshold;
 	static InsType		openWith;
