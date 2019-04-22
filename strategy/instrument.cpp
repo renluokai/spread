@@ -34,8 +34,11 @@ void Instrument::on_quote(Quote *q)
 	if(reached == false){
 		reached = true;
 	}
+	if(relativeIns->reached == false){
+		return;
+	}
 	if(insType == E_INS_FORWARD){
-
+	}else{
 	}
 }
 
