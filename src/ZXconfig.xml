@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <forward_contract>ic1905</forward_contract>
+    <recent_contract>ic1906</recent_contract>
+    <open_with>0</open_with>
+    <open_threshold>40</open_threshold>
+    <close_with>0</close_with>
+    <close_threshold>50</close_threshold>
+    <direction>0</direction>
+    <max_postion>5</max_postion>
+    <submit_max>1</submit_max>
+    <forward_cancel_max>400</forward_cancel_max>
+    <recent_cancel_max>400</recent_cancel_max>
+    <quote_channel>
+        <front>tcp://ctpfz1-front1.citicsf.com:51213</front>
+        <user>909889</user>
+        <password>100059</password>
+    </quote_channel>
+    <trade_channel>
+        <front>tcp://ctpfz1-front1.citicsf.com:51205</front>
+        <user>909889</user>
+        <password>100059</password>
+        <broker>66666</broker>
+    </trade_channel>
+</config>
