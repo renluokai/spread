@@ -66,7 +66,6 @@ void Instrument::CalcSpread(bool rct)
 		bidSpread = lastQuote->BidPrice1 - relativeIns->lastQuote->BidPrice1;
 		askSpread = lastQuote->AskPrice1 - relativeIns->lastQuote->AskPrice1;
 	}else{
-		CalcSpread();
 		bidSpread = relativeIns->lastQuote->BidPrice1 - lastQuote->BidPrice1;
 		askSpread = relativeIns->lastQuote->AskPrice1 - lastQuote->AskPrice1;
 	}

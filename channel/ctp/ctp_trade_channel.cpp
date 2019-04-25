@@ -585,9 +585,15 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"InstrumentID="<<pInstrument->InstrumentID
 <<"CombinationType="<<pInstrument->CombinationType<<" | "
 <<"MinBuyVolume="<<pInstrument->MinBuyVolume<<" | "
 <<"MinSellVolume="<<pInstrument->MinSellVolume<<" | "
-<<"InstrumentCode="<<pInstrument->InstrumentCode<<endl;
+<<"InstrumentCode="<<pInstrument->InstrumentCode<<" | ";
+if(pRspInfo){
+log_stream_<<"pRspInfo->ErrorID="<<pRspInfo->ErrorID<<" | "
+<<"pRspInfo->ErrorMsg="<<pRspInfo->ErrorMsg<<" | ";
+}
+log_stream_<<"bIslast="<<bIsLast<<endl;
 	};
 	if(bIsLast == true){
+		cout<<"Unlock sem"<<endl;
 		sem_post(&sem_);
 	}
 }
