@@ -46,6 +46,10 @@ void Instrument::on_quote(Quote *q)
 		CalcSpread();
 	}
 	ShowQuote();
+
+	if(direction == E_DIR_UP){
+	}else if(direction == E_DIR_DOWN){
+	}
 }
 void Instrument::ShowQuote()
 {
