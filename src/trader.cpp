@@ -80,7 +80,7 @@ bool Trader::run(Strategy *s){
 				}
 				if(o->state == E_MATCH){
 					positionManager->UpdatePosition(o->instrument, o->open_close,
-												o->long_short, o->match_volume);
+												o->long_short, o->match_volume, o->match_price);
 				}
 				strategy->on_order((Order*)data);
 				break;

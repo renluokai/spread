@@ -97,6 +97,7 @@ struct Order : public Data{
 	int insert_time;
 
 	int match_volume;//each match volume
+	double match_price;//each match volume
 	//traded_info_t *traded_info_;
 };
 

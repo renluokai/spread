@@ -1,5 +1,5 @@
 #include "position_manager.h"
-void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume)
+void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price)
 {
 	
 	if(instrument_position_info.count(instrument)==0){
@@ -57,18 +57,18 @@ void PositionManager::ShowPosition(const char* ins)
 		map<string, Positions>::iterator iter = instrument_position_info.begin();
 		for(; iter!= instrument_position_info.end(); iter++){
 			printf("%s\t\t%d\t%d\t%d\t%d\n", iter->first.c_str(),
-					iter->second.position[P_YESTERDAY_LONG],
-					iter->second.position[P_YESTERDAY_SHORT],
-					iter->second.position[P_TODAY_LONG],
-					iter->second.position[P_TODAY_SHORT]);
+					iter->second.position[P_YESTERDAY_LONG].volume,
+					iter->second.position[P_YESTERDAY_SHORT].volume,
+					iter->second.position[P_TODAY_LONG].volume,
+					iter->second.position[P_TODAY_SHORT].volume);
 		}
 	}else if(instrument_position_info.count(ins) > 0){
 		Positions *tmp = &instrument_position_info[ins];
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins,
-				tmp->position[P_YESTERDAY_LONG],
-				tmp->position[P_YESTERDAY_SHORT],
-				tmp->position[P_TODAY_LONG],
-				tmp->position[P_TODAY_SHORT]);
+				tmp->position[P_YESTERDAY_LONG].volume,
+				tmp->position[P_YESTERDAY_SHORT].volume,
+				tmp->position[P_TODAY_LONG].volume,
+				tmp->position[P_TODAY_SHORT].volume);
 	}else{
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins, 0, 0, 0, 0);
 	}

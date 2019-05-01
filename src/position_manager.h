@@ -9,12 +9,17 @@ using namespace std;
 class PositionManager
 {
 public:
-	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume);
+	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
 	void ShowPosition(const char* ins=NULL);
 	int  GetPosition(const char* ins, EPositionType posType);
 private:
-	struct Positions{
-		int position[P_LONGSHORT];	
+	struct Position{
+		int volume;
+		double price;
+	};
+	struct PositionInfo{
+		string instrument;
+		Position position[P_LONGSHORT];	
 	};
 	map<string, Positions> instrument_position_info;
 };

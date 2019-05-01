@@ -405,6 +405,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 	STRCPY(o.instrument, pTrade->InstrumentID);
 	o.order_local_id = order_ref_2_order_local_id[pTrade->OrderRef];	
 	o.match_volume = pTrade->Volume;
+	o.match_price = pTrade->Price;
 
 	switch(pTrade->Direction){
 		case THOST_FTDC_D_Buy:
