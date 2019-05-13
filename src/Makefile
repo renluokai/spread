@@ -9,6 +9,7 @@ objects := $(utility) helper.o handler.o $(channels) $(shangdong0) position_mana
 t: $(objects)  
 	rm -rf *.log
 	g++  -lpthread -L../channel/ctp/ -lthosttraderapi -lthostmduserapi -o $@ $^
+	rm -rf $(objects)
 *.o:*.cpp
 *.o:*.cpp
 	g++ -g -c  $@ $^

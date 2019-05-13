@@ -25,6 +25,8 @@ public:
 	virtual bool cancel(Order*);
 
 private:
+	bool DoQryPosition();
+	bool DoQryPositionDetail();
 	bool DoQryInvestor();
 	bool DoQryInstrument();
 	bool DoQrySettlementInfoConfirm();
@@ -46,6 +48,8 @@ private:
 	virtual void OnRtnTrade(CThostFtdcTradeField *pTrade);
 	virtual void OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 	virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+	virtual void OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 private:
 	sem_t	sem_;	
 	sem_t	request_sem_;	

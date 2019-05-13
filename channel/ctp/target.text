@@ -1,68 +1,52 @@
 	///合约代码
 	TThostFtdcInstrumentIDType	InstrumentID;
+	///经纪公司代码
+	TThostFtdcBrokerIDType	BrokerID;
+	///投资者代码
+	TThostFtdcInvestorIDType	InvestorID;
+	///投机套保标志
+	TThostFtdcHedgeFlagType	HedgeFlag;
+	///买卖
+	TThostFtdcDirectionType	Direction;
+	///开仓日期
+	TThostFtdcDateType	OpenDate;
+	///成交编号
+	TThostFtdcTradeIDType	TradeID;
+	///数量
+	TThostFtdcVolumeType	Volume;
+	///开仓价
+	TThostFtdcPriceType	OpenPrice;
+	///交易日
+	TThostFtdcDateType	TradingDay;
+	///结算编号
+	TThostFtdcSettlementIDType	SettlementID;
+	///成交类型
+	TThostFtdcTradeTypeType	TradeType;
+	///组合合约代码
+	TThostFtdcInstrumentIDType	CombInstrumentID;
 	///交易所代码
 	TThostFtdcExchangeIDType	ExchangeID;
-	///合约名称
-	TThostFtdcInstrumentNameType	InstrumentName;
-	///合约在交易所的代码
-	TThostFtdcExchangeInstIDType	ExchangeInstID;
-	///产品代码
-	TThostFtdcInstrumentIDType	ProductID;
-	///产品类型
-	TThostFtdcProductClassType	ProductClass;
-	///交割年份
-	TThostFtdcYearType	DeliveryYear;
-	///交割月
-	TThostFtdcMonthType	DeliveryMonth;
-	///市价单最大下单量
-	TThostFtdcVolumeType	MaxMarketOrderVolume;
-	///市价单最小下单量
-	TThostFtdcVolumeType	MinMarketOrderVolume;
-	///限价单最大下单量
-	TThostFtdcVolumeType	MaxLimitOrderVolume;
-	///限价单最小下单量
-	TThostFtdcVolumeType	MinLimitOrderVolume;
-	///合约数量乘数
-	TThostFtdcVolumeMultipleType	VolumeMultiple;
-	///最小变动价位
-	TThostFtdcPriceType	PriceTick;
-	///创建日
-	TThostFtdcDateType	CreateDate;
-	///上市日
-	TThostFtdcDateType	OpenDate;
-	///到期日
-	TThostFtdcDateType	ExpireDate;
-	///开始交割日
-	TThostFtdcDateType	StartDelivDate;
-	///结束交割日
-	TThostFtdcDateType	EndDelivDate;
-	///合约生命周期状态
-	TThostFtdcInstLifePhaseType	InstLifePhase;
-	///当前是否交易
-	TThostFtdcBoolType	IsTrading;
-	///持仓类型
-	TThostFtdcPositionTypeType	PositionType;
-	///持仓日期类型
-	TThostFtdcPositionDateTypeType	PositionDateType;
-	///多头保证金率
-	TThostFtdcRatioType	LongMarginRatio;
-	///空头保证金率
-	TThostFtdcRatioType	ShortMarginRatio;
-	///是否使用大额单边保证金算法
-	TThostFtdcMaxMarginSideAlgorithmType	MaxMarginSideAlgorithm;
-	///基础商品代码
-	TThostFtdcInstrumentIDType	UnderlyingInstrID;
-	///执行价
-	TThostFtdcPriceType	StrikePrice;
-	///期权类型
-	TThostFtdcOptionsTypeType	OptionsType;
-	///合约基础商品乘数
-	TThostFtdcUnderlyingMultipleType	UnderlyingMultiple;
-	///组合类型
-	TThostFtdcCombinationTypeType	CombinationType;
-	///最小买下单单位
-	TThostFtdcVolumeType	MinBuyVolume;
-	///最小卖下单单位
-	TThostFtdcVolumeType	MinSellVolume;
-	///合约标识码
-	TThostFtdcInstrumentCodeType	InstrumentCode;
+	///逐日盯市平仓盈亏
+	TThostFtdcMoneyType	CloseProfitByDate;
+	///逐笔对冲平仓盈亏
+	TThostFtdcMoneyType	CloseProfitByTrade;
+	///逐日盯市持仓盈亏
+	TThostFtdcMoneyType	PositionProfitByDate;
+	///逐笔对冲持仓盈亏
+	TThostFtdcMoneyType	PositionProfitByTrade;
+	///投资者保证金
+	TThostFtdcMoneyType	Margin;
+	///交易所保证金
+	TThostFtdcMoneyType	ExchMargin;
+	///保证金率
+	TThostFtdcRatioType	MarginRateByMoney;
+	///保证金率(按手数)
+	TThostFtdcRatioType	MarginRateByVolume;
+	///昨结算价
+	TThostFtdcPriceType	LastSettlementPrice;
+	///结算价
+	TThostFtdcPriceType	SettlementPrice;
+	///平仓量
+	TThostFtdcVolumeType	CloseVolume;
+	///平仓金额
+	TThostFtdcMoneyType	CloseAmount;

@@ -70,6 +70,9 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 		if(bret == false) return false;
 	}
 	bret = DoQryInstrument();
+	DoQryPosition();
+	DoQryPositionDetail();
+
 	if(bret == false) return false;
 	return true;
 }
@@ -657,7 +660,21 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryInstrument(&qry_ins, request_id_++);
 	return Wait(30, "ReqQryInstrument");
 }
+bool CtpTradeChannel::DoQryPosition()
+{
+	Delay(1);
+	CThostFtdcQryInvestorPositionField Position={0};
+	trade_api_->ReqQryInvestorPosition(&Position, request_id_++);
+	return Wait(30, "ReqQryInvestorPosition");
+}
 
+bool CtpTradeChannel::DoQryPositionDetail()
+{
+	Delay(1);
+CThostFtdcQryInvestorPositionDetailField PositionDetail={0};
+	trade_api_->ReqQryInvestorPositionDetail(&PositionDetail,request_id_++);
+	return Wait(30, "ReqQryInvestorPositionDetail");
+}
 bool CtpTradeChannel::DoQrySettlementInfoConfirm ()
 {
 	Delay(1);
@@ -684,6 +701,98 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 	Wait(30,"ReqSettlementInfoConfirm");
 }
 
+void CtpTradeChannel::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+cout<<"InstrumentID="<<pInvestorPosition->InstrumentID<<endl;
+cout<<"BrokerID="<<pInvestorPosition->BrokerID<<endl;
+cout<<"InvestorID="<<pInvestorPosition->InvestorID<<endl;
+cout<<"PosiDirection="<<pInvestorPosition->PosiDirection<<endl;
+cout<<"HedgeFlag="<<pInvestorPosition->HedgeFlag<<endl;
+cout<<"PositionDate="<<pInvestorPosition->PositionDate<<endl;
+cout<<"YdPosition="<<pInvestorPosition->YdPosition<<endl;
+cout<<"Position="<<pInvestorPosition->Position<<endl;
+cout<<"LongFrozen="<<pInvestorPosition->LongFrozen<<endl;
+cout<<"ShortFrozen="<<pInvestorPosition->ShortFrozen<<endl;
+cout<<"LongFrozenAmount="<<pInvestorPosition->LongFrozenAmount<<endl;
+cout<<"ShortFrozenAmount="<<pInvestorPosition->ShortFrozenAmount<<endl;
+cout<<"OpenVolume="<<pInvestorPosition->OpenVolume<<endl;
+cout<<"CloseVolume="<<pInvestorPosition->CloseVolume<<endl;
+cout<<"OpenAmount="<<pInvestorPosition->OpenAmount<<endl;
+cout<<"CloseAmount="<<pInvestorPosition->CloseAmount<<endl;
+cout<<"PositionCost="<<pInvestorPosition->PositionCost<<endl;
+cout<<"PreMargin="<<pInvestorPosition->PreMargin<<endl;
+cout<<"UseMargin="<<pInvestorPosition->UseMargin<<endl;
+cout<<"FrozenMargin="<<pInvestorPosition->FrozenMargin<<endl;
+cout<<"FrozenCash="<<pInvestorPosition->FrozenCash<<endl;
+cout<<"FrozenCommission="<<pInvestorPosition->FrozenCommission<<endl;
+cout<<"CashIn="<<pInvestorPosition->CashIn<<endl;
+cout<<"Commission="<<pInvestorPosition->Commission<<endl;
+cout<<"CloseProfit="<<pInvestorPosition->CloseProfit<<endl;
+cout<<"PositionProfit="<<pInvestorPosition->PositionProfit<<endl;
+cout<<"PreSettlementPrice="<<pInvestorPosition->PreSettlementPrice<<endl;
+cout<<"SettlementPrice="<<pInvestorPosition->SettlementPrice<<endl;
+cout<<"TradingDay="<<pInvestorPosition->TradingDay<<endl;
+cout<<"SettlementID="<<pInvestorPosition->SettlementID<<endl;
+cout<<"OpenCost="<<pInvestorPosition->OpenCost<<endl;
+cout<<"ExchangeMargin="<<pInvestorPosition->ExchangeMargin<<endl;
+cout<<"CombPosition="<<pInvestorPosition->CombPosition<<endl;
+cout<<"CombLongFrozen="<<pInvestorPosition->CombLongFrozen<<endl;
+cout<<"CombShortFrozen="<<pInvestorPosition->CombShortFrozen<<endl;
+cout<<"CloseProfitByDate="<<pInvestorPosition->CloseProfitByDate<<endl;
+cout<<"CloseProfitByTrade="<<pInvestorPosition->CloseProfitByTrade<<endl;
+cout<<"TodayPosition="<<pInvestorPosition->TodayPosition<<endl;
+cout<<"MarginRateByMoney="<<pInvestorPosition->MarginRateByMoney<<endl;
+cout<<"MarginRateByVolume="<<pInvestorPosition->MarginRateByVolume<<endl;
+cout<<"StrikeFrozen="<<pInvestorPosition->StrikeFrozen<<endl;
+cout<<"StrikeFrozenAmount="<<pInvestorPosition->StrikeFrozenAmount<<endl;
+cout<<"AbandonFrozen="<<pInvestorPosition->AbandonFrozen<<endl;
+cout<<"ExchangeID="<<pInvestorPosition->ExchangeID<<endl;
+cout<<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen<<endl;
+
+	if(bIsLast == true){
+		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
+			sem_post(&sem_);
+		}
+	}
+
+}
+void CtpTradeChannel::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+cout<<"InstrumentID="<<pInvestorPositionDetail->InstrumentID<<endl;
+cout<<"BrokerID="<<pInvestorPositionDetail->BrokerID<<endl;
+cout<<"InvestorID="<<pInvestorPositionDetail->InvestorID<<endl;
+cout<<"HedgeFlag="<<pInvestorPositionDetail->HedgeFlag<<endl;
+cout<<"Direction="<<pInvestorPositionDetail->Direction<<endl;
+cout<<"OpenDate="<<pInvestorPositionDetail->OpenDate<<endl;
+cout<<"TradeID="<<pInvestorPositionDetail->TradeID<<endl;
+cout<<"Volume="<<pInvestorPositionDetail->Volume<<endl;
+cout<<"OpenPrice="<<pInvestorPositionDetail->OpenPrice<<endl;
+cout<<"TradingDay="<<pInvestorPositionDetail->TradingDay<<endl;
+cout<<"SettlementID="<<pInvestorPositionDetail->SettlementID<<endl;
+cout<<"TradeType="<<pInvestorPositionDetail->TradeType<<endl;
+cout<<"CombInstrumentID="<<pInvestorPositionDetail->CombInstrumentID<<endl;
+cout<<"ExchangeID="<<pInvestorPositionDetail->ExchangeID<<endl;
+cout<<"CloseProfitByDate="<<pInvestorPositionDetail->CloseProfitByDate<<endl;
+cout<<"CloseProfitByTrade="<<pInvestorPositionDetail->CloseProfitByTrade<<endl;
+cout<<"PositionProfitByDate="<<pInvestorPositionDetail->PositionProfitByDate<<endl;
+cout<<"PositionProfitByTrade="<<pInvestorPositionDetail->PositionProfitByTrade<<endl;
+cout<<"Margin="<<pInvestorPositionDetail->Margin<<endl;
+cout<<"ExchMargin="<<pInvestorPositionDetail->ExchMargin<<endl;
+cout<<"MarginRateByMoney="<<pInvestorPositionDetail->MarginRateByMoney<<endl;
+cout<<"MarginRateByVolume="<<pInvestorPositionDetail->MarginRateByVolume<<endl;
+cout<<"LastSettlementPrice="<<pInvestorPositionDetail->LastSettlementPrice<<endl;
+cout<<"SettlementPrice="<<pInvestorPositionDetail->SettlementPrice<<endl;
+cout<<"CloseVolume="<<pInvestorPositionDetail->CloseVolume<<endl;
+cout<<"CloseAmount="<<pInvestorPositionDetail->CloseAmount<<endl;
+
+
+	if(bIsLast == true){
+		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
+			sem_post(&sem_);
+		}
+	}
+
+}
 void CtpTradeChannel::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
 cout<<(bIsLast==true?"true":"false")<<endl;
 cout<<pRspInfo->ErrorID<<endl;
@@ -706,4 +815,7 @@ cout<<"InstrumentID="<<pInputOrderAction->InstrumentID<<endl;
 cout<<"InvestUnitID="<<pInputOrderAction->InvestUnitID<<endl;
 cout<<"IPAddress="<<pInputOrderAction->IPAddress<<endl;
 cout<<"MacAddress="<<pInputOrderAction->MacAddress<<endl;
+
+
+
 }

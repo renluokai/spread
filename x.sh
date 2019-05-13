@@ -1,4 +1,4 @@
 rm -rf cscope.files
 find ./ -name *.h >>cscope.files
 find ./ -name *.cpp >>cscope.files
-cscope -i cscope.out
+cscope -i cscope.out 
