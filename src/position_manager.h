@@ -13,14 +13,21 @@ public:
 	void ShowPosition(const char* ins=NULL);
 	int  GetPosition(const char* ins, EPositionType posType);
 private:
-	struct Position{
+	
+	struct PositionEntry{
+		string instrument;
 		int volume;
 		double price;
+		EPositionType positionType;
+	};
+	struct Position{
+		int totalPosition;
+		list<PositionEntry> position;
 	};
 	struct PositionInfo{
 		string instrument;
-		Position position[P_LONGSHORT];	
+		Position position[P_LONGSHORT];
 	};
-	map<string, Positions> instrument_position_info;
+	map<string, PositionInfo> instrument_position_info;
 };
 #endif /* POSITION_MANAGER_H__ */

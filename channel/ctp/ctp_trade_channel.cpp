@@ -703,51 +703,52 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 
 void CtpTradeChannel::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-cout<<"InstrumentID="<<pInvestorPosition->InstrumentID<<endl;
-cout<<"BrokerID="<<pInvestorPosition->BrokerID<<endl;
-cout<<"InvestorID="<<pInvestorPosition->InvestorID<<endl;
-cout<<"PosiDirection="<<pInvestorPosition->PosiDirection<<endl;
-cout<<"HedgeFlag="<<pInvestorPosition->HedgeFlag<<endl;
-cout<<"PositionDate="<<pInvestorPosition->PositionDate<<endl;
-cout<<"YdPosition="<<pInvestorPosition->YdPosition<<endl;
-cout<<"Position="<<pInvestorPosition->Position<<endl;
-cout<<"LongFrozen="<<pInvestorPosition->LongFrozen<<endl;
-cout<<"ShortFrozen="<<pInvestorPosition->ShortFrozen<<endl;
-cout<<"LongFrozenAmount="<<pInvestorPosition->LongFrozenAmount<<endl;
-cout<<"ShortFrozenAmount="<<pInvestorPosition->ShortFrozenAmount<<endl;
-cout<<"OpenVolume="<<pInvestorPosition->OpenVolume<<endl;
-cout<<"CloseVolume="<<pInvestorPosition->CloseVolume<<endl;
-cout<<"OpenAmount="<<pInvestorPosition->OpenAmount<<endl;
-cout<<"CloseAmount="<<pInvestorPosition->CloseAmount<<endl;
-cout<<"PositionCost="<<pInvestorPosition->PositionCost<<endl;
-cout<<"PreMargin="<<pInvestorPosition->PreMargin<<endl;
-cout<<"UseMargin="<<pInvestorPosition->UseMargin<<endl;
-cout<<"FrozenMargin="<<pInvestorPosition->FrozenMargin<<endl;
-cout<<"FrozenCash="<<pInvestorPosition->FrozenCash<<endl;
-cout<<"FrozenCommission="<<pInvestorPosition->FrozenCommission<<endl;
-cout<<"CashIn="<<pInvestorPosition->CashIn<<endl;
-cout<<"Commission="<<pInvestorPosition->Commission<<endl;
-cout<<"CloseProfit="<<pInvestorPosition->CloseProfit<<endl;
-cout<<"PositionProfit="<<pInvestorPosition->PositionProfit<<endl;
-cout<<"PreSettlementPrice="<<pInvestorPosition->PreSettlementPrice<<endl;
-cout<<"SettlementPrice="<<pInvestorPosition->SettlementPrice<<endl;
-cout<<"TradingDay="<<pInvestorPosition->TradingDay<<endl;
-cout<<"SettlementID="<<pInvestorPosition->SettlementID<<endl;
-cout<<"OpenCost="<<pInvestorPosition->OpenCost<<endl;
-cout<<"ExchangeMargin="<<pInvestorPosition->ExchangeMargin<<endl;
-cout<<"CombPosition="<<pInvestorPosition->CombPosition<<endl;
-cout<<"CombLongFrozen="<<pInvestorPosition->CombLongFrozen<<endl;
-cout<<"CombShortFrozen="<<pInvestorPosition->CombShortFrozen<<endl;
-cout<<"CloseProfitByDate="<<pInvestorPosition->CloseProfitByDate<<endl;
-cout<<"CloseProfitByTrade="<<pInvestorPosition->CloseProfitByTrade<<endl;
-cout<<"TodayPosition="<<pInvestorPosition->TodayPosition<<endl;
-cout<<"MarginRateByMoney="<<pInvestorPosition->MarginRateByMoney<<endl;
-cout<<"MarginRateByVolume="<<pInvestorPosition->MarginRateByVolume<<endl;
-cout<<"StrikeFrozen="<<pInvestorPosition->StrikeFrozen<<endl;
-cout<<"StrikeFrozenAmount="<<pInvestorPosition->StrikeFrozenAmount<<endl;
-cout<<"AbandonFrozen="<<pInvestorPosition->AbandonFrozen<<endl;
-cout<<"ExchangeID="<<pInvestorPosition->ExchangeID<<endl;
-cout<<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen<<endl;
+log_stream_<<"["<<__FUNCTION__<<"] "
+<<"InstrumentID="<<pInvestorPosition->InstrumentID<<" | "
+<<"BrokerID="<<pInvestorPosition->BrokerID<<" | "
+<<"InvestorID="<<pInvestorPosition->InvestorID<<" | "
+<<"PosiDirection="<<pInvestorPosition->PosiDirection<<" | "
+<<"HedgeFlag="<<pInvestorPosition->HedgeFlag<<" | "
+<<"PositionDate="<<pInvestorPosition->PositionDate<<" | "
+<<"YdPosition="<<pInvestorPosition->YdPosition<<" | "
+<<"Position="<<pInvestorPosition->Position<<" | "
+<<"LongFrozen="<<pInvestorPosition->LongFrozen<<" | "
+<<"ShortFrozen="<<pInvestorPosition->ShortFrozen<<" | "
+<<"LongFrozenAmount="<<pInvestorPosition->LongFrozenAmount<<" | "
+<<"ShortFrozenAmount="<<pInvestorPosition->ShortFrozenAmount<<" | "
+<<"OpenVolume="<<pInvestorPosition->OpenVolume<<" | "
+<<"CloseVolume="<<pInvestorPosition->CloseVolume<<" | "
+<<"OpenAmount="<<pInvestorPosition->OpenAmount<<" | "
+<<"CloseAmount="<<pInvestorPosition->CloseAmount<<" | "
+<<"PositionCost="<<pInvestorPosition->PositionCost<<" | "
+<<"PreMargin="<<pInvestorPosition->PreMargin<<" | "
+<<"UseMargin="<<pInvestorPosition->UseMargin<<" | "
+<<"FrozenMargin="<<pInvestorPosition->FrozenMargin<<" | "
+<<"FrozenCash="<<pInvestorPosition->FrozenCash<<" | "
+<<"FrozenCommission="<<pInvestorPosition->FrozenCommission<<" | "
+<<"CashIn="<<pInvestorPosition->CashIn<<" | "
+<<"Commission="<<pInvestorPosition->Commission<<" | "
+<<"CloseProfit="<<pInvestorPosition->CloseProfit<<" | "
+<<"PositionProfit="<<pInvestorPosition->PositionProfit<<" | "
+<<"PreSettlementPrice="<<pInvestorPosition->PreSettlementPrice<<" | "
+<<"SettlementPrice="<<pInvestorPosition->SettlementPrice<<" | "
+<<"TradingDay="<<pInvestorPosition->TradingDay<<" | "
+<<"SettlementID="<<pInvestorPosition->SettlementID<<" | "
+<<"OpenCost="<<pInvestorPosition->OpenCost<<" | "
+<<"ExchangeMargin="<<pInvestorPosition->ExchangeMargin<<" | "
+<<"CombPosition="<<pInvestorPosition->CombPosition<<" | "
+<<"CombLongFrozen="<<pInvestorPosition->CombLongFrozen<<" | "
+<<"CombShortFrozen="<<pInvestorPosition->CombShortFrozen<<" | "
+<<"CloseProfitByDate="<<pInvestorPosition->CloseProfitByDate<<" | "
+<<"CloseProfitByTrade="<<pInvestorPosition->CloseProfitByTrade<<" | "
+<<"TodayPosition="<<pInvestorPosition->TodayPosition<<" | "
+<<"MarginRateByMoney="<<pInvestorPosition->MarginRateByMoney<<" | "
+<<"MarginRateByVolume="<<pInvestorPosition->MarginRateByVolume<<" | "
+<<"StrikeFrozen="<<pInvestorPosition->StrikeFrozen<<" | "
+<<"StrikeFrozenAmount="<<pInvestorPosition->StrikeFrozenAmount<<" | "
+<<"AbandonFrozen="<<pInvestorPosition->AbandonFrozen<<" | "
+<<"ExchangeID="<<pInvestorPosition->ExchangeID<<" | "
+<<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen;
 
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
@@ -758,32 +759,33 @@ cout<<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen<<endl;
 }
 void CtpTradeChannel::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-cout<<"InstrumentID="<<pInvestorPositionDetail->InstrumentID<<endl;
-cout<<"BrokerID="<<pInvestorPositionDetail->BrokerID<<endl;
-cout<<"InvestorID="<<pInvestorPositionDetail->InvestorID<<endl;
-cout<<"HedgeFlag="<<pInvestorPositionDetail->HedgeFlag<<endl;
-cout<<"Direction="<<pInvestorPositionDetail->Direction<<endl;
-cout<<"OpenDate="<<pInvestorPositionDetail->OpenDate<<endl;
-cout<<"TradeID="<<pInvestorPositionDetail->TradeID<<endl;
-cout<<"Volume="<<pInvestorPositionDetail->Volume<<endl;
-cout<<"OpenPrice="<<pInvestorPositionDetail->OpenPrice<<endl;
-cout<<"TradingDay="<<pInvestorPositionDetail->TradingDay<<endl;
-cout<<"SettlementID="<<pInvestorPositionDetail->SettlementID<<endl;
-cout<<"TradeType="<<pInvestorPositionDetail->TradeType<<endl;
-cout<<"CombInstrumentID="<<pInvestorPositionDetail->CombInstrumentID<<endl;
-cout<<"ExchangeID="<<pInvestorPositionDetail->ExchangeID<<endl;
-cout<<"CloseProfitByDate="<<pInvestorPositionDetail->CloseProfitByDate<<endl;
-cout<<"CloseProfitByTrade="<<pInvestorPositionDetail->CloseProfitByTrade<<endl;
-cout<<"PositionProfitByDate="<<pInvestorPositionDetail->PositionProfitByDate<<endl;
-cout<<"PositionProfitByTrade="<<pInvestorPositionDetail->PositionProfitByTrade<<endl;
-cout<<"Margin="<<pInvestorPositionDetail->Margin<<endl;
-cout<<"ExchMargin="<<pInvestorPositionDetail->ExchMargin<<endl;
-cout<<"MarginRateByMoney="<<pInvestorPositionDetail->MarginRateByMoney<<endl;
-cout<<"MarginRateByVolume="<<pInvestorPositionDetail->MarginRateByVolume<<endl;
-cout<<"LastSettlementPrice="<<pInvestorPositionDetail->LastSettlementPrice<<endl;
-cout<<"SettlementPrice="<<pInvestorPositionDetail->SettlementPrice<<endl;
-cout<<"CloseVolume="<<pInvestorPositionDetail->CloseVolume<<endl;
-cout<<"CloseAmount="<<pInvestorPositionDetail->CloseAmount<<endl;
+log_stream_<<"["<<__FUNCTION__<<"] "
+<<"InstrumentID="<<pInvestorPositionDetail->InstrumentID<<" | "
+<<"BrokerID="<<pInvestorPositionDetail->BrokerID<<" | "
+<<"InvestorID="<<pInvestorPositionDetail->InvestorID<<" | "
+<<"HedgeFlag="<<pInvestorPositionDetail->HedgeFlag<<" | "
+<<"Direction="<<pInvestorPositionDetail->Direction<<" | "
+<<"OpenDate="<<pInvestorPositionDetail->OpenDate<<" | "
+<<"TradeID="<<pInvestorPositionDetail->TradeID<<" | "
+<<"Volume="<<pInvestorPositionDetail->Volume<<" | "
+<<"OpenPrice="<<pInvestorPositionDetail->OpenPrice<<" | "
+<<"TradingDay="<<pInvestorPositionDetail->TradingDay<<" | "
+<<"SettlementID="<<pInvestorPositionDetail->SettlementID<<" | "
+<<"TradeType="<<pInvestorPositionDetail->TradeType<<" | "
+<<"CombInstrumentID="<<pInvestorPositionDetail->CombInstrumentID<<" | "
+<<"ExchangeID="<<pInvestorPositionDetail->ExchangeID<<" | "
+<<"CloseProfitByDate="<<pInvestorPositionDetail->CloseProfitByDate<<" | "
+<<"CloseProfitByTrade="<<pInvestorPositionDetail->CloseProfitByTrade<<" | "
+<<"PositionProfitByDate="<<pInvestorPositionDetail->PositionProfitByDate<<" | "
+<<"PositionProfitByTrade="<<pInvestorPositionDetail->PositionProfitByTrade<<" | "
+<<"Margin="<<pInvestorPositionDetail->Margin<<" | "
+<<"ExchMargin="<<pInvestorPositionDetail->ExchMargin<<" | "
+<<"MarginRateByMoney="<<pInvestorPositionDetail->MarginRateByMoney<<" | "
+<<"MarginRateByVolume="<<pInvestorPositionDetail->MarginRateByVolume<<" | "
+<<"LastSettlementPrice="<<pInvestorPositionDetail->LastSettlementPrice<<" | "
+<<"SettlementPrice="<<pInvestorPositionDetail->SettlementPrice<<" | "
+<<"CloseVolume="<<pInvestorPositionDetail->CloseVolume<<" | "
+<<"CloseAmount="<<pInvestorPositionDetail->CloseAmount;
 
 
 	if(bIsLast == true){
