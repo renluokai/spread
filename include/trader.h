@@ -28,6 +28,7 @@ public:
 	bool RegisterTradeChannel(TradeChannel*, int id);
 public:
 	void add_instrument_info(InstrumentInfo*);
+	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
 	InstrumentInfo* get_instrument_info(const char* ins); 
 private:
 	void process_command(Command*);

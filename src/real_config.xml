@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <forward_contract>cu1906</forward_contract>
+    <recent_contract>ni1906</recent_contract>
+    <open_with>0</open_with>
+    <open_threshold>40</open_threshold>
+    <close_with>0</close_with>
+    <close_threshold>50</close_threshold>
+    <direction>0</direction>
+    <max_postion>5</max_postion>
+    <submit_max>1</submit_max>
+    <forward_cancel_max>400</forward_cancel_max>
+    <recent_cancel_max>400</recent_cancel_max>
+    <quote_channel>
+        <front>tcp://180.168.212.51:41213</front>
+        <front>tcp://180.168.212.52:41213</front>
+        <front>tcp://180.168.212.55:41213</front>
+        <user>8005014038</user>
+        <password>Rlk170310</password>
+    </quote_channel>
+    <trade_channel>
+        <front>tcp://180.168.212.56:42205</front>
+        <front>tcp://180.168.212.57:42205</front>
+        <user>8005014038</user>
+        <password>Rlk170310</password>
+        <broker>88888</broker>
+    </trade_channel>
+</config>

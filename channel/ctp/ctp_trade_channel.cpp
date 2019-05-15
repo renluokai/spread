@@ -70,10 +70,12 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 		if(bret == false) return false;
 	}
 	bret = DoQryInstrument();
-	DoQryPosition();
-	DoQryPositionDetail();
-
 	if(bret == false) return false;
+
+	bret = DoQryPosition();
+	bret = DoQryPositionDetail();
+	if(bret == false) return false;
+
 	return true;
 }
 
@@ -664,6 +666,7 @@ bool CtpTradeChannel::DoQryPosition()
 {
 	Delay(1);
 	CThostFtdcQryInvestorPositionField Position={0};
+log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryInvestorPosition(&Position, request_id_++);
 	return Wait(30, "ReqQryInvestorPosition");
 }
@@ -748,7 +751,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"StrikeFrozenAmount="<<pInvestorPosition->StrikeFrozenAmount<<" | "
 <<"AbandonFrozen="<<pInvestorPosition->AbandonFrozen<<" | "
 <<"ExchangeID="<<pInvestorPosition->ExchangeID<<" | "
-<<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen;
+<<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen<<endl;
 
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
@@ -785,7 +788,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"LastSettlementPrice="<<pInvestorPositionDetail->LastSettlementPrice<<" | "
 <<"SettlementPrice="<<pInvestorPositionDetail->SettlementPrice<<" | "
 <<"CloseVolume="<<pInvestorPositionDetail->CloseVolume<<" | "
-<<"CloseAmount="<<pInvestorPositionDetail->CloseAmount;
+<<"CloseAmount="<<pInvestorPositionDetail->CloseAmount<<endl;
 
 
 	if(bIsLast == true){
