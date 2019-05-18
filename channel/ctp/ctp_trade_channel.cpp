@@ -706,6 +706,9 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 
 void CtpTradeChannel::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
+if(pInvestorPosition == NULL){
+	log_stream_<<"["<<__FUNCTION__<<"] "<<"pInvestorPosition=NULL"<<endl;
+}else{
 log_stream_<<"["<<__FUNCTION__<<"] "
 <<"InstrumentID="<<pInvestorPosition->InstrumentID<<" | "
 <<"BrokerID="<<pInvestorPosition->BrokerID<<" | "
@@ -752,7 +755,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"AbandonFrozen="<<pInvestorPosition->AbandonFrozen<<" | "
 <<"ExchangeID="<<pInvestorPosition->ExchangeID<<" | "
 <<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen<<endl;
-
+}
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
 			sem_post(&sem_);
@@ -762,6 +765,9 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 }
 void CtpTradeChannel::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
+if(pInvestorPositionDetail==NULL){
+log_stream_<<"["<<__FUNCTION__<<"] "<<"pInvestorPositionDetail=NULL"<<endl;
+}else{
 log_stream_<<"["<<__FUNCTION__<<"] "
 <<"InstrumentID="<<pInvestorPositionDetail->InstrumentID<<" | "
 <<"BrokerID="<<pInvestorPositionDetail->BrokerID<<" | "
@@ -789,7 +795,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"SettlementPrice="<<pInvestorPositionDetail->SettlementPrice<<" | "
 <<"CloseVolume="<<pInvestorPositionDetail->CloseVolume<<" | "
 <<"CloseAmount="<<pInvestorPositionDetail->CloseAmount<<endl;
-
+}
 
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
