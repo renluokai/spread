@@ -175,3 +175,8 @@ bool Trader::cancel_order(Order* o, int channel_id)
 	//TODO
 	return  ret;
 }
+
+void Trader::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec)
+{
+	orderManager->GetOrder(ins, oc, ls, odVec);
+}

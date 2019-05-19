@@ -26,6 +26,8 @@ public:
 	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 	bool RegisterQuoteChannel(QuoteChannel*, int id);
 	bool RegisterTradeChannel(TradeChannel*, int id);
+
+	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
 public:
 	void add_instrument_info(InstrumentInfo*);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);

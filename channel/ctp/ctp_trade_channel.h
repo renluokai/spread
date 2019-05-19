@@ -27,6 +27,7 @@ public:
 private:
 	bool DoQryPosition();
 	bool DoQryPositionDetail();
+	bool DoQryOrder();
 	bool DoQryInvestor();
 	bool DoQryInstrument();
 	bool DoQrySettlementInfoConfirm();
@@ -50,6 +51,7 @@ private:
 	virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 	virtual void OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+	virtual void OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 private:
 	sem_t	sem_;	
 	sem_t	request_sem_;	

@@ -8,6 +8,11 @@ enum InsType
 	E_INS_FORWARD,
 	E_INS_RECENT,
 };
+enum StopLoss{
+	E_STOPLOSS_NO,
+	E_STOPLOSS_AVERAGE,
+	E_STOPLOSS_TICKBYTICK,
+};
 enum Direction
 {
 
@@ -41,10 +46,12 @@ public:
 	static double		openThreshold;
 	static double		closeThreshold;
 	static InsType		openWith;
+	static StopLoss		stopLossType;
+	static int			stopLoss;
 	static InsType		closeWith; 
 	static Direction	direction;
-	static int		maxPosition;
-	static int		submitMax;
-	static bool		loop;
+	static int			maxPosition;
+	static int			submitMax;
+	static bool			loop;
 };
 #endif /* INSTRUMENT_H__ */ 

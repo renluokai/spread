@@ -72,7 +72,8 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 	bret = DoQryInstrument();
 	if(bret == false) return false;
 
-	bret = DoQryPosition();
+	bret = DoQryOrder();
+	if(bret == false) return false;
 	bret = DoQryPositionDetail();
 	if(bret == false) return false;
 
@@ -662,6 +663,15 @@ log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryInstrument(&qry_ins, request_id_++);
 	return Wait(30, "ReqQryInstrument");
 }
+
+bool CtpTradeChannel::DoQryOrder()
+{
+	Delay(1);
+	CThostFtdcQryOrderField qryOrder={0};
+log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+	trade_api_->ReqQryOrder(&qryOrder, request_id_++);
+	return Wait(30, "ReqQryOrder");
+}
 bool CtpTradeChannel::DoQryPosition()
 {
 	Delay(1);
@@ -826,7 +836,80 @@ cout<<"InstrumentID="<<pInputOrderAction->InstrumentID<<endl;
 cout<<"InvestUnitID="<<pInputOrderAction->InvestUnitID<<endl;
 cout<<"IPAddress="<<pInputOrderAction->IPAddress<<endl;
 cout<<"MacAddress="<<pInputOrderAction->MacAddress<<endl;
-
-
-
+}
+void CtpTradeChannel::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) 
+{
+if(pOrder==NULL){
+log_stream_<<"["<<__FUNCTION__<<"] "<<"pInvestorPositionDetail=NULL"<<endl;
+}else{
+log_stream_<<"["<<__FUNCTION__<<"] "
+<<"BrokerID="<<pOrder->BrokerID<<" | "
+<<"InvestorID="<<pOrder->InvestorID<<" | "
+<<"InstrumentID="<<pOrder->InstrumentID<<" | "
+<<"OrderRef="<<pOrder->OrderRef<<" | "
+<<"UserID="<<pOrder->UserID<<" | "
+<<"OrderPriceType="<<pOrder->OrderPriceType<<" | "
+<<"Direction="<<pOrder->Direction<<" | "
+<<"CombOffsetFlag="<<pOrder->CombOffsetFlag<<" | "
+<<"CombHedgeFlag="<<pOrder->CombHedgeFlag<<" | "
+<<"LimitPrice="<<pOrder->LimitPrice<<" | "
+<<"VolumeTotalOriginal="<<pOrder->VolumeTotalOriginal<<" | "
+<<"TimeCondition="<<pOrder->TimeCondition<<" | "
+<<"GTDDate="<<pOrder->GTDDate<<" | "
+<<"VolumeCondition="<<pOrder->VolumeCondition<<" | "
+<<"MinVolume="<<pOrder->MinVolume<<" | "
+<<"ContingentCondition="<<pOrder->ContingentCondition<<" | "
+<<"StopPrice="<<pOrder->StopPrice<<" | "
+<<"ForceCloseReason="<<pOrder->ForceCloseReason<<" | "
+<<"IsAutoSuspend="<<pOrder->IsAutoSuspend<<" | "
+<<"BusinessUnit="<<pOrder->BusinessUnit<<" | "
+<<"RequestID="<<pOrder->RequestID<<" | "
+<<"OrderLocalID="<<pOrder->OrderLocalID<<" | "
+<<"ExchangeID="<<pOrder->ExchangeID<<" | "
+<<"ParticipantID="<<pOrder->ParticipantID<<" | "
+<<"ClientID="<<pOrder->ClientID<<" | "
+<<"ExchangeInstID="<<pOrder->ExchangeInstID<<" | "
+<<"TraderID="<<pOrder->TraderID<<" | "
+<<"InstallID="<<pOrder->InstallID<<" | "
+<<"OrderSubmitStatus="<<pOrder->OrderSubmitStatus<<" | "
+<<"NotifySequence="<<pOrder->NotifySequence<<" | "
+<<"TradingDay="<<pOrder->TradingDay<<" | "
+<<"SettlementID="<<pOrder->SettlementID<<" | "
+<<"OrderSysID="<<pOrder->OrderSysID<<" | "
+<<"OrderSource="<<pOrder->OrderSource<<" | "
+<<"OrderStatus="<<pOrder->OrderStatus<<" | "
+<<"OrderType="<<pOrder->OrderType<<" | "
+<<"VolumeTraded="<<pOrder->VolumeTraded<<" | "
+<<"VolumeTotal="<<pOrder->VolumeTotal<<" | "
+<<"InsertDate="<<pOrder->InsertDate<<" | "
+<<"InsertTime="<<pOrder->InsertTime<<" | "
+<<"ActiveTime="<<pOrder->ActiveTime<<" | "
+<<"SuspendTime="<<pOrder->SuspendTime<<" | "
+<<"UpdateTime="<<pOrder->UpdateTime<<" | "
+<<"CancelTime="<<pOrder->CancelTime<<" | "
+<<"ActiveTraderID="<<pOrder->ActiveTraderID<<" | "
+<<"ClearingPartID="<<pOrder->ClearingPartID<<" | "
+<<"SequenceNo="<<pOrder->SequenceNo<<" | "
+<<"FrontID="<<pOrder->FrontID<<" | "
+<<"SessionID="<<pOrder->SessionID<<" | "
+<<"UserProductInfo="<<pOrder->UserProductInfo<<" | "
+<<"StatusMsg="<<pOrder->StatusMsg<<" | "
+<<"UserForceClose="<<pOrder->UserForceClose<<" | "
+<<"ActiveUserID="<<pOrder->ActiveUserID<<" | "
+<<"BrokerOrderSeq="<<pOrder->BrokerOrderSeq<<" | "
+<<"RelativeOrderSysID="<<pOrder->RelativeOrderSysID<<" | "
+<<"ZCETotalTradedVolume="<<pOrder->ZCETotalTradedVolume<<" | "
+<<"IsSwapOrder="<<pOrder->IsSwapOrder<<" | "
+<<"BranchID="<<pOrder->BranchID<<" | "
+<<"InvestUnitID="<<pOrder->InvestUnitID<<" | "
+<<"AccountID="<<pOrder->AccountID<<" | "
+<<"CurrencyID="<<pOrder->CurrencyID<<" | "
+<<"IPAddress="<<pOrder->IPAddress<<" | "
+<<"MacAddress="<<pOrder->MacAddress<<endl;
+}
+	if(bIsLast == true){
+		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
+			sem_post(&sem_);
+		}
+	}
 }

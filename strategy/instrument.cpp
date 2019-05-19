@@ -12,9 +12,11 @@ double		Instrument::openThreshold = 0.0;
 double		Instrument::closeThreshold = 0.0;
 InsType		Instrument::openWith = E_INS_INVALID;
 InsType		Instrument::closeWith = E_INS_INVALID; 
+StopLoss	Instrument::stopLossType = E_STOPLOSS_NO;
+int			Instrument::stopLoss = 0;
 Direction	Instrument::direction = E_DIR_INVALID;
-int		Instrument::maxPosition = 0;
-int		Instrument::submitMax = 0;
+int			Instrument::maxPosition = 0;
+int			Instrument::submitMax = 0;
 bool		Instrument::loop = true;
 
 Instrument::Instrument(char *ins_name)
@@ -46,8 +48,19 @@ void Instrument::on_quote(Quote *q)
 		CalcSpread();
 	}
 	ShowQuote();
-
+//has position
+	if(stopLossType == E_STOPLOSS_NO){
+	}else{
+		if(stopLossType == E_STOPLOSS_AVERAGE){
+		}else{
+		}
+	}
+//has no position
 	if(direction == E_DIR_UP){
+		if(insType == openWith){
+			
+		}
+
 	}else if(direction == E_DIR_DOWN){
 	}
 }
