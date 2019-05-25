@@ -17,7 +17,7 @@ Order* OrderManager::FillNewOrder(Order* o, const char* instrument, double price
 	o->canceled_volume = 0;
 	o->state = E_ORIGINAL;
 	o->canceled_volume = 0;
-	o->order_local_id = order_local_id++;
+	o->order_local_id = GetOrderLocalId();
 
 	return o;
 }
@@ -39,6 +39,16 @@ bool OrderManager::UpdateOrder(Order* o)
 			break;
 		}
 		case E_INSERT:
+			if(o->order_local_id==-1){
+				id = GetOrderLocalId();
+				o->order_local_id = id;
+				if(instrument_order_info.count(o->instrument) == 0){
+					Orders* orders = new Orders;
+					instrument_order_info.insert(make_pair(o->instrument, orders));
+				}
+				instrument_order_info[o->instrument]->orders[o->open_close][o->long_short].insert(make_pair(id, o));
+				ocls.insert(make_pair(o->order_local_id, Ocls(o->open_close,o->long_short)));
+			}
 			id = o->order_local_id;
 			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
 			tmp->state = E_INSERT;
@@ -123,4 +133,9 @@ void OrderManager::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vecto
 			odVec.push_back(tmp);
 		}
 	}
+}
+
+int OrderManager::GetOrderLocalId()
+{
+	return order_local_id++;
 }

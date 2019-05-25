@@ -1,6 +1,7 @@
 #ifndef TRADER_H__
 #define TRADER_H__
 #include <map>
+#include <vector>
 #include <string>
 #include "istrategy.h"
 #include "handler.h"
@@ -23,11 +24,12 @@ public:
 	bool init();
 	bool submit_order(Order*, int channel_id=0);
 	bool cancel_order(Order*, int channel_id=0);
-	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 	bool RegisterQuoteChannel(QuoteChannel*, int id);
 	bool RegisterTradeChannel(TradeChannel*, int id);
 
 	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
+
+	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 public:
 	void add_instrument_info(InstrumentInfo*);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);

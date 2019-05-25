@@ -906,6 +906,27 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"CurrencyID="<<pOrder->CurrencyID<<" | "
 <<"IPAddress="<<pOrder->IPAddress<<" | "
 <<"MacAddress="<<pOrder->MacAddress<<endl;
+	if(pOrder->OrderStatus == THOST_FTDC_OST_PartTradedQueueing 
+	|| pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing){
+		Order o;
+		order_ref_has_inserted.insert(pOrder->OrderRef);
+		STRCPY(o.instrument, pOrder->InstrumentID);
+		if(pOrder->Direction == THOST_FTDC_D_Buy){
+			o.long_short = E_LONG;
+		}else{
+			o.long_short = E_SHORT;
+		}
+		if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
+			o.open_close = E_OPEN;
+		}else{
+			o.open_close = E_CLOSE;
+		}
+		o.state = E_INSERT;
+		o.order_local_id = -1;
+		STRCPY(o.order_system_id, pOrder->OrderSysID);
+		STRCPY(o.state_msg, pOrder->StatusMsg);
+		handler_->push(&o);
+	}
 }
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
