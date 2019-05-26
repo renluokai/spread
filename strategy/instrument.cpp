@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string.h>
+#include <vector>
 
 #include "instrument.h"
 #include "../include/data_types.h"
@@ -24,6 +25,7 @@ Instrument::Instrument(char *ins_name)
 	STRCPY(name, ins_name);
 	reached = false;
 	lastQuote = new Quote;
+	trader_ = Trader::GetTrader();
 }
 
 void Instrument::ShowState()
@@ -48,19 +50,46 @@ void Instrument::on_quote(Quote *q)
 		CalcSpread();
 	}
 	ShowQuote();
-//has position
+
+	//has position
 	if(stopLossType == E_STOPLOSS_NO){
 	}else{
 		if(stopLossType == E_STOPLOSS_AVERAGE){
 		}else{
 		}
 	}
-//has no position
+
+	//has no position
 	if(direction == E_DIR_UP){
 		if(insType == openWith){
-			
+			//if relativins has order, that means the openwith's order has matched, so just pass;
+			//if relativeins has no order, we should update the openwith's order 
+			vector<Order*>	ods;
+			trader_->GetOrder(relativeIns->name, E_OPEN, E_SHORT, ods);
+			if(ods.size()!=0){
+				return;
+			}
+			trader_->GetOrder(name, E_OPEN, E_LONG, ods);
+			//full the open condition
+			if(bidSpread <= openThreshold){
+				if(ods.size()==0){
+					Order* o = trader_->NewOrder(q->InstrumentID, q->AskPrice1, submitMax, E_OPEN, E_LONG);
+					trader_->submit_order(o);	
+				}else{
+					//TODO
+				}
+			}else{
+				//not satisfy the open condition, we should cancel the order
+				if(ods.size()>0){
+					vector<Order*>::iterator iter=ods.begin();
+					for(; iter != ods.end(); iter++){
+						if((*iter)->canceling == false){
+							trader_->cancel_order(*iter);
+						}
+					}
+				}
+			}
 		}
-
 	}else if(direction == E_DIR_DOWN){
 	}
 }

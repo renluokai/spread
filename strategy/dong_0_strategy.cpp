@@ -202,16 +202,13 @@ void Dong0Strategy::on_order(Order *o)
 }
 void Dong0Strategy::on_quote(Quote *q)
 {
-	//cout<<"CALLING: "<<__FUNCTION__<<endl;
-	//printf("%s %.5f %.5f %.5f %d %.5f %d %s %s\n",q->InstrumentID, q->LastPrice, q->AveragePrice, q->BidPrice1, q->BidVolume1, q->AskPrice1, q->AskVolume1, q->UpdateTime, q->LocalTime);
 	Instrument *ins = instruments[q->InstrumentID];
 	ins->on_quote(q);
 	static int i = 0;
-	if(i< 5){
+	if(i== 5){
 		Order* o = trader_->NewOrder(q->InstrumentID, q->AskPrice1, 1, E_OPEN, E_SHORT);
 		trader_->submit_order(o);	
 		cout<<"submit order"<<endl;
-		i++;
 	}
 }
 void Dong0Strategy::on_error(Error  *e)

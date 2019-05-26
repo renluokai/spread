@@ -1,5 +1,6 @@
 #ifndef INSTRUMENT_H__
 #define INSTRUMENT_H__
+#include "../include/trader.h"
 class Quote;
 class Order;
 enum InsType
@@ -19,6 +20,12 @@ enum Direction
 	E_DIR_INVALID,
 	E_DIR_UP,
 	E_DIR_DOWN,
+};
+enum SpreadCondition{
+	SC_NORMAL,
+	SC_OPEN_NEW,
+	SC_STOP_LOSS,
+	SC_TARGET_PROFIT,
 };
 class Instrument
 {
@@ -41,6 +48,11 @@ public:
 	Quote		*lastQuote;
 	int			cancelMax;
 
+	Trader		*trader_;
+
+
+	static SpreadCondition bidSpreadCondition;
+	static SpreadCondition askSpreadCondition;
 	static double		bidSpread;
 	static double		askSpread;
 	static double		openThreshold;

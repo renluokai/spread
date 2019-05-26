@@ -73,6 +73,7 @@ struct Order : public Data{
 		open_close = E_OPENCLOSE;
 		long_short = E_LONGSHORT;
 		state = E_ORIGINAL;
+		canceling = false;
 	}
 	virtual void clear_data()
 	{
@@ -95,6 +96,7 @@ struct Order : public Data{
 	int order_local_id;
 	int insert_date;
 	int insert_time;
+	bool canceling;
 
 	int match_volume;//each match volume
 	double match_price;//each match volume
