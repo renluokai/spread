@@ -181,6 +181,8 @@ bool Dong0Strategy::on_init()
 }
 void Dong0Strategy::on_order(Order *o)
 {
+	if(instruments.count(o->instrument)==0)
+		return;
 	Instrument *ins = instruments[o->instrument];
 	switch(o->state)
 	{
