@@ -1,44 +1,24 @@
 #include "position_manager.h"
-void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price)
+void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType  pt)
 {
-	
+//if openclose is open, add a new entry at positionlist tail
+//if openclose is close, sub volume from positionlist head	
 	if(instrument_position_info.count(instrument)==0){
 		instrument_position_info.insert(make_pair(instrument, PositionInfo()));
 	}
-	int* p = (int*)&instrument_position_info[instrument].position;
 	switch(oc){
-		case E_OPEN:
-			switch(ls){
-				case E_LONG:
-					p[P_TODAY_LONG] += volume;
-					break;
-				case E_SHORT:
-					p[P_TODAY_SHORT] += volume;
-					break;
-			}
-			break;
+		case E_OPEN:{
+			PositionEntry pe;
+			pe.instrument = instrument;
+			pe.volume = volume;
+			pe.price = price;
+			pe.positionType = (pt==P_LONGSHORT) ? (ls==E_LONG ? P_LONG : P_SHORT) : pt;
+			instrument_position_info[instrument].position[pe.positionType].positionList.push_back(pe);
+		}
+		break;
 		case E_CLOSE:
-		case E_CLOSE_T:
-			switch(ls){
-				case E_LONG:
-					p[P_TODAY_LONG] -= volume;
-					break;
-				case E_SHORT:
-					p[P_TODAY_SHORT] -= volume;
-					break;
-			}
-			break;
-		case E_CLOSE_Y:
-			switch(ls){
-				case E_LONG:
-					p[P_YESTERDAY_LONG] -= volume;
-					break;
-				case E_SHORT:
-					p[P_YESTERDAY_SHORT] -= volume;
-					break;
-			}
-			break;
-	}	
+		break;
+	}
 	return;
 }
 
@@ -59,16 +39,16 @@ void PositionManager::ShowPosition(const char* ins)
 			printf("%s\t\t%d\t%d\t%d\t%d\n", iter->first.c_str(),
 					iter->second.position[P_YESTERDAY_LONG].totalPosition,
 					iter->second.position[P_YESTERDAY_SHORT].totalPosition,
-					iter->second.position[P_TODAY_LONG].totalPosition,
-					iter->second.position[P_TODAY_SHORT].totalPosition);
+					iter->second.position[P_LONG].totalPosition,
+					iter->second.position[P_SHORT].totalPosition);
 		}
 	}else if(instrument_position_info.count(ins) > 0){
 		PositionInfo *tmp = &instrument_position_info[ins];
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins,
 				tmp->position[P_YESTERDAY_LONG].totalPosition,
 				tmp->position[P_YESTERDAY_SHORT].totalPosition,
-				tmp->position[P_TODAY_LONG].totalPosition,
-				tmp->position[P_TODAY_SHORT].totalPosition);
+				tmp->position[P_LONG].totalPosition,
+				tmp->position[P_SHORT].totalPosition);
 	}else{
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins, 0, 0, 0, 0);
 	}

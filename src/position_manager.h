@@ -9,7 +9,7 @@ using namespace std;
 class PositionManager
 {
 public:
-	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
+	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pt=P_LONGSHORT);
 	void ShowPosition(const char* ins=NULL);
 	int  GetPosition(const char* ins, EPositionType posType);
 private:
@@ -22,7 +22,7 @@ private:
 	};
 	struct Position{
 		int totalPosition;
-		list<PositionEntry> position;
+		list<PositionEntry> positionList;
 	};
 	struct PositionInfo{
 		string instrument;
