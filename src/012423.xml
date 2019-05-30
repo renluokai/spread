@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <forward_contract>ni1908</forward_contract>
+    <recent_contract>ni1907</recent_contract>
+    <open_with>0</open_with>
+    <open_threshold>-140</open_threshold>
+    <close_with>0</close_with>
+    <close_threshold>50</close_threshold>
+    <direction>0</direction>
+    <stop_loss>0</stop_loss>
+    <stop_loss_option>0</stop_loss_option>
+    <max_postion>5</max_postion>
+    <submit_max>1</submit_max>
+    <forward_cancel_max>400</forward_cancel_max>
+    <recent_cancel_max>400</recent_cancel_max>
+    <quote_channel>
+        <front>tcp://180.168.146.187:10011</front>
+        <user>012423</user>
+        <password>Rlk1234567</password>
+    </quote_channel>
+    <trade_channel>
+        <front>tcp://180.168.146.187:10001</front>
+        <user>012423</user>
+        <password>Rlk1234567</password>
+        <broker>9999</broker>
+    </trade_channel>
+</config>
