@@ -805,6 +805,19 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"SettlementPrice="<<pInvestorPositionDetail->SettlementPrice<<" | "
 <<"CloseVolume="<<pInvestorPositionDetail->CloseVolume<<" | "
 <<"CloseAmount="<<pInvestorPositionDetail->CloseAmount<<endl;
+	int remainder = pInvestorPositionDetail->Volume - pInvestorPositionDetail->CloseVolume;
+	if(remainder > 0){
+		ELongShort ls = pInvestorPositionDetail->Direction=='0'?E_LONG:E_SHORT;
+
+		EPositionType pe = P_LONGSHORT;
+		if(atoi(pInvestorPositionDetail->OpenDate) < atoi(pInvestorPositionDetail->TradingDay)){
+			pe = ls==E_LONG?P_YESTERDAY_LONG:P_YESTERDAY_SHORT;
+		}else{
+			pe = ls==E_LONG?P_LONG:P_SHORT;
+		}
+		double price = pInvestorPositionDetail->OpenPrice;
+		trader_->UpdatePosition(pInvestorPositionDetail->InstrumentID, E_OPEN, ls, remainder, price, pe);
+	}
 }
 
 	if(bIsLast == true){

@@ -14,7 +14,7 @@ enum StopLoss{
 	E_STOPLOSS_AVERAGE,
 	E_STOPLOSS_TICKBYTICK,
 };
-enum Direction
+enum EDirection
 {
 
 	E_DIR_INVALID,
@@ -40,6 +40,7 @@ public:
 	void ShowQuote();
 
 	void CalcSpread(bool rct=true);
+	int CalcLockedPosition(const char* main, const char* second, EDirection dir);
 
 	char 		name[64];
 	bool 		reached;
@@ -48,7 +49,7 @@ public:
 	Quote		*lastQuote;
 	int			cancelMax;
 
-	Trader		*trader_;
+	Trader		*trader;
 
 
 	static SpreadCondition bidSpreadCondition;
@@ -61,7 +62,7 @@ public:
 	static StopLoss		stopLossType;
 	static int			stopLoss;
 	static InsType		closeWith; 
-	static Direction	direction;
+	static EDirection	direction;
 	static int			maxPosition;
 	static int			submitMax;
 	static bool			loop;

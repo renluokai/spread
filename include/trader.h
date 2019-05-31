@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "istrategy.h"
 #include "handler.h"
 #include "data_types.h"
@@ -27,12 +28,18 @@ public:
 	bool RegisterQuoteChannel(QuoteChannel*, int id);
 	bool RegisterTradeChannel(TradeChannel*, int id);
 
+	int GetPosition(const char* ins, EPositionType posType);
+	int GetLongPosition(const char* ins);
+	int GetShortPosition(const char* ins);
+
+	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pe=P_LONGSHORT);
+
 	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
 
 	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
+	void log(const char* msg);
 public:
 	void add_instrument_info(InstrumentInfo*);
-	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
 	InstrumentInfo* get_instrument_info(const char* ins); 
 private:
 	void process_command(Command*);
@@ -53,6 +60,7 @@ private:
 	map<int, TradeChannel*> tradeChannels;
 private:
 	pthread_t user_input_thread;	
+	std::fstream log_stream;
 private:
 	static Trader* instance_;
 };

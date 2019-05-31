@@ -1,4 +1,5 @@
 #include <iostream>
+#include <time.h>
 
 #include "position_manager.h"
 #include "order_manager.h"
@@ -17,11 +18,24 @@ Trader* Trader::GetTrader()
 //constructor
 Trader::Trader()
 {
+
+	time_t now_sec = time(NULL);
+	tm tm_now = *localtime(&now_sec);
+	char buffer[256] = {0};
+	sprintf(buffer, "./trader_%04d%02d%02d_%02d%02d%02d.log",
+			tm_now.tm_year+1900, tm_now.tm_mon+1, tm_now.tm_mday,
+			tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec);
+	log_stream.open(buffer, fstream::out|fstream::app);
+	log_stream<<"*****************Trader STARTED*****************"<<endl;
 	handler = new Handler;
 	orderManager = new OrderManager;
 	positionManager = new PositionManager;
 }
 
+void Trader::log(const char* msg)
+{
+	log_stream<<msg<<std::flush;
+}
 //get handler, the main data center
 Handler* Trader::get_handler()
 {
@@ -104,9 +118,9 @@ bool Trader::run(Strategy *s){
 	return true;
 }
 
-void Trader::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price)
+void Trader::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pe)
 {
-	positionManager->UpdatePosition(instrument, oc, ls, volume, price);
+	positionManager->UpdatePosition(instrument, oc, ls, volume, price, pe);
 }
 void Trader::process_command(Command* cmd)
 {
@@ -171,7 +185,12 @@ bool Trader::submit_order(Order* o, int channel_id)
 
 bool Trader::cancel_order(Order* o, int channel_id)
 {
+	char buffer[256]={0};
+	log(buffer);
 	bool ret = tradeChannels[channel_id]->cancel(o);
+	if(ret==true){
+		o->canceling = true;
+	}
 	//TODO
 	return  ret;
 }
@@ -179,4 +198,25 @@ bool Trader::cancel_order(Order* o, int channel_id)
 void Trader::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec)
 {
 	orderManager->GetOrder(ins, oc, ls, odVec);
+}
+
+int Trader::GetPosition(const char* ins, EPositionType posType)
+{
+	return positionManager->GetPosition(ins, posType);
+}
+
+int Trader::GetLongPosition(const char* ins)
+{
+	int yesterday=0, today=0;
+	yesterday = positionManager->GetPosition(ins,P_YESTERDAY_LONG);
+	today = positionManager->GetPosition(ins,P_LONG);
+	return yesterday + today;
+}
+
+int Trader::GetShortPosition(const char* ins)
+{
+	int yesterday=0, today=0;
+	yesterday = positionManager->GetPosition(ins,P_YESTERDAY_SHORT);
+	today = positionManager->GetPosition(ins,P_SHORT);
+	return yesterday + today;
 }

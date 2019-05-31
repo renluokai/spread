@@ -54,6 +54,7 @@ bool Dong0Strategy::load_config()
 	doc.Print(&printer);
 	cout<<"----------"<<endl;
 	cout<<printer.CStr();
+	trader_->log(printer.CStr());
 	cout<<"----------"<<endl;
 
 	XMLElement *root_element, *element, *child_element;

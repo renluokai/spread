@@ -14,6 +14,7 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 			pe.price = price;
 			pe.positionType = (pt==P_LONGSHORT) ? (ls==E_LONG ? P_LONG : P_SHORT) : pt;
 			instrument_position_info[instrument].position[pe.positionType].positionList.push_back(pe);
+			instrument_position_info[instrument].position[pe.positionType].totalPosition += volume;
 		}
 		break;
 		case E_CLOSE:

@@ -15,7 +15,7 @@ InsType		Instrument::openWith = E_INS_INVALID;
 InsType		Instrument::closeWith = E_INS_INVALID; 
 StopLoss	Instrument::stopLossType = E_STOPLOSS_NO;
 int			Instrument::stopLoss = 0;
-Direction	Instrument::direction = E_DIR_INVALID;
+EDirection	Instrument::direction = E_DIR_INVALID;
 int			Instrument::maxPosition = 0;
 int			Instrument::submitMax = 0;
 bool		Instrument::loop = true;
@@ -25,7 +25,7 @@ Instrument::Instrument(char *ins_name)
 	STRCPY(name, ins_name);
 	reached = false;
 	lastQuote = new Quote;
-	trader_ = Trader::GetTrader();
+	trader = Trader::GetTrader();
 }
 
 void Instrument::ShowState()
@@ -44,58 +44,63 @@ void Instrument::on_quote(Quote *q)
 	}
 	if(insType == E_INS_FORWARD){
 		CalcSpread(false);
-		//memset(UpdateTime, 0, sizeof(UpdateTime));
-		//memset(LocalTime, 0, sizeof(LocalTime));
 	}else{
 		CalcSpread();
 	}
 	ShowQuote();
 
-	//has position
-	if(stopLossType == E_STOPLOSS_NO){
-	}else{
-		if(stopLossType == E_STOPLOSS_AVERAGE){
-		}else{
+	if(direction == E_DIR_UP)
+	{
+		// open with ins
+		if(insType == openWith)
+		{
+			int lockedPosition = CalcLockedPosition(name, relativeIns->name, direction);
+			//has no locked position
+			if(lockedPosition ==0)
+			{
+				//full the open condition
+				if(bidSpread <= openThreshold){
+					vector<Order*> ods;
+					trader->GetOrder(relativeIns->name, E_OPEN, E_SHORT, ods);
+					if(ods.size()!=0){
+						return;
+					}
+					trader->GetOrder(name, E_OPEN, E_LONG, ods);
+					if(ods.size()>0){
+						vector<Order*>::iterator iter = ods.begin();
+						for(; iter != ods.end(); iter++){
+							if((*iter)->canceling == false){
+								trader->cancel_order(*iter);
+							}
+						}
+					}else{
+						
+					}
+				}else{
+				}
+			}
+			//has locked position
+			else
+			{
+			}
+		}
+		//
+		if(insType == closeWith)
+		{
 		}
 	}
-
-	//has no position
-	if(direction == E_DIR_UP){
-		if(insType == openWith){
-			//if relativins has order, that means the openwith's order has matched, so just pass;
-			//if relativeins has no order, we should update the openwith's order 
-			vector<Order*>	ods;
-			trader_->GetOrder(relativeIns->name, E_OPEN, E_SHORT, ods);
-			if(ods.size()!=0){
-				return;
-			}
-			trader_->GetOrder(name, E_OPEN, E_LONG, ods);
-			//full the open condition
-			if(bidSpread <= openThreshold){
-				if(ods.size()==0){
-					Order* o = trader_->NewOrder(q->InstrumentID, q->AskPrice1, submitMax, E_OPEN, E_LONG);
-					trader_->submit_order(o);	
-				}else{
-					//TODO
-				}
-			}else{
-				//not satisfy the open condition, we should cancel the order
-				if(ods.size()>0){
-					vector<Order*>::iterator iter=ods.begin();
-					for(; iter != ods.end(); iter++){
-						if((*iter)->canceling == false){
-							trader_->cancel_order(*iter);
-						}
-					}
-				}
-			}
-		}
-	}else if(direction == E_DIR_DOWN){
+	if(direction == E_DIR_DOWN)
+	{
+		if(insType == openWith)
+		{}
+		if(insType == closeWith)
+		{}
 	}
 }
 void Instrument::ShowQuote()
 {
-	printf("Q %s %s %.5f %d %.5f %d %.5f %.5f %.5f\n",
+	char buffer[256]={0};
+	sprintf(buffer,"Q %s %s %.5f %d %.5f %d %.5f %.5f %.5f\n",
 			insType==E_INS_FORWARD?"F":"R",
 			lastQuote->InstrumentID,
 			lastQuote->AskPrice1,
@@ -105,6 +110,8 @@ void Instrument::ShowQuote()
 			lastQuote->AveragePrice,
 			askSpread,
 			bidSpread);
+	printf(buffer);
+	trader->log(buffer);
 }
 void Instrument::CalcSpread(bool rct)
 {
@@ -134,4 +141,18 @@ void Instrument::on_cancel(Order*)
 void Instrument::on_insert(Order*)
 {
 	cout<<__FUNCTION__<<": "<<name<<endl;
+}
+
+int Instrument::CalcLockedPosition(const char* main, const char* second, EDirection dir)
+{
+	int m=0,s=0;
+	if(dir == E_DIR_UP)	{
+		m = trader->GetLongPosition(main);
+		s = trader->GetShortPosition(second);
+		return min(m,s);
+	}else{
+		m = trader->GetShortPosition(main);
+		s = trader->GetLongPosition(second);
+		return min(m,s);
+	}
 }
