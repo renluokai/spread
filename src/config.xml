@@ -2,10 +2,14 @@
 <config>
     <forward_contract>ni1908</forward_contract>
     <recent_contract>ni1907</recent_contract>
+	<!-- 0 近期合约 1远期合约!-->
     <open_with>0</open_with>
-    <open_threshold>-140</open_threshold>
+    <open_threshold>-110</open_threshold>
+
+	<!-- 0 近期合约 1远期合约!-->
     <close_with>0</close_with>
     <close_threshold>50</close_threshold>
+	<!-- 0看涨 1看跌!-->
     <direction>0</direction>
     <stop_loss>0</stop_loss>
     <stop_loss_option>0</stop_loss_option>

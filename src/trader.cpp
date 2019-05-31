@@ -34,6 +34,7 @@ Trader::Trader()
 
 void Trader::log(const char* msg)
 {
+	cout<<msg<<std::flush;
 	log_stream<<msg<<std::flush;
 }
 //get handler, the main data center
@@ -176,7 +177,9 @@ bool Trader::RegisterTradeChannel(TradeChannel* channel, int id)
 bool Trader::submit_order(Order* o, int channel_id)
 {
 	bool ret = tradeChannels[channel_id]->submit(o);
-	//TODO	
+	char buffer[256]={0};
+	sprintf(buffer,"T O %s %d\n", o->instrument, o->submit_volume);
+	log(buffer);
 	if(ret == true){
 		orderManager->UpdateOrder(o);
 	}
@@ -186,6 +189,7 @@ bool Trader::submit_order(Order* o, int channel_id)
 bool Trader::cancel_order(Order* o, int channel_id)
 {
 	char buffer[256]={0};
+	sprintf(buffer,"T C %s %d\n", o->instrument, o->submit_volume-o->total_matched);
 	log(buffer);
 	bool ret = tradeChannels[channel_id]->cancel(o);
 	if(ret==true){

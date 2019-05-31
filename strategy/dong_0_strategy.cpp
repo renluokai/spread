@@ -52,10 +52,9 @@ bool Dong0Strategy::load_config()
 		return false;
 	}
 	doc.Print(&printer);
-	cout<<"----------"<<endl;
-	cout<<printer.CStr();
+	trader_->log("----------\n");
 	trader_->log(printer.CStr());
-	cout<<"----------"<<endl;
+	trader_->log("----------\n");
 
 	XMLElement *root_element, *element, *child_element;
 
@@ -185,20 +184,29 @@ void Dong0Strategy::on_order(Order *o)
 	if(instruments.count(o->instrument)==0)
 		return;
 	Instrument *ins = instruments[o->instrument];
+	char buffer[256]={0};
 	switch(o->state)
 	{
 		case E_ORIGINAL:
 			break;
 		case E_INSERT:
+			sprintf("T I %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+			trader_->log(buffer);
 			ins->on_insert(o);
 			break;
 		case E_REJECT:
+			sprintf("T R %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+			trader_->log(buffer);
 			ins->on_reject(o);
 			break;
 		case E_CANCEL:
+			sprintf("T K %s %d %.5f\n", o->instrument, o->canceled_volume, o->submit_price);
+			trader_->log(buffer);
 			ins->on_cancel(o);
 			break;
 		case E_MATCH:
+			sprintf("T M %s %d %.5f\n", o->instrument, o->match_volume, o->match_price);
+			trader_->log(buffer);
 			ins->on_match(o);
 			break;
 	}
