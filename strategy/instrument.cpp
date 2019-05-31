@@ -59,7 +59,8 @@ void Instrument::on_quote(Quote *q)
 			if(lockedPosition ==0)
 			{
 				//full the open condition
-				if(bidSpread <= openThreshold){
+				if(bidSpread <= openThreshold)
+				{
 					vector<Order*> ods;
 					trader->GetOrder(relativeIns->name, E_OPEN, E_SHORT, ods);
 					if(ods.size()!=0){
@@ -91,12 +92,23 @@ void Instrument::on_quote(Quote *q)
 							}
 						}
 					}
-				}else{
+				}
+				//don't full open condition, cancel open orders
+				else
+				{
 				}
 			}
 			//has locked position
 			else
 			{
+				//full the close condition
+				if(askSpread >= closeThrehold)
+				{
+				}
+				if(bidSpread <= openThreshold)
+				{
+				}
+				
 			}
 		}
 		//
@@ -138,7 +150,6 @@ void Instrument::CalcSpread(bool rct)
 }
 void Instrument::on_match(Order* o)
 {
-	cout<<__FUNCTION__<<": "<<name<<endl;
 	if(insType==openWith)
 	{
 		switch(o->open_close){
