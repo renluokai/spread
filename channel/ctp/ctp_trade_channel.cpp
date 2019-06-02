@@ -98,10 +98,18 @@ bool CtpTradeChannel::submit(Order *o)
 	
 	switch(o->long_short){
 		case E_LONG:
-			new_order.Direction = THOST_FTDC_D_Buy;
+			if(o->open_close == E_OPEN){
+				new_order.Direction = THOST_FTDC_D_Buy;
+			}else{
+				new_order.Direction = THOST_FTDC_D_Sell;
+			}
 			break;
 		case E_SHORT:
-			new_order.Direction = THOST_FTDC_D_Sell;
+			if(o->open_close == E_OPEN){
+				new_order.Direction = THOST_FTDC_D_Sell;
+			}else{
+				new_order.Direction = THOST_FTDC_D_Buy;
+			}
 			break;
 		default:
 			break;
@@ -112,7 +120,11 @@ bool CtpTradeChannel::submit(Order *o)
 			new_order.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
 			break;
 		case E_CLOSE:
-			new_order.CombOffsetFlag[0] = THOST_FTDC_OF_Close;
+			if(strcmp(o->exchange_id,"SHFE")==0){
+				new_order.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;
+			}else{
+				new_order.CombOffsetFlag[0] = THOST_FTDC_OF_Close;
+			}
 			break;
 		case E_CLOSE_T:
 			new_order.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;
@@ -125,6 +137,38 @@ bool CtpTradeChannel::submit(Order *o)
 	}
 	
 	int ret = 0;
+log_stream_<<"[ ReqOrderInsert] "
+<<"BrokerID="<<new_order.BrokerID<<" | "
+<<"InvestorID="<<new_order.InvestorID<<" | "
+<<"InstrumentID="<<new_order.InstrumentID<<" | "
+<<"OrderRef="<<new_order.OrderRef<<" | "
+<<"UserID="<<new_order.UserID<<" | "
+<<"OrderPriceType="<<new_order.OrderPriceType<<" | "
+<<"Direction="<<new_order.Direction<<" | "
+<<"CombOffsetFlag="<<new_order.CombOffsetFlag<<" | "
+<<"CombHedgeFlag="<<new_order.CombHedgeFlag<<" | "
+<<"LimitPrice="<<new_order.LimitPrice<<" | "
+<<"VolumeTotalOriginal="<<new_order.VolumeTotalOriginal<<" | "
+<<"TimeCondition="<<new_order.TimeCondition<<" | "
+<<"GTDDate="<<new_order.GTDDate<<" | "
+<<"VolumeCondition="<<new_order.VolumeCondition<<" | "
+<<"MinVolume="<<new_order.MinVolume<<" | "
+<<"ContingentCondition="<<new_order.ContingentCondition<<" | "
+<<"StopPrice="<<new_order.StopPrice<<" | "
+<<"ForceCloseReason="<<new_order.ForceCloseReason<<" | "
+<<"IsAutoSuspend="<<new_order.IsAutoSuspend<<" | "
+<<"BusinessUnit="<<new_order.BusinessUnit<<" | "
+<<"RequestID="<<new_order.RequestID<<" | "
+<<"UserForceClose="<<new_order.UserForceClose<<" | "
+<<"IsSwapOrder="<<new_order.IsSwapOrder<<" | "
+<<"ExchangeID="<<new_order.ExchangeID<<" | "
+<<"InvestUnitID="<<new_order.InvestUnitID<<" | "
+<<"AccountID="<<new_order.AccountID<<" | "
+<<"CurrencyID="<<new_order.CurrencyID<<" | "
+<<"ClientID="<<new_order.ClientID<<" | "
+<<"IPAddress="<<new_order.IPAddress<<" | "
+<<"MacAddress="<<new_order.MacAddress<<endl;
+
 	ret = trade_api_->ReqOrderInsert(&new_order, request_id_++);
 	order_ref_2_order_local_id.insert(std::make_pair(new_order.OrderRef, o->order_local_id));
 	return ret == 0 ? true : false;
@@ -141,6 +185,14 @@ bool CtpTradeChannel::cancel(Order *o)
 	STRCPY(a.InstrumentID, o->instrument);
 	a.ActionFlag = THOST_FTDC_AF_Delete;
 	int ret = 0;
+log_stream_<<"[ ReqOrderAction ] "
+<<"BrokerID="<<a.BrokerID<<" | "
+<<"InvestorID="<<a.InvestorID<<" | "
+<<"UserID="<<a.UserID<<" | "
+<<"OrderSysID="<<a.OrderSysID<<" | "
+<<"ExchangeID="<<a.ExchangeID<<" | "
+<<"InstrumentID="<<a.InstrumentID<<" | "
+<<"ActionFlag="<<a.ActionFlag<<endl;
 	ret = trade_api_->ReqOrderAction(&a, request_id_++);
 	return ret == 0 ? true : false;
 }
@@ -828,27 +880,35 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 
 }
 void CtpTradeChannel::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){
-cout<<(bIsLast==true?"true":"false")<<endl;
-cout<<pRspInfo->ErrorID<<endl;
-cout<<pRspInfo->ErrorMsg<<endl;
-
-cout<<"BrokerID="<<pInputOrderAction->BrokerID<<endl;
-cout<<"InvestorID="<<pInputOrderAction->InvestorID<<endl;
-cout<<"OrderActionRef="<<pInputOrderAction->OrderActionRef<<endl;
-cout<<"OrderRef="<<pInputOrderAction->OrderRef<<endl;
-cout<<"RequestID="<<pInputOrderAction->RequestID<<endl;
-cout<<"FrontID="<<pInputOrderAction->FrontID<<endl;
-cout<<"SessionID="<<pInputOrderAction->SessionID<<endl;
-cout<<"ExchangeID="<<pInputOrderAction->ExchangeID<<endl;
-cout<<"OrderSysID="<<pInputOrderAction->OrderSysID<<endl;
-cout<<"ActionFlag="<<pInputOrderAction->ActionFlag<<endl;
-cout<<"LimitPrice="<<pInputOrderAction->LimitPrice<<endl;
-cout<<"VolumeChange="<<pInputOrderAction->VolumeChange<<endl;
-cout<<"UserID="<<pInputOrderAction->UserID<<endl;
-cout<<"InstrumentID="<<pInputOrderAction->InstrumentID<<endl;
-cout<<"InvestUnitID="<<pInputOrderAction->InvestUnitID<<endl;
-cout<<"IPAddress="<<pInputOrderAction->IPAddress<<endl;
-cout<<"MacAddress="<<pInputOrderAction->MacAddress<<endl;
+if(pInputOrderAction==NULL){
+log_stream_<<"["<<__FUNCTION__<<"] "<<"pRspInfo=NULL"<<endl;
+}else{
+log_stream_<<"["<<__FUNCTION__<<"] BrokerID="<<pInputOrderAction->BrokerID<<" | "
+<<"InvestorID="<<pInputOrderAction->InvestorID<<" | "
+<<"OrderActionRef="<<pInputOrderAction->OrderActionRef<<" | "
+<<"OrderRef="<<pInputOrderAction->OrderRef<<" | "
+<<"RequestID="<<pInputOrderAction->RequestID<<" | "
+<<"FrontID="<<pInputOrderAction->FrontID<<" | "
+<<"SessionID="<<pInputOrderAction->SessionID<<" | "
+<<"ExchangeID="<<pInputOrderAction->ExchangeID<<" | "
+<<"OrderSysID="<<pInputOrderAction->OrderSysID<<" | "
+<<"ActionFlag="<<pInputOrderAction->ActionFlag<<" | "
+<<"LimitPrice="<<pInputOrderAction->LimitPrice<<" | "
+<<"VolumeChange="<<pInputOrderAction->VolumeChange<<" | "
+<<"UserID="<<pInputOrderAction->UserID<<" | "
+<<"InstrumentID="<<pInputOrderAction->InstrumentID<<" | "
+<<"InvestUnitID="<<pInputOrderAction->InvestUnitID<<" | "
+<<"IPAddress="<<pInputOrderAction->IPAddress<<" | "
+<<"MacAddress="<<pInputOrderAction->MacAddress<<" | ";
+}
+if(pRspInfo==NULL){
+log_stream_<<"pRspInfo==NULL";
+}else{
+log_stream_<<"ErrorId="<<pRspInfo->ErrorID<<" | "
+<<"ErrorMsg="<<pRspInfo->ErrorMsg;
+}
+log_stream_<<" | nRequestID="<<nRequestID<<" | bIsLast="<<"bIsLast="<<bIsLast<<endl;
+log_stream_<<endl;
 }
 void CtpTradeChannel::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) 
 {

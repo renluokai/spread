@@ -41,10 +41,12 @@ public:
 
 	void CalcSpread(bool rct=true);
 	void CancelOrders(vector<Order*> &ods);
-	int CalcLockedPosition(const char* main, const char* second, EDirection dir);
-	void FullOpenLong();
+	int	 CalcLockedPosition(const char* main, const char* second, EDirection dir);
+	void FullOpenLong(int lockedPosition);
 	void DoNotFullOpenLong();
 
+	void FullCloseLong(int lockedPosition);
+	void DoNotFullCloseLong();
 	char 		name[64];
 	bool 		reached;
 	InsType 	insType;

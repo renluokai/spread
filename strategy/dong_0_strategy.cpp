@@ -203,22 +203,22 @@ void Dong0Strategy::on_order(Order *o)
 		case E_ORIGINAL:
 			break;
 		case E_INSERT:
-			sprintf("T I %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+			sprintf(buffer, "T I %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
 			trader_->log(buffer);
 			ins->on_insert(o);
 			break;
 		case E_REJECT:
-			sprintf("T R %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+			sprintf(buffer, "T R %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
 			trader_->log(buffer);
 			ins->on_reject(o);
 			break;
 		case E_CANCEL:
-			sprintf("T K %s %d %.5f\n", o->instrument, o->canceled_volume, o->submit_price);
+			sprintf(buffer, "T K %s %d %.5f\n", o->instrument, o->canceled_volume, o->submit_price);
 			trader_->log(buffer);
 			ins->on_cancel(o);
 			break;
 		case E_MATCH:
-			sprintf("T M %s %d %.5f\n", o->instrument, o->match_volume, o->match_price);
+			sprintf(buffer, "T M %s %d %.5f\n", o->instrument, o->match_volume, o->match_price);
 			trader_->log(buffer);
 			ins->on_match(o);
 			break;

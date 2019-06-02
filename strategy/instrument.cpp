@@ -58,10 +58,16 @@ void Instrument::on_quote(Quote *q)
 	if(direction == E_DIR_UP)
 	{
 		int lockedPosition = CalcLockedPosition(mainIns->name, mainIns->relativeIns->name, direction);
+		{
+			char buffer[256]={0};
+			
+printf(buffer, "Locked position is %d\n", lockedPosition);
+			trader->log(buffer);
+		}
 		if(lockedPosition ==0){
 			if(bidSpread <= openThreshold){
 				//full the open condition
-				FullOpenLong();
+				FullOpenLong(lockedPosition);
 			}
 			else{
 				//don't full open condition, cancel open orders
@@ -74,11 +80,12 @@ void Instrument::on_quote(Quote *q)
 			//full the close condition
 			if(askSpread >= closeThreshold)
 			{
-				FullOpenLong();
+				FullCloseLong(lockedPosition);
 			}
 			//full the open condition
-			if(bidSpread <= closeThreshold)
+			if(bidSpread <= openThreshold)
 			{
+				FullOpenLong(lockedPosition);
 			}
 		}
 	}
@@ -109,46 +116,31 @@ void Instrument::CalcSpread(bool rct)
 }
 void Instrument::on_match(Order* o)
 {
-	if(insType==openWith)
-	{
-		switch(o->open_close){
-		case E_OPEN:
-			if(o->long_short==E_LONG){
-				const char* nm = relativeIns->name;
-				double px = relativeIns->lastQuote->BidPrice1;
-				int vol = o->match_volume;
-				Order* o = trader->NewOrder(nm, px, vol, E_OPEN, E_SHORT);
-				trader->submit_order(o);
-			}else{
-				const char* nm = relativeIns->name;
-				double px = relativeIns->lastQuote->AskPrice1;
-				int vol = o->match_volume;
-				Order* o = trader->NewOrder(nm, px, vol, E_OPEN, E_LONG);
-				trader->submit_order(o);
-			}
-		break;	
+	if(o->open_close == E_OPEN){
+	//open 
+		if(firstOpenIns == this){
+			//first leg, need to lock position
+			const char* nm = secondOpenIns->name;
+			double px = o->long_short == E_LONG ? secondOpenIns->lastQuote->BidPrice1 :secondOpenIns->lastQuote->AskPrice1;
+			int vol = o->match_volume;
+			Order* o = trader->NewOrder(nm, px, vol, E_OPEN, o->long_short == E_LONG ? E_SHORT : E_LONG);
+			trader->submit_order(o);
+		}else{
+			//second leg, do nothing
 		}
-	}
-	if(insType==closeWith)
-	{
-		switch(o->open_close){
-		case E_CLOSE:
-		case E_CLOSE_T:
-		case E_CLOSE_Y:
-			if(o->long_short==E_LONG){
-				const char* nm = relativeIns->name;
-				double px = relativeIns->lastQuote->AskPrice1;
-				int vol = o->match_volume;
-				Order* o = trader->NewOrder(nm, px, vol, E_CLOSE, E_SHORT);
-				trader->submit_order(o);
-			}else{
-				const char* nm = relativeIns->name;
-				double px = relativeIns->lastQuote->BidPrice1;
-				int vol = o->match_volume;
-				Order* o = trader->NewOrder(nm, px, vol, E_CLOSE, E_LONG);
-				trader->submit_order(o);
-			}
-		break;
+	}else{
+	//close
+		if(firstCloseIns == this){
+			//first leg, need to lock position
+			const char* nm = secondCloseIns->name;
+			double px = o->long_short == E_LONG ? secondCloseIns->lastQuote->AskPrice1 :secondCloseIns->lastQuote->BidPrice1;
+			int vol = o->match_volume;
+			//TODO
+			//need to calc today position and yesterday position
+			Order* o = trader->NewOrder(nm, px, vol, E_CLOSE, o->long_short == E_LONG ? E_SHORT : E_LONG);
+			trader->submit_order(o);
+		}else{
+			//second leg, do nothing
 		}
 	}
 }
@@ -192,7 +184,7 @@ void Instrument::CancelOrders(vector<Order*> &ods)
 	}
 }
 
-void Instrument::FullOpenLong()
+void Instrument::FullOpenLong(int lockedPosition)
 {
 	if(mainIns==firstOpenIns){
 		//open from main instrument
@@ -212,12 +204,13 @@ void Instrument::FullOpenLong()
 				}
 			}
 		}else{
-			if(maxPosition<=0){
+			int remaindVolume = maxPosition - lockedPosition;
+			if(remaindVolume<=0){
 				trader->log("Don't open new position\n");
 			}else{
 				const char* nm = firstOpenIns->name;
 				double price = firstOpenIns->lastQuote->BidPrice1;
-				int vol = maxPosition/submitMax>=1?submitMax:maxPosition%submitMax;
+				int vol = remaindVolume/submitMax>=1?submitMax:remaindVolume%submitMax;
 				if(vol==0){
 					trader->log("Cann't open 0 volume order\n");
 					return;
@@ -244,12 +237,13 @@ void Instrument::FullOpenLong()
 				}
 			}
 		}else{
-			if(maxPosition<=0){
+			int remaindVolume = maxPosition - lockedPosition;
+			if(remaindVolume<=0){
 				trader->log("Don't open new position\n");
 			}else{
 				const char* nm = firstOpenIns->name;
 				double price = firstOpenIns->lastQuote->AskPrice1;
-				int vol = maxPosition/submitMax>=1?submitMax:maxPosition%submitMax;
+				int vol = remaindVolume/submitMax>=1?submitMax:remaindVolume%submitMax;
 				if(vol==0){
 					trader->log("Cann't open 0 volume order\n");
 					return;
@@ -278,11 +272,75 @@ void Instrument::DoNotFullOpenLong()
 			return;
 		}else{
 			CancelOrders(ods);
-		}			
+		}
 	}
-}    			
-     			
-     			
-     			
-     			
-     			
+}
+
+void Instrument::FullCloseLong(int lockedPosition)
+{
+	if(mainIns==firstCloseIns){
+		//close from main instrument
+		vector<Order*> ods;
+		trader->GetOrder(secondCloseIns->name, E_CLOSE, E_SHORT, ods);
+		if(ods.size()!=0){
+			return;
+		}
+		trader->GetOrder(firstCloseIns->name, E_CLOSE, E_LONG, ods);
+		if(ods.size()>0){
+			vector<Order*>::iterator iter = ods.begin();
+			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
+			for(; iter != ods.end(); iter++){
+				if((*iter)->submit_price > newPrice 
+				&& (*iter)->canceling == false){
+					trader->cancel_order(*iter);
+				}
+			}
+		}else{
+			if(lockedPosition<=0){
+				trader->log("Has no position to close\n");
+			}else{
+				const char* nm = firstCloseIns->name;
+				double price = firstCloseIns->lastQuote->AskPrice1;
+				int vol = lockedPosition/submitMax>=1?submitMax:lockedPosition%submitMax;
+				if(vol==0){
+					trader->log("Cann't open 0 volume order\n");
+					return;
+				}
+				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE, E_LONG);
+				trader->submit_order(o);
+			}
+		}
+	}else{
+		//close from second instrument
+		vector<Order*> ods;
+		trader->GetOrder(secondCloseIns->name, E_CLOSE, E_LONG, ods);
+		if(ods.size()!=0){
+			return;
+		}
+		trader->GetOrder(firstCloseIns->name, E_CLOSE, E_SHORT, ods);
+		if(ods.size()>0){
+			vector<Order*>::iterator iter = ods.begin();
+			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
+			for(; iter != ods.end(); iter++){
+				if((*iter)->submit_price < newPrice 
+				&& (*iter)->canceling == false){
+					trader->cancel_order(*iter);
+				}
+			}
+		}else{
+			if(lockedPosition<=0){
+				trader->log("Has no position to close\n");
+			}else{
+				const char* nm = firstCloseIns->name;
+				double price = firstCloseIns->lastQuote->BidPrice1;
+				int vol = lockedPosition/submitMax>=1?submitMax:lockedPosition%submitMax;
+				if(vol==0){
+					trader->log("Can't open volume 0 close order\n");
+					return;
+				}
+				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE, E_SHORT);
+				trader->submit_order(o);
+			}
+		}
+	}
+}

@@ -135,7 +135,7 @@ void Trader::process_command(Command* cmd)
 			cout<<insInfoIter->first<<endl;	
 		}
 	}
-	else if(strcmp(cmd->buffer,":ls o\n") == 0){
+	else if(strcmp(cmd->buffer,":lso\n") == 0){
 		orderManager->ShowOrders();	
 	}
 	else if(strcmp(cmd->buffer,":lsp\n")==0){
@@ -178,7 +178,7 @@ bool Trader::submit_order(Order* o, int channel_id)
 {
 	bool ret = tradeChannels[channel_id]->submit(o);
 	char buffer[256]={0};
-	sprintf(buffer,"T O %s %d\n", o->instrument, o->submit_volume);
+	sprintf(buffer,"T O %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
 	log(buffer);
 	if(ret == true){
 		orderManager->UpdateOrder(o);
