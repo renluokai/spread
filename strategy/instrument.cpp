@@ -123,8 +123,8 @@ void Instrument::on_match(Order* o)
 			const char* nm = secondOpenIns->name;
 			double px = o->long_short == E_LONG ? secondOpenIns->lastQuote->BidPrice1 :secondOpenIns->lastQuote->AskPrice1;
 			int vol = o->match_volume;
-			Order* o = trader->NewOrder(nm, px, vol, E_OPEN, o->long_short == E_LONG ? E_SHORT : E_LONG);
-			trader->submit_order(o);
+			Order* new_order = trader->NewOrder(nm, px, vol, E_OPEN, o->long_short == E_LONG ? E_SHORT : E_LONG);
+			trader->submit_order(new_order);
 		}else{
 			//second leg, do nothing
 		}
@@ -141,8 +141,8 @@ void Instrument::on_match(Order* o)
 			int vol = o->match_volume;
 			//TODO
 			//need to calc today position and yesterday position
-			Order* o = trader->NewOrder(nm, px, vol, E_CLOSE, o->long_short == E_LONG ? E_SHORT : E_LONG);
-			trader->submit_order(o);
+			Order* new_order = trader->NewOrder(nm, px, vol, E_CLOSE, o->long_short == E_LONG ? E_SHORT : E_LONG);
+			trader->submit_order(new_order);
 		}else{
 			//second leg, do nothing
 		}

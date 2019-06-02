@@ -191,6 +191,7 @@ bool Trader::cancel_order(Order* o, int channel_id)
 	char buffer[256]={0};
 	sprintf(buffer,"T C %s %d\n", o->instrument, o->submit_volume-o->total_matched);
 	log(buffer);
+	o->ShowOrder();
 	bool ret = tradeChannels[channel_id]->cancel(o);
 	if(ret==true){
 		o->canceling = true;

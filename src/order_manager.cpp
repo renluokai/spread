@@ -52,6 +52,7 @@ bool OrderManager::UpdateOrder(Order* o)
 			id = o->order_local_id;
 			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
 			tmp->state = E_INSERT;
+			STRCPY(tmp->order_system_id, o->order_system_id);
 			STRCPY(tmp->state_msg, o->state_msg);
 		break;
 		case E_REJECT:

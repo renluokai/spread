@@ -203,7 +203,7 @@ void Dong0Strategy::on_order(Order *o)
 		case E_ORIGINAL:
 			break;
 		case E_INSERT:
-			sprintf(buffer, "T I %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+			sprintf(buffer, "T I %s %d %.5f [%s]\n", o->instrument, o->submit_volume, o->submit_price,o->order_system_id);
 			trader_->log(buffer);
 			ins->on_insert(o);
 			break;

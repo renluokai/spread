@@ -80,7 +80,7 @@ struct Order : public Data{
 	}
 	void ShowOrder()
 	{
-		printf("%s\t%s\t%s\t%f\n",instrument, exchange_id, state_msg, submit_price);
+		printf("%s\t%s\t%s\t%f\t[%s]\n",instrument, exchange_id, state_msg, submit_price, order_system_id);
 	}
 	char instrument[64];
 	char order_system_id[24];

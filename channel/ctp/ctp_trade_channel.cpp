@@ -410,6 +410,8 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 			o.order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
 			STRCPY(o.order_system_id, pOrder->OrderSysID);
 			STRCPY(o.state_msg, pOrder->StatusMsg);
+			o.submit_price = pOrder->LimitPrice;
+			o.submit_volume = pOrder->VolumeTotalOriginal;
 			handler_->push(&o);
 			return;
 		}else if(pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertRejected
@@ -985,9 +987,17 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 		order_ref_has_inserted.insert(pOrder->OrderRef);
 		STRCPY(o.instrument, pOrder->InstrumentID);
 		if(pOrder->Direction == THOST_FTDC_D_Buy){
-			o.long_short = E_LONG;
+			if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
+				o.long_short = E_LONG;
+			}else{
+				o.long_short = E_SHORT;
+			}
 		}else{
-			o.long_short = E_SHORT;
+			if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
+				o.long_short = E_SHORT;
+			}else{
+				o.long_short = E_LONG;
+			}
 		}
 		if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
 			o.open_close = E_OPEN;
@@ -997,6 +1007,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 		o.state = E_INSERT;
 		o.order_local_id = -1;
 		STRCPY(o.order_system_id, pOrder->OrderSysID);
+		STRCPY(o.exchange_id, pOrder->ExchangeInstID);
 		STRCPY(o.state_msg, pOrder->StatusMsg);
 		handler_->push(&o);
 	}
