@@ -7,12 +7,18 @@
 using namespace std;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
 
+Instrument*	Instrument::firstOpenIns = NULL;
+Instrument*	Instrument::firstCloseIns = NULL;
+Instrument*	Instrument::secondOpenIns = NULL;
+Instrument*	Instrument::secondCloseIns = NULL;
+Instrument*	Instrument::mainIns = NULL;
 double 		Instrument::askSpread = 0.0;
 double 		Instrument::bidSpread = 0.0;
 double		Instrument::openThreshold = 0.0;
 double		Instrument::closeThreshold = 0.0;
 InsType		Instrument::openWith = E_INS_INVALID;
 InsType		Instrument::closeWith = E_INS_INVALID; 
+
 StopLoss	Instrument::stopLossType = E_STOPLOSS_NO;
 int			Instrument::stopLoss = 0;
 EDirection	Instrument::direction = E_DIR_INVALID;
@@ -51,77 +57,30 @@ void Instrument::on_quote(Quote *q)
 
 	if(direction == E_DIR_UP)
 	{
-		// open with ins
-		if(insType == openWith)
-		{
-			int lockedPosition = CalcLockedPosition(name, relativeIns->name, direction);
-			//has no locked position
-			if(lockedPosition ==0)
-			{
+		int lockedPosition = CalcLockedPosition(mainIns->name, mainIns->relativeIns->name, direction);
+		if(lockedPosition ==0){
+			if(bidSpread <= openThreshold){
 				//full the open condition
-				if(bidSpread <= openThreshold)
-				{
-					vector<Order*> ods;
-					trader->GetOrder(relativeIns->name, E_OPEN, E_SHORT, ods);
-					if(ods.size()!=0){
-						return;
-					}
-					trader->GetOrder(name, E_OPEN, E_LONG, ods);
-					if(ods.size()>0){
-						vector<Order*>::iterator iter = ods.begin();
-						for(; iter != ods.end(); iter++){
-							if((*iter)->submit_price < lastQuote->BidPrice1 
-							&& (*iter)->canceling == false){
-								trader->cancel_order(*iter);
-							}
-						}
-					}else{
-						if(maxPosition<=0)
-						{
-							cout<<"Don't open new position"<<endl;
-						}
-						else{
-							if(maxPosition/submitMax >= 1){
-								Order* o = trader->NewOrder(q->InstrumentID, q->BidPrice1, submitMax, E_OPEN, E_LONG);
-								trader->submit_order(o);
-							}else{
-								int vol = maxPosition%submitMax;
-								if(vol==0) return;
-								Order* o = trader->NewOrder(q->InstrumentID, q->BidPrice1, vol , E_OPEN, E_LONG);
-								trader->submit_order(o);
-							}
-						}
-					}
-				}
+				FullOpenLong();
+			}
+			else{
 				//don't full open condition, cancel open orders
-				else
-				{
-				}
+				DoNotFullOpenLong();
 			}
+		}
+		else{
 			//has locked position
-			else
+			
+			//full the close condition
+			if(askSpread >= closeThreshold)
 			{
-				//full the close condition
-				if(askSpread >= closeThrehold)
-				{
-				}
-				if(bidSpread <= openThreshold)
-				{
-				}
-				
+				FullOpenLong();
+			}
+			//full the open condition
+			if(bidSpread <= closeThreshold)
+			{
 			}
 		}
-		//
-		if(insType == closeWith)
-		{
-		}
-	}
-	if(direction == E_DIR_DOWN)
-	{
-		if(insType == openWith)
-		{}
-		if(insType == closeWith)
-		{}
 	}
 }
 void Instrument::ShowQuote()
@@ -222,3 +181,108 @@ int Instrument::CalcLockedPosition(const char* main, const char* second, EDirect
 		return min(m,s);
 	}
 }
+
+void Instrument::CancelOrders(vector<Order*> &ods)
+{
+	vector<Order*>::iterator iter = ods.begin();
+	for(; iter != ods.end(); iter++){
+		if((*iter)->canceling == false){
+			trader->cancel_order(*iter);
+		}
+	}
+}
+
+void Instrument::FullOpenLong()
+{
+	if(mainIns==firstOpenIns){
+		//open from main instrument
+		vector<Order*> ods;
+		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
+		if(ods.size()!=0){
+			return;
+		}
+		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
+		if(ods.size()>0){
+			vector<Order*>::iterator iter = ods.begin();
+			double newPrice = firstOpenIns->lastQuote->BidPrice1; 
+			for(; iter != ods.end(); iter++){
+				if((*iter)->submit_price < newPrice 
+				&& (*iter)->canceling == false){
+					trader->cancel_order(*iter);
+				}
+			}
+		}else{
+			if(maxPosition<=0){
+				trader->log("Don't open new position\n");
+			}else{
+				const char* nm = firstOpenIns->name;
+				double price = firstOpenIns->lastQuote->BidPrice1;
+				int vol = maxPosition/submitMax>=1?submitMax:maxPosition%submitMax;
+				if(vol==0){
+					trader->log("Cann't open 0 volume order\n");
+					return;
+				}
+				Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
+				trader->submit_order(o);
+			}
+		}
+	}else{
+		//open from second instrument
+		vector<Order*> ods;
+		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
+		if(ods.size()!=0){
+			return;
+		}
+		trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
+		if(ods.size()>0){
+			vector<Order*>::iterator iter = ods.begin();
+			double newPrice = firstOpenIns->lastQuote->AskPrice1; 
+			for(; iter != ods.end(); iter++){
+				if((*iter)->submit_price > newPrice 
+				&& (*iter)->canceling == false){
+					trader->cancel_order(*iter);
+				}
+			}
+		}else{
+			if(maxPosition<=0){
+				trader->log("Don't open new position\n");
+			}else{
+				const char* nm = firstOpenIns->name;
+				double price = firstOpenIns->lastQuote->AskPrice1;
+				int vol = maxPosition/submitMax>=1?submitMax:maxPosition%submitMax;
+				if(vol==0){
+					trader->log("Cann't open 0 volume order\n");
+					return;
+				}
+				Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
+				trader->submit_order(o);
+			}
+		}
+	}
+}
+
+void Instrument::DoNotFullOpenLong()
+{
+	if(mainIns==firstOpenIns){
+		vector<Order*> ods;
+		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
+		if(ods.size()==0){
+			return;
+		}else{
+			CancelOrders(ods);
+		}			
+	}else{
+		vector<Order*> ods;
+		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
+		if(ods.size()==0){
+			return;
+		}else{
+			CancelOrders(ods);
+		}			
+	}
+}    			
+     			
+     			
+     			
+     			
+     			

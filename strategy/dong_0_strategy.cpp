@@ -27,9 +27,11 @@ Dong0Strategy::Dong0Strategy(int argc, char** argv)
 	
 	forward_contract_ = new char[32];
 	recent_contract_ = new char[32];
+
 	bzero(forward_contract_, 32);
 	bzero(recent_contract_, 32);
 
+	main_contract_ =0;
 	open_with_ = 0;
 	close_with_ = 0;
 	open_threshold_ = 0;
@@ -67,6 +69,10 @@ bool Dong0Strategy::load_config()
 	element = root_element->FirstChildElement("recent_contract");
 	if(!element)PARSE_ERROR("recent_contract");
 	STRCPY(recent_contract_,element->GetText());
+
+	element = root_element->FirstChildElement("main_contract");
+	if(!element)PARSE_ERROR("main_contract");
+	main_contract_ = atoi(element->GetText());
 
 	element = root_element->FirstChildElement("open_with");
 	if(!element)PARSE_ERROR("open_with");
@@ -153,21 +159,28 @@ bool Dong0Strategy::on_init()
 
 	Instrument *forward_ins = new Instrument(forward_contract_);
 	Instrument *recent_ins = new Instrument(recent_contract_);
+	forward_ins->relativeIns = recent_ins;
+	recent_ins->relativeIns = forward_ins;
 
 	forward_ins->insType = E_INS_FORWARD;
 	recent_ins->insType = E_INS_RECENT;
 
-	forward_ins->relativeIns = recent_ins;
-	recent_ins->relativeIns = forward_ins;
-
 	forward_ins->cancelMax = forward_cancel_max_;
 	recent_ins->cancelMax = recent_cancel_max_;
+
+	Instrument::mainIns = main_contract_==0?recent_ins:forward_ins;
 	
 	Instrument::openThreshold =	open_threshold_;
 	Instrument::closeThreshold = close_threshold_;
 
 	Instrument::openWith = open_with_==0?E_INS_RECENT:E_INS_FORWARD;
+	Instrument::firstOpenIns = open_with_==0?recent_ins:forward_ins;
+	Instrument::secondOpenIns = Instrument::firstOpenIns->relativeIns;
+
 	Instrument::closeWith = close_with_==0?E_INS_RECENT:E_INS_FORWARD;
+	Instrument::firstCloseIns = close_with_==0?recent_ins:forward_ins;
+	Instrument::secondCloseIns = Instrument::firstCloseIns->relativeIns;
+
 	Instrument::submitMax = submit_max_;
 	Instrument::maxPosition = max_position_;
 	Instrument::direction = direction_==0 ? E_DIR_UP : E_DIR_DOWN;

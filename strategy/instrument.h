@@ -40,7 +40,10 @@ public:
 	void ShowQuote();
 
 	void CalcSpread(bool rct=true);
+	void CancelOrders(vector<Order*> &ods);
 	int CalcLockedPosition(const char* main, const char* second, EDirection dir);
+	void FullOpenLong();
+	void DoNotFullOpenLong();
 
 	char 		name[64];
 	bool 		reached;
@@ -54,14 +57,21 @@ public:
 
 	static SpreadCondition bidSpreadCondition;
 	static SpreadCondition askSpreadCondition;
+
+	static Instrument*	firstOpenIns;
+	static Instrument*	firstCloseIns;
+	static Instrument*	secondOpenIns;
+	static Instrument*	secondCloseIns;
+	static Instrument*	mainIns;
+
 	static double		bidSpread;
 	static double		askSpread;
 	static double		openThreshold;
 	static double		closeThreshold;
 	static InsType		openWith;
+	static InsType		closeWith; 
 	static StopLoss		stopLossType;
 	static int			stopLoss;
-	static InsType		closeWith; 
 	static EDirection	direction;
 	static int			maxPosition;
 	static int			submitMax;
