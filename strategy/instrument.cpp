@@ -132,6 +132,10 @@ void Instrument::on_match(Order* o)
 	//close
 		if(firstCloseIns == this){
 			//first leg, need to lock position
+			trader->log("***************************************************\n");
+			trader->log("first close leg matched\n");
+			trader->log("***************************************************\n");
+			o->ShowOrder();
 			const char* nm = secondCloseIns->name;
 			double px = o->long_short == E_LONG ? secondCloseIns->lastQuote->AskPrice1 :secondCloseIns->lastQuote->BidPrice1;
 			int vol = o->match_volume;
