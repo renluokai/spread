@@ -154,9 +154,30 @@ void Instrument::on_reject(Order*)
 	cout<<__FUNCTION__<<": "<<name<<endl;
 }
 
-void Instrument::on_cancel(Order*)
+void Instrument::on_cancel(Order* o)
 {
-	cout<<__FUNCTION__<<": "<<name<<endl;
+	trader->log(__FUNCTION__);trader->log("\n");
+	if(secondOpenIns == this
+	|| secondCloseIns == this){
+		o->ShowOrder();
+		double price = 0.0; 
+		if(o->open_close == E_OPEN){
+			if(o->long_short == E_LONG){
+				price = lastQuote->AskPrice1;
+			}else{
+				price = lastQuote->BidPrice1;
+			}
+		}else{
+			if(o->long_short == E_LONG){
+				price = lastQuote->BidPrice1;
+			}else{
+				price = lastQuote->AskPrice1;
+			}
+		}
+		Order* new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
+		trader->submit_order(new_order);
+	}
+
 }
 
 void Instrument::on_insert(Order*)
@@ -190,16 +211,26 @@ void Instrument::CancelOrders(vector<Order*> &ods)
 
 void Instrument::FullOpenLong(int lockedPosition)
 {
+	trader->log(__FUNCTION__);trader->log("\n");
 	if(mainIns==firstOpenIns){
 		//open from main instrument
 		vector<Order*> ods;
+		vector<Order*>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()!=0){
+			iter = ods.begin();
+			double newPrice = secondOpenIns->lastQuote->BidPrice1; 
+			for(; iter != ods.end(); iter++){
+				if((*iter)->submit_price > newPrice 
+				&& (*iter)->canceling == false){
+					trader->cancel_order(*iter);
+				}
+			}
 			return;
 		}
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()>0){
-			vector<Order*>::iterator iter = ods.begin();
+			iter = ods.begin();
 			double newPrice = firstOpenIns->lastQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
@@ -226,13 +257,22 @@ void Instrument::FullOpenLong(int lockedPosition)
 	}else{
 		//open from second instrument
 		vector<Order*> ods;
+		vector<Order*>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()!=0){
+			iter = ods.begin();
+			double newPrice = secondOpenIns->lastQuote->AskPrice1; 
+			for(; iter != ods.end(); iter++){
+				if((*iter)->submit_price < newPrice 
+				&& (*iter)->canceling == false){
+					trader->cancel_order(*iter);
+				}
+			}
 			return;
 		}
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()>0){
-			vector<Order*>::iterator iter = ods.begin();
+			iter = ods.begin();
 			double newPrice = firstOpenIns->lastQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 

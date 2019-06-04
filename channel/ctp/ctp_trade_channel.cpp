@@ -422,6 +422,39 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 			STRCPY(o.state_msg, pOrder->StatusMsg);
 			handler_->push(&o);
 			return;
+		}else if( pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted
+		&& pOrder->OrderStatus == THOST_FTDC_OST_Canceled){
+			STRCPY(o.instrument, pOrder->InstrumentID);
+			o.state = E_CANCEL;
+			o.order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
+			o.canceled_volume = pOrder->VolumeTotal - pOrder->VolumeTraded;
+			if(pOrder->CombHedgeFlag[0] == THOST_FTDC_OF_Open){
+				o.open_close =  E_OPEN;
+				if(pOrder->Direction == THOST_FTDC_D_Buy){
+					o.long_short = E_LONG;
+				}else{
+					o.long_short = E_SHORT;
+				}
+			}else{
+				if(pOrder->CombHedgeFlag[0] == THOST_FTDC_OF_Close){
+					o.open_close = E_CLOSE;
+				}else if(pOrder->CombHedgeFlag[0] == THOST_FTDC_OF_CloseToday){
+					o.open_close = E_CLOSE_T;
+				}else if(pOrder->CombHedgeFlag[0] == THOST_FTDC_OF_CloseYesterday){
+					o.open_close = E_CLOSE_Y;
+				}else{
+					o.open_close = E_CLOSE;
+				}
+
+				if(pOrder->Direction == THOST_FTDC_D_Buy){
+					o.long_short = E_SHORT;
+				}else{
+					o.long_short = E_LONG;
+				}
+			}
+			STRCPY(o.state_msg, pOrder->StatusMsg);
+			handler_->push(&o);
+			return;
 		}
 	}
 }

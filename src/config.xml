@@ -12,7 +12,7 @@
     <direction>0</direction>
     <stop_loss>0</stop_loss>
     <stop_loss_option>0</stop_loss_option>
-    <max_postion>34</max_postion>
+    <max_postion>10</max_postion>
     <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>

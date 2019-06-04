@@ -80,7 +80,21 @@ struct Order : public Data{
 	}
 	void ShowOrder()
 	{
-		printf("%s\t%s\t%s\t%f\t[%s]\n",instrument, exchange_id, state_msg, submit_price, order_system_id);
+		const char *tmp=NULL;
+		if(open_close == E_OPEN){
+			if(long_short == E_LONG){
+				tmp = "OL";
+			}else{
+				tmp = "OS";
+			}
+		}else{
+			if(long_short == E_LONG){
+				tmp = "CL";
+			}else{
+				tmp = "CS";
+			}
+		}
+		printf("%s\t%s\t%s\t%s\t%f\t[%s]\n",instrument, tmp, exchange_id, state_msg, submit_price, order_system_id);
 	}
 	char instrument[64];
 	char order_system_id[24];
