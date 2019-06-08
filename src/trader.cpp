@@ -178,7 +178,21 @@ bool Trader::submit_order(Order* o, int channel_id)
 {
 	bool ret = tradeChannels[channel_id]->submit(o);
 	char buffer[256]={0};
-	sprintf(buffer,"T O %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+	const char* ocls = NULL;
+	if(o->open_close==E_OPEN){
+		if(o->long_short==E_LONG){
+			ocls = "OL";
+		}else{
+			ocls = "OS";
+		}
+	}else{
+		if(o->long_short==E_LONG){
+			ocls = "CL";
+		}else{
+			ocls = "CS";
+		}
+	}
+	sprintf(buffer,"T O %s %s %d %.5f\n", ocls, o->instrument, o->submit_volume, o->submit_price);
 	log(buffer);
 	if(ret == true){
 		orderManager->UpdateOrder(o);
@@ -189,7 +203,21 @@ bool Trader::submit_order(Order* o, int channel_id)
 bool Trader::cancel_order(Order* o, int channel_id)
 {
 	char buffer[256]={0};
-	sprintf(buffer,"T C %s %d\n", o->instrument, o->submit_volume-o->total_matched);
+	const char* ocls = NULL;
+	if(o->open_close == E_OPEN){
+		if(o->long_short == E_LONG){
+			ocls = "OL";
+		}else{
+			ocls = "OS";
+		}
+	}else{
+		if(o->long_short == E_LONG){
+			ocls = "CL";
+		}else{
+			ocls = "CS";
+		}
+	}
+	sprintf(buffer,"T K %s %s %d\n", ocls, o->instrument, o->submit_volume-o->total_matched);
 	log(buffer);
 	o->ShowOrder();
 	bool ret = tradeChannels[channel_id]->cancel(o);

@@ -198,27 +198,41 @@ void Dong0Strategy::on_order(Order *o)
 		return;
 	Instrument *ins = instruments[o->instrument];
 	char buffer[256]={0};
+	const char* ocls = NULL;
+	if(o->open_close==E_OPEN){
+		if(o->long_short==E_LONG){
+			ocls = "OL";
+		}else{
+			ocls = "OS";
+		}
+	}else{
+		if(o->long_short==E_LONG){
+			ocls = "CL";
+		}else{
+			ocls = "CS";
+		}
+	}	
 	switch(o->state)
 	{
 		case E_ORIGINAL:
 			break;
 		case E_INSERT:
-			sprintf(buffer, "T I %s %d %.5f [%s]\n", o->instrument, o->submit_volume, o->submit_price,o->order_system_id);
+			sprintf(buffer, "T I %s %s %d %.5f [%s]\n", ocls, o->instrument, o->submit_volume, o->submit_price,o->order_system_id);
 			trader_->log(buffer);
 			ins->on_insert(o);
 			break;
 		case E_REJECT:
-			sprintf(buffer, "T R %s %d %.5f\n", o->instrument, o->submit_volume, o->submit_price);
+			sprintf(buffer, "T R %s %s %d %.5f\n", ocls, o->instrument, o->submit_volume, o->submit_price);
 			trader_->log(buffer);
 			ins->on_reject(o);
 			break;
 		case E_CANCEL:
-			sprintf(buffer, "T K %s %d %.5f\n", o->instrument, o->canceled_volume, o->submit_price);
+			sprintf(buffer, "T C %s %s %d %.5f\n", ocls, o->instrument, o->canceled_volume, o->submit_price);
 			trader_->log(buffer);
 			ins->on_cancel(o);
 			break;
 		case E_MATCH:
-			sprintf(buffer, "T M %s %d %.5f\n", o->instrument, o->match_volume, o->match_price);
+			sprintf(buffer, "T M %s %s %d %.5f\n", ocls, o->instrument, o->match_volume, o->match_price);
 			trader_->log(buffer);
 			ins->on_match(o);
 			break;
