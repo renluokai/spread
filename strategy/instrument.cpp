@@ -198,7 +198,33 @@ int Instrument::CalcLockedPosition(const char* main, const char* second, EDirect
 		return min(m,s);
 	}
 }
+int Instrument::CalcLockedPositionYesterday(const char* main, const char* second, EDirection dir)
+{
+	int m=0,s=0;
+	if(dir == E_DIR_UP)	{
+		m = trader->GetLongPositionYesterday(main);
+		s = trader->GetShortPositionYesterday(second);
+		return min(m,s);
+	}else{
+		m = trader->GetShortPositionYesterday(main);
+		s = trader->GetLongPositionYesterday(second);
+		return min(m,s);
+	}
+}
 
+int Instrument::CalcLockedPositionYestarday(const char* main, const char* second, EDirection dir)
+{
+	int m=0,s=0;
+	if(dir == E_DIR_UP)	{
+		m = trader->GetLongPositionToday(main);
+		s = trader->GetShortPositionToday(second);
+		return min(m,s);
+	}else{
+		m = trader->GetShortPositionToday(main);
+		s = trader->GetLongPositionToday(second);
+		return min(m,s);
+	}
+}
 void Instrument::CancelOrders(vector<Order*> &ods)
 {
 	vector<Order*>::iterator iter = ods.begin();

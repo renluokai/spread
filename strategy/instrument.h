@@ -42,6 +42,8 @@ public:
 	void CalcSpread(bool rct=true);
 	void CancelOrders(vector<Order*> &ods);
 	int	 CalcLockedPosition(const char* main, const char* second, EDirection dir);
+	int	 CalcLockedPositionYesterday(const char* main, const char* second, EDirection dir);
+	int	 CalcLockedPositionToday(const char* main, const char* second, EDirection dir);
 	void FullOpenLong(int lockedPosition);
 	void DoNotFullOpenLong();
 

@@ -225,3 +225,28 @@ int Trader::GetShortPosition(const char* ins)
 	today = positionManager->GetPosition(ins,P_SHORT);
 	return yesterday + today;
 }
+
+int Trader::GetYesterdayLongPosition(const char* ins)
+{
+	int yesterday=0;
+	yesterday = positionManager->GetPosition(ins,P_YESTERDAY_LONG);
+	return yesterday;
+}
+int Trader::GetYesterdayShortPosition(const char* ins)
+{
+	int yesterday=0;
+	yesterday = positionManager->GetPosition(ins,P_YESTERDAY_SHORT);
+	return yesterday + today;
+}
+int Trader::GetTodayLongPosition(const char* ins)
+{
+	int today=0;
+	today = positionManager->GetPosition(ins,P_LONG);
+	return yesterday + today;
+}
+int Trader::GetTodayShortPosition(const char* ins)
+{
+	int today=0;
+	today = positionManager->GetPosition(ins,P_SHORT);
+	return yesterday + today;
+}
