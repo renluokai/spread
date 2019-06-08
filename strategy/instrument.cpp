@@ -100,7 +100,7 @@ printf(buffer, "Locked position is %d\n", lockedPosition);
 			trader->log(buffer);
 		}
 		if(lockedPosition ==0){
-			if(AskSpread >= openThreshold){
+			if(askSpread >= openThreshold){
 				//full the open condition
 				FullOpenShort(lockedPosition);
 			}
@@ -113,12 +113,12 @@ printf(buffer, "Locked position is %d\n", lockedPosition);
 			//has locked position
 			
 			//full the close condition
-			if(BidSpread <= closeThreshold)
+			if(bidSpread <= closeThreshold)
 			{
 				FullCloseShort(lockedPosition);
 			}
 			//full the open condition
-			if(AskSpread >= openThreshold)
+			if(askSpread >= openThreshold)
 			{
 				FullOpenShort(lockedPosition);
 			}
@@ -248,7 +248,7 @@ int Instrument::CalcLockedPositionYesterday(const char* main, const char* second
 	}
 }
 
-int Instrument::CalcLockedPositionYestarday(const char* main, const char* second, EDirection dir)
+int Instrument::CalcLockedPositionToday(const char* main, const char* second, EDirection dir)
 {
 	int m=0,s=0;
 	if(dir == E_DIR_UP)	{

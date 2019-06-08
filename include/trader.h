@@ -31,10 +31,10 @@ public:
 	int GetPosition(const char* ins, EPositionType posType);
 	int GetLongPosition(const char* ins);
 	int GetShortPosition(const char* ins);
-	int GetYesterdayLongPosition(const char* ins);
-	int GetYesterdayShortPosition(const char* ins);
-	int GetTodayLongPosition(const char* ins);
-	int GetTodayShortPosition(const char* ins);
+	int GetLongPositionYesterday(const char* ins);
+	int GetShortPositionYesterday(const char* ins);
+	int GetLongPositionToday(const char* ins);
+	int GetShortPositionToday(const char* ins);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pe=P_LONGSHORT);
 
 	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);

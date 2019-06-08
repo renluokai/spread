@@ -9,7 +9,7 @@
     <open_threshold>-70</open_threshold>
     <close_threshold>90</close_threshold>
 	<!-- 0看涨 1看跌!-->
-    <direction>0</direction>
+    <direction>1</direction>
     <stop_loss>0</stop_loss>
     <stop_loss_option>0</stop_loss_option>
     <max_postion>10</max_postion>
