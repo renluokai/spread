@@ -49,6 +49,12 @@ public:
 
 	void FullCloseLong(int lockedPosition);
 	void DoNotFullCloseLong();
+
+	void FullOpenShort(int lockedPosition);
+	void DoNotFullOpenShort();
+
+	void FullCloseShort(int lockedPosition);
+	void DoNotFullCloseShort();
 	char 		name[64];
 	bool 		reached;
 	InsType 	insType;
