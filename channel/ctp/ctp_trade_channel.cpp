@@ -854,13 +854,15 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"AbandonFrozen="<<pInvestorPosition->AbandonFrozen<<" | "
 <<"ExchangeID="<<pInvestorPosition->ExchangeID<<" | "
 <<"YdStrikeFrozen="<<pInvestorPosition->YdStrikeFrozen<<endl;
+if(pInvestorPosition->YdPosition > 0){
+	trader_->UpdateYesterdayPosition(pInvestorPosition->InstrumentID, pInvestorPosition->PosiDirection ==THOST_FTDC_PD_Long?E_LONG:E_SHORT, pInvestorPosition->YdPosition, pInvestorPosition->PreSettlementPrice);
+}
 }
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
 			sem_post(&sem_);
 		}
 	}
-
 }
 
 bool CtpTradeChannel::DoQryTrade()

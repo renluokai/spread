@@ -278,3 +278,8 @@ int Trader::GetShortPositionToday(const char* ins)
 	today = positionManager->GetPosition(ins,P_SHORT);
 	return today;
 }
+
+void Trader::UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price)
+{
+	return positionManager->UpdateYesterdayPosition(instrument, ls, volume, price);
+}

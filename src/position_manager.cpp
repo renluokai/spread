@@ -73,3 +73,17 @@ void PositionManager::GeneratePositionFromQryMatch()
 
 
 }
+
+void PositionManager::UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price)
+{
+	if(instrument_yesterday_position.count(instrument)==0){
+		instrument_qry_match.insert(make_pair(instrument, YesterdayPosition()));
+	}
+	if(ls == E_LONG){
+		instrument_yesterday_position[instrument].long_volume = volume;
+		instrument_yesterday_position[instrument].long_price = price;
+	}else{
+		instrument_yesterday_position[instrument].short_volume = volume;
+		instrument_yesterday_position[instrument].short_price = price;
+	}
+}

@@ -37,6 +37,7 @@ public:
 	int GetShortPositionToday(const char* ins);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pe=P_LONGSHORT);
 
+	void UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price);
 	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
 
 	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);

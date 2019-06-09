@@ -10,6 +10,7 @@ class PositionManager
 {
 public:
 	void UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
+	void UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pt=P_LONGSHORT);
 	void ShowPosition(const char* ins=NULL);
 	int  GetPosition(const char* ins, EPositionType posType);
@@ -31,6 +32,12 @@ private:
 	struct QryMatch{
 		list<PositionEntry> qryMatchList[E_OPENCLOSE][E_LONGSHORT];
 	};
+	struct YesterdayPosition{
+		int long_volume;
+		int short_volume;
+		double long_price;
+		double short_volume;
+	};
 	struct PositionInfo{
 		string instrument;
 		Position position[P_LONGSHORT];
@@ -38,6 +45,6 @@ private:
 
 	map<string, PositionInfo> instrument_position_info;
 	map<string, QryMatch> instrument_qry_match;
-	
+	map<string, YesterdayPosition> instrument_yesterday_position;
 };
 #endif /* POSITION_MANAGER_H__ */
