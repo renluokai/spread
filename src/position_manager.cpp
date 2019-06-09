@@ -54,3 +54,22 @@ void PositionManager::ShowPosition(const char* ins)
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins, 0, 0, 0, 0);
 	}
 }
+
+void PositionManager::UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price)
+{
+	if(instrument_qry_match.count(instrument)==0){
+		instrument_qry_match.insert(make_pair(instrument, QryMatch()));
+	}
+	PositionEntry positionEntry;
+	positionEntry.instrument = instrument;
+	positionEntry.volume = volume;
+	positionEntry.price = price;
+	positionEntry.positionType = P_LONGSHORT;
+	instrument_qry_match[instrument].qryMatchList[oc][ls].push_back(positionEntry);
+}
+
+void PositionManager::GeneratePositionFromQryMatch()
+{
+
+
+}

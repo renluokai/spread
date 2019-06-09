@@ -69,12 +69,21 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 		bret = DoSettlementInfoConfirm();
 		if(bret == false) return false;
 	}
+
 	bret = DoQryInstrument();
 	if(bret == false) return false;
 
 	bret = DoQryOrder();
 	if(bret == false) return false;
+
+
+	bret = DoQryPosition();
+	if(bret == false) return false;
+
 	bret = DoQryPositionDetail();
+	if(bret == false) return false;
+
+	bret = DoQryTrade();
 	if(bret == false) return false;
 
 	return true;
@@ -852,6 +861,58 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 		}
 	}
 
+}
+
+bool CtpTradeChannel::DoQryTrade()
+{
+	Delay(1);
+	CThostFtdcQryTradeField qryTrade={0};
+	trade_api_->ReqQryTrade(&qryTrade,request_id_++);
+	return Wait(60, "ReqQryTrade");
+}
+void CtpTradeChannel::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+if(pTrade==NULL){
+log_stream_<<"["<<__FUNCTION__<<"] "<<"pTrade=NULL"<<endl;
+}else{
+log_stream_<<"["<<__FUNCTION__<<"] "
+<<"BrokerID="<<pTrade->BrokerID<<" | "
+<<"InvestorID="<<pTrade->InvestorID<<" | "
+<<"InstrumentID="<<pTrade->InstrumentID<<" | "
+<<"OrderRef="<<pTrade->OrderRef<<" | "
+<<"UserID="<<pTrade->UserID<<" | "
+<<"ExchangeID="<<pTrade->ExchangeID<<" | "
+<<"TradeID="<<pTrade->TradeID<<" | "
+<<"Direction="<<pTrade->Direction<<" | "
+<<"OrderSysID="<<pTrade->OrderSysID<<" | "
+<<"ParticipantID="<<pTrade->ParticipantID<<" | "
+<<"ClientID="<<pTrade->ClientID<<" | "
+<<"TradingRole="<<pTrade->TradingRole<<" | "
+<<"ExchangeInstID="<<pTrade->ExchangeInstID<<" | "
+<<"OffsetFlag="<<pTrade->OffsetFlag<<" | "
+<<"HedgeFlag="<<pTrade->HedgeFlag<<" | "
+<<"Price="<<pTrade->Price<<" | "
+<<"Volume="<<pTrade->Volume<<" | "
+<<"TradeDate="<<pTrade->TradeDate<<" | "
+<<"TradeTime="<<pTrade->TradeTime<<" | "
+<<"TradeType="<<pTrade->TradeType<<" | "
+<<"PriceSource="<<pTrade->PriceSource<<" | "
+<<"TraderID="<<pTrade->TraderID<<" | "
+<<"OrderLocalID="<<pTrade->OrderLocalID<<" | "
+<<"ClearingPartID="<<pTrade->ClearingPartID<<" | "
+<<"BusinessUnit="<<pTrade->BusinessUnit<<" | "
+<<"SequenceNo="<<pTrade->SequenceNo<<" | "
+<<"TradingDay="<<pTrade->TradingDay<<" | "
+<<"SettlementID="<<pTrade->SettlementID<<" | "
+<<"BrokerOrderSeq="<<pTrade->BrokerOrderSeq<<" | "
+<<"TradeSource="<<pTrade->TradeSource<<endl;
+}
+
+	if(bIsLast == true){
+		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
+			sem_post(&sem_);
+		}
+	}
 }
 void CtpTradeChannel::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField *pInvestorPositionDetail, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
