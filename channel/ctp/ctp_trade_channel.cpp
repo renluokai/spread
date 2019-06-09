@@ -429,8 +429,9 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 		}
 		o.order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
 		STRCPY(o.state_msg, pOrder->StatusMsg);
-		if(pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted
-		&& pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing
+		if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertSubmitted
+		|| pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted)
+		&& strlen(pOrder->OrderSysID) > 0
 		&& order_ref_has_inserted.count(pOrder->OrderRef) == 0){
 			order_ref_has_inserted.insert(pOrder->OrderRef);
 			o.state = E_INSERT;
@@ -490,16 +491,18 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 	o.match_volume = pTrade->Volume;
 	o.match_price = pTrade->Price;
 
-	switch(pTrade->Direction){
-		case THOST_FTDC_D_Buy:
+	if(pTrade->OffsetFlag == THOST_FTDC_OF_Open){
+		if(pTrade->Direction==THOST_FTDC_D_Buy){
 			o.long_short = E_LONG;
-			break;
-		case THOST_FTDC_D_Sell:
+		}else{
 			o.long_short = E_SHORT;
-			break;
-		default:
-			cout<<"ERROR DIRECTION"<<endl;
-			break;
+		}
+	}else{
+		if(pTrade->Direction==THOST_FTDC_D_Buy){
+			o.long_short = E_SHORT;
+		}else{
+			o.long_short = E_LONG;
+		}
 	}
 	switch(pTrade->OffsetFlag){
 		case THOST_FTDC_OF_Open:

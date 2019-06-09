@@ -7,7 +7,7 @@
     <open_with>0</open_with>
     <close_with>0</close_with>
     <open_threshold>-290</open_threshold>
-    <close_threshold>-320</close_threshold>
+    <close_threshold>-270</close_threshold>
 	<!-- 0看涨 1看跌!-->
     <direction>1</direction>
     <stop_loss>0</stop_loss>
