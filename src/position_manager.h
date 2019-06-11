@@ -13,9 +13,11 @@ public:
 	void UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pt=P_LONGSHORT);
 	void ShowPosition(const char* ins=NULL);
+	void ShowQryMatch();
 	int  GetPosition(const char* ins, EPositionType posType);
 private:
 	void GeneratePositionFromQryMatch();	
+public:
 	struct PositionEntry{
 		string instrument;
 		int volume;
@@ -36,13 +38,13 @@ private:
 		int long_volume;
 		int short_volume;
 		double long_price;
-		double short_volume;
+		double short_price;
 	};
 	struct PositionInfo{
 		string instrument;
 		Position position[P_LONGSHORT];
 	};
-
+private:
 	map<string, PositionInfo> instrument_position_info;
 	map<string, QryMatch> instrument_qry_match;
 	map<string, YesterdayPosition> instrument_yesterday_position;

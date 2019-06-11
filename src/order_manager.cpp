@@ -63,6 +63,7 @@ bool OrderManager::UpdateOrder(Order* o)
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
 			return true;
 		case E_CANCEL:
+			id = o->order_local_id;
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
 			return true;
 		break;

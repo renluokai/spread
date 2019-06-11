@@ -80,8 +80,8 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 	bret = DoQryPosition();
 	if(bret == false) return false;
 
-	bret = DoQryPositionDetail();
-	if(bret == false) return false;
+//	bret = DoQryPositionDetail();
+//	if(bret == false) return false;
 
 	bret = DoQryTrade();
 	if(bret == false) return false;
@@ -908,8 +908,40 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"SettlementID="<<pTrade->SettlementID<<" | "
 <<"BrokerOrderSeq="<<pTrade->BrokerOrderSeq<<" | "
 <<"TradeSource="<<pTrade->TradeSource<<endl;
+	string ins = pTrade->InstrumentID;
+	EOpenClose oc;
+	ELongShort ls;
+	if(pTrade->OffsetFlag == THOST_FTDC_OF_Open){
+		oc = E_OPEN;
+		if(pTrade->Direction==THOST_FTDC_D_Buy){
+			ls = E_LONG;
+		}else{
+			ls = E_SHORT;
+		}
+	}else{
+		if(pTrade->Direction==THOST_FTDC_D_Buy){
+			ls = E_SHORT;
+		}else{
+			ls = E_LONG;
+		}
+		if(pTrade->OffsetFlag == THOST_FTDC_OF_Close){
+			oc = E_CLOSE;
+		}else if(pTrade->OffsetFlag == THOST_FTDC_OF_ForceClose){
+			oc = E_CLOSE;
+		}else if(pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday){
+			oc = E_CLOSE_T;
+		}else if(pTrade->OffsetFlag == THOST_FTDC_OF_CloseYesterday){
+			oc = E_CLOSE_Y;
+		}else if(pTrade->OffsetFlag == THOST_FTDC_OF_ForceOff){
+			oc = E_CLOSE;
+		}else if(pTrade->OffsetFlag == THOST_FTDC_OF_LocalForceClose){
+			oc = E_CLOSE;
+		}
+	}
+	int volume = pTrade->Volume;
+	double price = pTrade->Price;
+	trader_->UpdateQryMatch(ins, oc, ls, volume, price);
 }
-
 	if(bIsLast == true){
 		if(pRspInfo == NULL || pRspInfo->ErrorID == 0){
 			sem_post(&sem_);
@@ -956,7 +988,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 		if(atoi(pInvestorPositionDetail->OpenDate) < atoi(pInvestorPositionDetail->TradingDay)){
 			pe = ls==E_LONG?P_YESTERDAY_LONG:P_YESTERDAY_SHORT;
 		}else{
-			pe = ls==E_LONG?P_LONG:P_SHORT;
+			pe = ls==E_LONG?P_TODAY_LONG:P_TODAY_SHORT;
 		}
 		double price = pInvestorPositionDetail->OpenPrice;
 		trader_->UpdatePosition(pInvestorPositionDetail->InstrumentID, E_OPEN, ls, remainder, price, pe);

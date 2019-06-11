@@ -1,3 +1,5 @@
+#include <algorithm>    // std::for_each
+#include <iostream>
 #include "position_manager.h"
 void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType  pt)
 {
@@ -12,12 +14,87 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 			pe.instrument = instrument;
 			pe.volume = volume;
 			pe.price = price;
-			pe.positionType = (pt==P_LONGSHORT) ? (ls==E_LONG ? P_LONG : P_SHORT) : pt;
+			pe.positionType = (pt==P_LONGSHORT) ? (ls==E_LONG ? P_TODAY_LONG : P_TODAY_SHORT) : pt;
 			instrument_position_info[instrument].position[pe.positionType].positionList.push_back(pe);
 			instrument_position_info[instrument].position[pe.positionType].totalPosition += volume;
 		}
 		break;
 		case E_CLOSE:
+		//TODO
+		break;
+		case E_CLOSE_T:
+			if(ls==E_LONG){
+				instrument_position_info[instrument].position[P_TODAY_LONG].positionList.sort();
+				while(true){
+					PositionEntry *pe = &instrument_position_info[instrument].position[P_TODAY_LONG].positionList.front();
+					if(pe->volume > volume){
+						pe->volume -= volume;	
+						break;
+					}else{
+						volume -= pe->volume;
+					}
+					
+					instrument_position_info[instrument].position[P_TODAY_LONG].positionList.pop_front();
+					if(volume == 0){
+						break;
+					}
+				}
+				instrument_position_info[instrument].position[P_TODAY_LONG].totalPosition -= volume;
+			}else{
+				instrument_position_info[instrument].position[P_TODAY_SHORT].positionList.sort();
+				while(true){
+					PositionEntry *pe = &instrument_position_info[instrument].position[P_TODAY_SHORT].positionList.front();
+					if(pe->volume > volume){
+						pe->volume -= volume;	
+						break;
+					}else{
+						volume -= pe->volume;
+					}
+					
+					instrument_position_info[instrument].position[P_TODAY_SHORT].positionList.pop_front();
+					if(volume == 0){
+						break;
+					}
+				}
+				instrument_position_info[instrument].position[P_TODAY_SHORT].totalPosition -= volume;
+			}
+		break;
+		case E_CLOSE_Y:
+			if(ls==E_LONG){
+				instrument_position_info[instrument].position[P_YESTERDAY_LONG].positionList.sort();
+				while(true){
+					PositionEntry *pe = &instrument_position_info[instrument].position[P_YESTERDAY_LONG].positionList.front();
+					if(pe->volume > volume){
+						pe->volume -= volume;	
+						break;
+					}else{
+						volume -= pe->volume;
+					}
+					
+					instrument_position_info[instrument].position[P_YESTERDAY_LONG].positionList.pop_front();
+					if(volume == 0){
+						break;
+					}
+				}
+				instrument_position_info[instrument].position[P_YESTERDAY_LONG].totalPosition -= volume;
+			}else{
+				instrument_position_info[instrument].position[P_YESTERDAY_SHORT].positionList.sort();
+				while(true){
+					PositionEntry *pe = &instrument_position_info[instrument].position[P_YESTERDAY_SHORT].positionList.front();
+					if(pe->volume > volume){
+						pe->volume -= volume;	
+						break;
+					}else{
+						volume -= pe->volume;
+					}
+					
+					instrument_position_info[instrument].position[P_YESTERDAY_SHORT].positionList.pop_front();
+					if(volume == 0){
+						break;
+					}
+				}
+				instrument_position_info[instrument].position[P_YESTERDAY_SHORT].totalPosition -= volume;
+			}
 		break;
 	}
 	return;
@@ -40,16 +117,16 @@ void PositionManager::ShowPosition(const char* ins)
 			printf("%s\t\t%d\t%d\t%d\t%d\n", iter->first.c_str(),
 					iter->second.position[P_YESTERDAY_LONG].totalPosition,
 					iter->second.position[P_YESTERDAY_SHORT].totalPosition,
-					iter->second.position[P_LONG].totalPosition,
-					iter->second.position[P_SHORT].totalPosition);
+					iter->second.position[P_TODAY_LONG].totalPosition,
+					iter->second.position[P_TODAY_SHORT].totalPosition);
 		}
 	}else if(instrument_position_info.count(ins) > 0){
 		PositionInfo *tmp = &instrument_position_info[ins];
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins,
 				tmp->position[P_YESTERDAY_LONG].totalPosition,
 				tmp->position[P_YESTERDAY_SHORT].totalPosition,
-				tmp->position[P_LONG].totalPosition,
-				tmp->position[P_SHORT].totalPosition);
+				tmp->position[P_TODAY_LONG].totalPosition,
+				tmp->position[P_TODAY_SHORT].totalPosition);
 	}else{
 		printf("%s\t\t%d\t%d\t%d\t%d\n", ins, 0, 0, 0, 0);
 	}
@@ -57,6 +134,25 @@ void PositionManager::ShowPosition(const char* ins)
 
 void PositionManager::UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price)
 {
+	const char *o=NULL;
+	const char *l=NULL;
+	switch(oc){
+	case E_OPEN:
+		o = "E_OPEN\t";break;
+	case E_CLOSE:
+		o = "E_CLOSE\t";break;
+	case E_CLOSE_T:
+		o = "E_CLOSE_T\t";break;
+	case E_CLOSE_Y:
+		o = "E_CLOSE_Y\t";break;
+	}
+	switch(ls){
+	case E_LONG:
+		l = "E_LONG";break;
+	case E_SHORT:
+		l = "E_SHORT";break;
+	}
+	cout<<instrument<<"\t"<<volume<<"\t"<<price<<o<<l<<endl;
 	if(instrument_qry_match.count(instrument)==0){
 		instrument_qry_match.insert(make_pair(instrument, QryMatch()));
 	}
@@ -77,7 +173,7 @@ void PositionManager::GeneratePositionFromQryMatch()
 void PositionManager::UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price)
 {
 	if(instrument_yesterday_position.count(instrument)==0){
-		instrument_qry_match.insert(make_pair(instrument, YesterdayPosition()));
+		instrument_yesterday_position.insert(make_pair(instrument, YesterdayPosition()));
 	}
 	if(ls == E_LONG){
 		instrument_yesterday_position[instrument].long_volume = volume;
@@ -85,5 +181,65 @@ void PositionManager::UpdateYesterdayPosition(string instrument, ELongShort ls, 
 	}else{
 		instrument_yesterday_position[instrument].short_volume = volume;
 		instrument_yesterday_position[instrument].short_price = price;
+	}
+}
+void ShowMatchEntry(PositionManager::PositionEntry pe){
+	cout<<pe.instrument<<"\t"<<pe.volume<<"\t"<<pe.price<<endl;
+}
+
+void PositionManager::ShowQryMatch()
+{
+	map<string, QryMatch>::iterator iter;
+	iter = instrument_qry_match.begin();
+	for(;iter!=instrument_qry_match.end(); iter++){
+		if(iter->second.qryMatchList[E_OPEN][E_LONG].size()>0){
+			cout<<"----------open long----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_OPEN][E_LONG].begin(),
+				(iter->second.qryMatchList)[E_OPEN][E_LONG].end(),
+				ShowMatchEntry);
+		}
+		if((iter->second.qryMatchList)[E_CLOSE][E_LONG].size()>0){
+			cout<<"----------close long----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_CLOSE][E_LONG].begin(),
+				(iter->second.qryMatchList)[E_CLOSE][E_LONG].end(),
+				ShowMatchEntry);
+		}
+		if((iter->second.qryMatchList)[E_CLOSE_T][E_LONG].size()>0){
+			cout<<"----------close today long----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_CLOSE_T][E_LONG].begin(),
+				(iter->second.qryMatchList)[E_CLOSE_T][E_LONG].end(),
+				ShowMatchEntry);
+		}
+		if((iter->second.qryMatchList)[E_CLOSE_Y][E_LONG].size()>0){
+			cout<<"----------close yesterday long----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_CLOSE_Y][E_LONG].begin(),
+				(iter->second.qryMatchList)[E_CLOSE_Y][E_LONG].end(),
+				ShowMatchEntry);
+		}
+
+		if(iter->second.qryMatchList[E_OPEN][E_SHORT].size()>0){
+			cout<<"----------open short----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_OPEN][E_SHORT].begin(),
+				(iter->second.qryMatchList)[E_OPEN][E_SHORT].end(),
+				ShowMatchEntry);
+		}
+		if((iter->second.qryMatchList)[E_CLOSE][E_SHORT].size()>0){
+			cout<<"----------close short----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_CLOSE][E_SHORT].begin(),
+				(iter->second.qryMatchList)[E_CLOSE][E_SHORT].end(),
+				ShowMatchEntry);
+		}
+		if((iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].size()>0){
+			cout<<"----------close today long----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].begin(),
+				(iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].end(),
+				ShowMatchEntry);
+		}
+		if((iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].size()>0){
+			cout<<"----------close yesterday long----------"<<endl;
+			for_each((iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].begin(),
+				(iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].end(),
+				ShowMatchEntry);
+		}
 	}
 }

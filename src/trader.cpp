@@ -30,6 +30,7 @@ Trader::Trader()
 	handler = new Handler;
 	orderManager = new OrderManager;
 	positionManager = new PositionManager;
+	startToTrade = false;
 }
 
 void Trader::log(const char* msg)
@@ -84,6 +85,7 @@ bool Trader::run(Strategy *s){
 	size_t c=0;
 	Data *data = NULL;
 	Order* o = NULL;
+	log("input :s to start system");
 	while(1){
 		//cout<<"#"<<c++<<" run running..."<<endl;
 		data = handler->pop();
@@ -100,6 +102,9 @@ bool Trader::run(Strategy *s){
 				strategy->on_order((Order*)data);
 				break;
 			case E_QUOTE_TYPE:
+				if(startToTrade == false){
+					break;
+				}
 				strategy->on_quote((Quote*)data);
 				break;
 			case E_ERROR_TYPE:
@@ -125,7 +130,7 @@ void Trader::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int
 }
 void Trader::process_command(Command* cmd)
 {
-	cout<<"USER COMMAND PROCESSING:"<<cmd->buffer<<endl;
+	//cout<<"USER COMMAND PROCESSING:"<<cmd->buffer<<endl;
 	if(strcmp(cmd->buffer,":q\n") == 0){
 		cout<<"EXITING"<<endl;
 	}
@@ -140,6 +145,14 @@ void Trader::process_command(Command* cmd)
 	}
 	else if(strcmp(cmd->buffer,":lsp\n")==0){
 		positionManager->ShowPosition(NULL);
+	}
+	else if(strcmp(cmd->buffer,":hm\n")==0){
+		positionManager->ShowQryMatch();
+	}
+	else if(strcmp(cmd->buffer,":s\n")==0){
+		if(startToTrade == false){
+			startToTrade = true;
+		}
 	}
 }
 
@@ -242,7 +255,7 @@ int Trader::GetLongPosition(const char* ins)
 {
 	int yesterday=0, today=0;
 	yesterday = positionManager->GetPosition(ins,P_YESTERDAY_LONG);
-	today = positionManager->GetPosition(ins,P_LONG);
+	today = positionManager->GetPosition(ins,P_TODAY_LONG);
 	return yesterday + today;
 }
 
@@ -250,7 +263,7 @@ int Trader::GetShortPosition(const char* ins)
 {
 	int yesterday=0, today=0;
 	yesterday = positionManager->GetPosition(ins,P_YESTERDAY_SHORT);
-	today = positionManager->GetPosition(ins,P_SHORT);
+	today = positionManager->GetPosition(ins,P_TODAY_SHORT);
 	return yesterday + today;
 }
 
@@ -269,17 +282,22 @@ int Trader::GetShortPositionYesterday(const char* ins)
 int Trader::GetLongPositionToday(const char* ins)
 {
 	int today=0;
-	today = positionManager->GetPosition(ins,P_LONG);
+	today = positionManager->GetPosition(ins,P_TODAY_LONG);
 	return today;
 }
 int Trader::GetShortPositionToday(const char* ins)
 {
 	int today=0;
-	today = positionManager->GetPosition(ins,P_SHORT);
+	today = positionManager->GetPosition(ins,P_TODAY_SHORT);
 	return today;
 }
 
 void Trader::UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price)
 {
-	return positionManager->UpdateYesterdayPosition(instrument, ls, volume, price);
+	positionManager->UpdateYesterdayPosition(instrument, ls, volume, price);
+}
+
+void Trader::UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price)
+{
+	positionManager->UpdateQryMatch(instrument, oc, ls,volume, price);
 }

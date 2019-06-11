@@ -390,11 +390,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 	if(mainIns==firstCloseIns){
 		//close from main instrument
 		vector<Order*> ods;
-		trader->GetOrder(secondCloseIns->name, E_CLOSE, E_SHORT, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		if(ods.size()!=0){
 			return;
 		}
-		trader->GetOrder(firstCloseIns->name, E_CLOSE, E_LONG, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
@@ -416,18 +416,18 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE, E_LONG);
+				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE_T, E_LONG);
 				trader->submit_order(o);
 			}
 		}
 	}else{
 		//close from second instrument
 		vector<Order*> ods;
-		trader->GetOrder(secondCloseIns->name, E_CLOSE, E_LONG, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		if(ods.size()!=0){
 			return;
 		}
-		trader->GetOrder(firstCloseIns->name, E_CLOSE, E_SHORT, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
@@ -449,7 +449,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->log("Can't open volume 0 close order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE, E_SHORT);
+				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE_T, E_SHORT);
 				trader->submit_order(o);
 			}
 		}
@@ -579,11 +579,11 @@ void Instrument::FullCloseShort(int lockedPosition)
 	if(mainIns==firstCloseIns){
 		//close from main instrument
 		vector<Order*> ods;
-		trader->GetOrder(secondCloseIns->name, E_CLOSE, E_LONG, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		if(ods.size()!=0){
 			return;
 		}
-		trader->GetOrder(firstCloseIns->name, E_CLOSE, E_SHORT, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
@@ -605,18 +605,18 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE, E_SHORT);
+				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE_T, E_SHORT);
 				trader->submit_order(o);
 			}
 		}
 	}else{
 		//close from second instrument
 		vector<Order*> ods;
-		trader->GetOrder(secondCloseIns->name, E_CLOSE, E_SHORT, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		if(ods.size()!=0){
 			return;
 		}
-		trader->GetOrder(firstCloseIns->name, E_CLOSE, E_LONG, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
@@ -638,7 +638,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->log("Can't open volume 0 close order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE, E_LONG);
+				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE_T, E_LONG);
 				trader->submit_order(o);
 			}
 		}

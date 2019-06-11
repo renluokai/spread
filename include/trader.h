@@ -36,6 +36,7 @@ public:
 	int GetLongPositionToday(const char* ins);
 	int GetShortPositionToday(const char* ins);
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pe=P_LONGSHORT);
+	void UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
 
 	void UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price);
 	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
@@ -65,6 +66,7 @@ private:
 private:
 	pthread_t user_input_thread;	
 	std::fstream log_stream;
+	bool startToTrade;
 private:
 	static Trader* instance_;
 };
