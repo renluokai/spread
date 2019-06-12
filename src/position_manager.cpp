@@ -5,6 +5,7 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 {
 //if openclose is open, add a new entry at positionlist tail
 //if openclose is close, sub volume from positionlist head	
+    cout<<__FUNCTION__<<endl<<instrument<<"\t"<<volume<<"\t"<<price<<endl;
 	if(instrument_position_info.count(instrument)==0){
 		instrument_position_info.insert(make_pair(instrument, PositionInfo()));
 	}
@@ -27,6 +28,7 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 				instrument_position_info[instrument].position[P_TODAY_LONG].positionList.sort();
 				while(true){
 					PositionEntry *pe = &instrument_position_info[instrument].position[P_TODAY_LONG].positionList.front();
+					instrument_position_info[instrument].position[P_TODAY_LONG].totalPosition -= volume;
 					if(pe->volume > volume){
 						pe->volume -= volume;	
 						break;
@@ -39,11 +41,11 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 						break;
 					}
 				}
-				instrument_position_info[instrument].position[P_TODAY_LONG].totalPosition -= volume;
 			}else{
 				instrument_position_info[instrument].position[P_TODAY_SHORT].positionList.sort();
 				while(true){
 					PositionEntry *pe = &instrument_position_info[instrument].position[P_TODAY_SHORT].positionList.front();
+					instrument_position_info[instrument].position[P_TODAY_SHORT].totalPosition -= volume;
 					if(pe->volume > volume){
 						pe->volume -= volume;	
 						break;
@@ -56,7 +58,6 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 						break;
 					}
 				}
-				instrument_position_info[instrument].position[P_TODAY_SHORT].totalPosition -= volume;
 			}
 		break;
 		case E_CLOSE_Y:
@@ -64,6 +65,7 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 				instrument_position_info[instrument].position[P_YESTERDAY_LONG].positionList.sort();
 				while(true){
 					PositionEntry *pe = &instrument_position_info[instrument].position[P_YESTERDAY_LONG].positionList.front();
+					instrument_position_info[instrument].position[P_YESTERDAY_LONG].totalPosition -= volume;
 					if(pe->volume > volume){
 						pe->volume -= volume;	
 						break;
@@ -76,11 +78,11 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 						break;
 					}
 				}
-				instrument_position_info[instrument].position[P_YESTERDAY_LONG].totalPosition -= volume;
 			}else{
 				instrument_position_info[instrument].position[P_YESTERDAY_SHORT].positionList.sort();
 				while(true){
 					PositionEntry *pe = &instrument_position_info[instrument].position[P_YESTERDAY_SHORT].positionList.front();
+					instrument_position_info[instrument].position[P_YESTERDAY_SHORT].totalPosition -= volume;
 					if(pe->volume > volume){
 						pe->volume -= volume;	
 						break;
@@ -93,7 +95,6 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 						break;
 					}
 				}
-				instrument_position_info[instrument].position[P_YESTERDAY_SHORT].totalPosition -= volume;
 			}
 		break;
 	}
@@ -166,8 +167,79 @@ void PositionManager::UpdateQryMatch(string instrument, EOpenClose oc, ELongShor
 
 void PositionManager::GeneratePositionFromQryMatch()
 {
+			
+	map<string, YesterdayPosition>::iterator iter;
+	iter = instrument_yesterday_position.begin();
+	for(;iter!=instrument_yesterday_position.end();iter++){
+		UpdatePosition(iter->first, E_OPEN, E_LONG,
+						iter->second.long_volume,
+						iter->second.long_price,
+						P_YESTERDAY_LONG);
+		UpdatePosition(iter->first, E_OPEN, E_SHORT,
+						iter->second.short_volume,
+						iter->second.short_price,
+						P_YESTERDAY_SHORT);
+	}
+	
+	map<string, QryMatch>::iterator qmIter=instrument_qry_match.begin();
+	for(;qmIter!=instrument_qry_match.end();qmIter++){
+		list<PositionEntry>::iterator peIter;
+		qmIter->second.qryMatchList[E_OPEN][E_LONG].sort();
+		peIter = qmIter->second.qryMatchList[E_OPEN][E_LONG].begin();
+		for(;peIter != qmIter->second.qryMatchList[E_OPEN][E_LONG].end();
+			peIter++){
+				UpdatePosition(qmIter->first, E_OPEN, E_LONG,
+						peIter->volume,
+						peIter->price,
+						P_TODAY_LONG);
+		}
 
+		qmIter->second.qryMatchList[E_OPEN][E_SHORT].sort();
+		peIter = qmIter->second.qryMatchList[E_OPEN][E_SHORT].begin();
+		for(;peIter != qmIter->second.qryMatchList[E_OPEN][E_SHORT].end();
+			peIter++){
+				UpdatePosition(qmIter->first, E_OPEN, E_SHORT,
+						peIter->volume,
+						peIter->price,
+						P_TODAY_SHORT);
+		}
 
+		qmIter->second.qryMatchList[E_CLOSE_Y][E_LONG].sort();
+		peIter = qmIter->second.qryMatchList[E_CLOSE_Y][E_LONG].begin();
+		for(;peIter != qmIter->second.qryMatchList[E_CLOSE_Y][E_LONG].end();
+			peIter++){
+				UpdatePosition(qmIter->first, E_CLOSE_Y, E_LONG,
+						peIter->volume,
+						peIter->price);
+		}
+
+		qmIter->second.qryMatchList[E_CLOSE_Y][E_SHORT].sort();
+		peIter = qmIter->second.qryMatchList[E_CLOSE_Y][E_SHORT].begin();
+		for(;peIter !=qmIter->second.qryMatchList[E_CLOSE_Y][E_SHORT].end();
+			peIter++){
+				UpdatePosition(qmIter->first, E_CLOSE_Y, E_SHORT,
+						peIter->volume,
+						peIter->price);
+		}
+
+		qmIter->second.qryMatchList[E_CLOSE_T][E_LONG].sort();
+		peIter = qmIter->second.qryMatchList[E_CLOSE_T][E_LONG].begin();
+		for(;peIter != qmIter->second.qryMatchList[E_CLOSE_T][E_LONG].end();
+			peIter++){
+				UpdatePosition(qmIter->first, E_CLOSE_T, E_LONG,
+						peIter->volume,
+						peIter->price);
+		}
+
+		qmIter->second.qryMatchList[E_CLOSE_T][E_SHORT].sort();
+		peIter = qmIter->second.qryMatchList[E_CLOSE_T][E_SHORT].begin();
+		for(;peIter !=qmIter->second.qryMatchList[E_CLOSE_T][E_SHORT].end();
+			peIter++){
+				UpdatePosition(qmIter->first, E_CLOSE_T, E_SHORT,
+						peIter->volume,
+						peIter->price);
+		}
+	}
 }
 
 void PositionManager::UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price)

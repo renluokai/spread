@@ -60,7 +60,9 @@ bool Trader::init(){
 	pthread_create(&user_input_thread, NULL, user_command_fn, NULL);
 	bool ret = false;
 	ret = strategy->on_init();
-	return ret;
+	if(ret==false) return ret;
+	positionManager->GeneratePositionFromQryMatch();
+	return true;
 }
 
 void Trader::add_instrument_info(InstrumentInfo* info)

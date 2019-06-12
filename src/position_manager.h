@@ -15,7 +15,6 @@ public:
 	void ShowPosition(const char* ins=NULL);
 	void ShowQryMatch();
 	int  GetPosition(const char* ins, EPositionType posType);
-private:
 	void GeneratePositionFromQryMatch();	
 public:
 	struct PositionEntry{
