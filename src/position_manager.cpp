@@ -302,13 +302,13 @@ void PositionManager::ShowQryMatch()
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].size()>0){
-			cout<<"----------close today long----------"<<endl;
+			cout<<"----------close today short----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].begin(),
 				(iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].size()>0){
-			cout<<"----------close yesterday long----------"<<endl;
+			cout<<"----------close yesterday short----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].begin(),
 				(iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].end(),
 				ShowMatchEntry);
