@@ -32,6 +32,7 @@ Instrument::Instrument(char *ins_name)
 	reached = false;
 	lastQuote = new Quote;
 	trader = Trader::GetTrader();
+	priceTick = 0.0;
 }
 
 void Instrument::ShowState()
@@ -76,19 +77,24 @@ printf(buffer, "Locked position is %d\n", lockedPosition);
 		}
 		else{
 			//has locked position
-			
+			//check stoploss and do respective action
+			CheckStopLoss();	
 			//full the close condition
 			if(askSpread >= closeThreshold)
 			{
 				FullCloseLong(lockedPosition);
+			}else{
+				//don't full close condition, cancel close orders
+				DoNotFullCloseLong();
 			}
 			//full the open condition
 			if(bidSpread <= openThreshold)
 			{
 				FullOpenLong(lockedPosition);
+			}else{
+				//don't full open condition, cancel open orders
+				DoNotFullOpenLong();
 			}
-
-			//check stoploss and do respective action
 		}
 	}else if(direction == E_DIR_DOWN){
 		int lockedPosition = CalcLockedPosition(mainIns->name, mainIns->relativeIns->name, direction);
@@ -109,18 +115,22 @@ printf(buffer, "Locked position is %d\n", lockedPosition);
 		}
 		else{
 			//has locked position
-			
+			//check stoploss and do respective action
+			CheckStopLoss();	
 			//full the close condition
 			if(bidSpread <= closeThreshold)
 			{
 				FullCloseShort(lockedPosition);
+			}else{
+				DoNotFullCloseLong();
 			}
 			//full the open condition
 			if(askSpread >= openThreshold)
 			{
 				FullOpenShort(lockedPosition);
+			}else{
+				DoNotFullOpenShort();
 			}
-			//check stoploss and do respective action
 		}
 	}
 }
@@ -130,12 +140,12 @@ void Instrument::ShowQuote()
 	sprintf(buffer,"Q %s %s %.5f %d %.5f %d %.5f %.5f\n",
 			insType==E_INS_FORWARD?"F":"R",
 			lastQuote->InstrumentID,
-			lastQuote->AskPrice1,
-			lastQuote->AskVolume1,
 			lastQuote->BidPrice1,
 			lastQuote->BidVolume1,
-			askSpread,
-			bidSpread);
+			lastQuote->AskPrice1,
+			lastQuote->AskVolume1,
+			bidSpread,
+			askSpread);
 	trader->log(buffer);
 }
 void Instrument::CalcSpread(bool rct)
@@ -457,6 +467,31 @@ void Instrument::FullCloseLong(int lockedPosition)
 }
 void Instrument::DoNotFullCloseLong()
 {
+	if(mainIns==firstCloseIns){
+		vector<Order*> ods;
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+	}else{
+		vector<Order*> ods;
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+	}
 }
 
 void Instrument::FullOpenShort(int lockedPosition)
@@ -646,4 +681,44 @@ void Instrument::FullCloseShort(int lockedPosition)
 }
 void Instrument::DoNotFullCloseShort()
 {
+	if(mainIns==firstCloseIns){
+		vector<Order*> ods;
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+	}else{
+		vector<Order*> ods;
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
+		if(ods.size()==0){
+		}else{
+			CancelOrders(ods);
+		}			
+	}
+}
+void Instrument::CheckStopLoss()
+{
+	trader->log("let's stop loss");
+	int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
+	int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+	double tradedSpread = 0.0;
+	if(lockedPositionYesterday>0){
+		tradedSpread = 
+		trader->GetAverageSpread(mainIns->name, mainIns->relativeIns->name,
+								lockedPostionYesterday, lockedPositionToday, 
+								direction==E_DIR_UP?E_LONG:E_SHORT);
+	}else{
+		tradedSpread = trader->GetHeadSpread(mainIns->name, mainIns->relativeIns->name, direction==E_DIR_UP?E_LONG:E_SHORT);
+	}
 }

@@ -30,6 +30,8 @@ enum SpreadCondition{
 class Instrument
 {
 public:
+	double priceTick;
+public:
 	Instrument(char*);
 	void on_quote(Quote*);	
 	void on_match(Order*);	
@@ -38,7 +40,7 @@ public:
 	void on_insert(Order*);	
 	void ShowState();
 	void ShowQuote();
-
+	void CheckStopLoss();
 	void CalcSpread(bool rct=true);
 	void CancelOrders(vector<Order*> &ods);
 	int	 CalcLockedPosition(const char* main, const char* second, EDirection dir);

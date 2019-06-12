@@ -162,6 +162,11 @@ bool Dong0Strategy::on_init()
 	forward_ins->relativeIns = recent_ins;
 	recent_ins->relativeIns = forward_ins;
 
+	forward_ins->priceTick =
+		trader_->get_instrument_info(forward_contract_).PriceTick;
+	recent_ins->priceTick =
+		trader_->get_instrument_info(recent_contract_).PriceTick;
+
 	forward_ins->insType = E_INS_FORWARD;
 	recent_ins->insType = E_INS_RECENT;
 
