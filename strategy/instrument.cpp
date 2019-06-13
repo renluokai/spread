@@ -25,6 +25,7 @@ EDirection	Instrument::direction = E_DIR_INVALID;
 int			Instrument::maxPosition = 0;
 int			Instrument::submitMax = 0;
 bool		Instrument::loop = true;
+bool		Instrument::needToStopLoss=false;
 
 Instrument::Instrument(char *ins_name)
 {
@@ -720,5 +721,19 @@ void Instrument::CheckStopLoss()
 								direction==E_DIR_UP?E_LONG:E_SHORT);
 	}else{
 		tradedSpread = trader->GetHeadSpread(mainIns->name, mainIns->relativeIns->name, direction==E_DIR_UP?E_LONG:E_SHORT);
+	}
+
+	if(direction == E_DIR_UP){
+		if((bidSpread + stopLoss*priceTick) <= tradedSpread){
+			needToStopLoss = true;
+		}else{
+			needToStopLoss = false;
+		}
+	}else{
+		if((askSpread - stopLoss*priceTick) >= tradedSpread){
+			needToStopLoss = true;
+		}else{
+			needToStopLoss = false;
+		}
 	}
 }

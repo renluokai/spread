@@ -88,5 +88,6 @@ public:
 	static int			maxPosition;
 	static int			submitMax;
 	static bool			loop;
+	static bool			needToStopLoss;
 };
 #endif /* INSTRUMENT_H__ */ 
