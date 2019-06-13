@@ -716,7 +716,7 @@ void Instrument::CheckStopLoss()
 	if(lockedPositionYesterday>0){
 		tradedSpread = 
 		trader->GetAverageSpread(mainIns->name, mainIns->relativeIns->name,
-								lockedPostionYesterday, lockedPositionToday, 
+								lockedPositionYesterday, lockedPositionToday, 
 								direction==E_DIR_UP?E_LONG:E_SHORT);
 	}else{
 		tradedSpread = trader->GetHeadSpread(mainIns->name, mainIns->relativeIns->name, direction==E_DIR_UP?E_LONG:E_SHORT);

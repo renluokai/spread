@@ -16,6 +16,10 @@ public:
 	void ShowQryMatch();
 	int  GetPosition(const char* ins, EPositionType posType);
 	void GeneratePositionFromQryMatch();	
+
+	double GetHeadSpread(const char *main, const char *second,ELongShort ls);
+	double GetAverageSpread(const char *main, const char *second, 
+						int volumeYesterday, int volumeToday, ELongShort ls);
 public:
 	struct PositionEntry{
 		string instrument;

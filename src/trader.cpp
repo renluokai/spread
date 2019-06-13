@@ -303,3 +303,20 @@ void Trader::UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int
 {
 	positionManager->UpdateQryMatch(instrument, oc, ls,volume, price);
 }
+
+double Trader::GetAverageSpread(const char *main, const char *second, 
+						int volumeYesterday, int volumeToday, ELongShort ls)
+{
+	double spread=0.0;
+	spread =
+		positionManager->GetAverageSpread(main, second, volumeYesterday,
+											volumeToday, ls);
+	return spread;
+}
+double Trader::GetHeadSpread(const char *main, const char *second,
+							ELongShort ls)
+{
+	double spread=0.0;
+	spread = positionManager->GetHeadSpread(main, second, ls);
+	return spread;
+}

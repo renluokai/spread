@@ -315,3 +315,15 @@ void PositionManager::ShowQryMatch()
 		}
 	}
 }
+
+double PositionManager::GetHeadSpread(const char *main, const char *second,ELongShort ls)
+{
+	double spread=0.0;
+	return spread;
+}
+double PositionManager::GetAverageSpread(const char *main, const char *second, 
+						int volumeYesterday, int volumeToday, ELongShort ls)
+{
+	double spread=0.0;
+	return spread;
+}

@@ -35,6 +35,11 @@ public:
 	int GetShortPositionYesterday(const char* ins);
 	int GetLongPositionToday(const char* ins);
 	int GetShortPositionToday(const char* ins);
+
+	double GetHeadSpread(const char *main, const char *second,ELongShort ls);
+	double GetAverageSpread(const char *main, const char *second, 
+						int volumeYesterday, int volumeToday, ELongShort ls);
+
 	void UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int volume, double price, EPositionType pe=P_LONGSHORT);
 	void UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
 
