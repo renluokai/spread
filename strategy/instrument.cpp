@@ -710,7 +710,6 @@ void Instrument::DoNotFullCloseShort()
 }
 void Instrument::CheckStopLoss()
 {
-	trader->log("let's stop loss");
 	int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
 	int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
 	double tradedSpread = 0.0;
@@ -725,12 +724,59 @@ void Instrument::CheckStopLoss()
 
 	if(direction == E_DIR_UP){
 		if((bidSpread + stopLoss*priceTick) <= tradedSpread){
+			trader->log("let's stop loss");
 			needToStopLoss = true;
+			vector<Order*> ods;
+			vector<Order*>::iterator iter;
+
+			if(mainIns == firstOpenIns){
+				trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
+			}else{
+				trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
+			}
+			if(ods.size()>0){
+				trader->log("Wait for second leg match\n");
+				return;
+			}
+			if(mainIns == firstOpenIns){
+				trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
+			}else{
+				trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
+			}
+			if(ods.size()==0){
+				const char* nm = firstCloseIns->name;
+				double px = 0.0;
+				EOpenClose oc;
+				ELongShort ls;
+				int vol = 0;
+				if(mainIns == firstCloseIns){
+					ls = E_LONG;
+					px = firstCloseIns->lastQuote->BidPrice1;
+				}else{
+					ls = E_SHORT;
+					px = firstCloseIns->lastQuote->AskPrice1;
+				}
+				if(lockedPositionToday > 0){
+					oc = E_CLOSE_T;
+					vol = lockedPositionToday/submitMax>0?submitMax:lockedPositionToday%submitMax;
+				}else if(lockedPositionYesterday>0){
+					oc = E_CLOSE_Y;
+					vol = lockedPositionYesterday/submitMax>0?submitMax:lockedPositionYesterday%submitMax;
+				}
+				Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
+				trader->submit_order(new_order);
+				return;
+			}else{
+				CancelOrders(ods);
+			}			
 		}else{
+			if(needToStopLoss == true){
+			}
 			needToStopLoss = false;
 		}
 	}else{
 		if((askSpread - stopLoss*priceTick) >= tradedSpread){
+			trader->log("let's stop loss");
 			needToStopLoss = true;
 		}else{
 			needToStopLoss = false;
