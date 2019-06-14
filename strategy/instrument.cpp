@@ -283,6 +283,9 @@ void Instrument::CancelOrders(vector<Order*> &ods)
 
 void Instrument::FullOpenLong(int lockedPosition)
 {
+	if(needToStopLoss==true && lockedPosition>0){
+		return;
+	}
 	trader->log(__FUNCTION__);trader->log("\n");
 	if(mainIns==firstOpenIns){
 		//open from main instrument
@@ -402,10 +405,12 @@ void Instrument::FullCloseLong(int lockedPosition)
 		//close from main instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
 			return;
 		}
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
@@ -422,12 +427,22 @@ void Instrument::FullCloseLong(int lockedPosition)
 			}else{
 				const char* nm = firstCloseIns->name;
 				double price = firstCloseIns->lastQuote->AskPrice1;
-				int vol = lockedPosition/submitMax>=1?submitMax:lockedPosition%submitMax;
+				int vol = 0;
+				EOpenClose oc;
+				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+				if(lockedPositionToday>0){
+					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
+					oc  = E_CLOSE_T;
+				}else if(lockedPositionYesterday>0){
+					vol = lockedPositionYesterday/submitMax>=1?submitMax:lockedPositionYesterday%submitMax;
+					oc  = E_CLOSE_Y;
+				}
 				if(vol==0){
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE_T, E_LONG);
+				Order* o =trader->NewOrder(nm, price, vol, oc, E_LONG);
 				trader->submit_order(o);
 			}
 		}
@@ -435,10 +450,12 @@ void Instrument::FullCloseLong(int lockedPosition)
 		//close from second instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()!=0){
 			return;
 		}
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
@@ -455,12 +472,22 @@ void Instrument::FullCloseLong(int lockedPosition)
 			}else{
 				const char* nm = firstCloseIns->name;
 				double price = firstCloseIns->lastQuote->BidPrice1;
-				int vol = lockedPosition/submitMax>=1?submitMax:lockedPosition%submitMax;
+				int vol = 0;
+				EOpenClose oc;
+				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionToday = CalcLockedPositionToday(firstCloseIns->name, firstCloseIns->relativeIns->name,direction);
+				if(lockedPositionToday>0){
+					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
+					oc  = E_CLOSE_T;
+				}else if(lockedPositionYesterday>0){
+					vol = lockedPositionYesterday/submitMax>=1?submitMax:lockedPositionYesterday%submitMax;
+					oc  = E_CLOSE_Y;
+				}
 				if(vol==0){
-					trader->log("Can't open volume 0 close order\n");
+					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE_T, E_SHORT);
+				Order* o = trader->NewOrder(nm, price, vol, oc, E_SHORT);
 				trader->submit_order(o);
 			}
 		}
@@ -498,6 +525,9 @@ void Instrument::DoNotFullCloseLong()
 void Instrument::FullOpenShort(int lockedPosition)
 {
 	trader->log(__FUNCTION__);trader->log("\n");
+	if(needToStopLoss==true && lockedPosition>0){
+		return;
+	}
 	if(mainIns==firstOpenIns){
 		//open from main instrument
 		vector<Order*> ods;
@@ -616,10 +646,12 @@ void Instrument::FullCloseShort(int lockedPosition)
 		//close from main instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()!=0){
 			return;
 		}
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
@@ -636,12 +668,22 @@ void Instrument::FullCloseShort(int lockedPosition)
 			}else{
 				const char* nm = firstCloseIns->name;
 				double price = firstCloseIns->lastQuote->AskPrice1;
-				int vol = lockedPosition/submitMax>=1?submitMax:lockedPosition%submitMax;
+				int vol = 0;
+				EOpenClose oc;
+				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+				if(lockedPositionToday){
+					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
+					oc = E_CLOSE_T;
+				}else if(lockedPositionYesterday){
+					vol = lockedPositionYesterday/submitMax>=1?submitMax:lockedPositionYesterday%submitMax;
+					oc = E_CLOSE_Y;
+				}
 				if(vol==0){
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, E_CLOSE_T, E_SHORT);
+				Order* o =trader->NewOrder(nm, price, vol, oc, E_SHORT);
 				trader->submit_order(o);
 			}
 		}
@@ -649,10 +691,12 @@ void Instrument::FullCloseShort(int lockedPosition)
 		//close from second instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
 			return;
 		}
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()>0){
 			vector<Order*>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
@@ -669,12 +713,22 @@ void Instrument::FullCloseShort(int lockedPosition)
 			}else{
 				const char* nm = firstCloseIns->name;
 				double price = firstCloseIns->lastQuote->AskPrice1;
-				int vol = lockedPosition/submitMax>=1?submitMax:lockedPosition%submitMax;
+				int vol = 0;
+				EOpenClose oc;
+				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+				if(lockedPositionToday){
+					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
+					oc = E_CLOSE_T;
+				}else if(lockedPositionYesterday){
+					vol = lockedPositionYesterday/submitMax>=1?submitMax:lockedPositionYesterday%submitMax;
+					oc = E_CLOSE_Y;
+				}
 				if(vol==0){
 					trader->log("Can't open volume 0 close order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, E_CLOSE_T, E_LONG);
+				Order* o = trader->NewOrder(nm, price, vol, oc, E_LONG);
 				trader->submit_order(o);
 			}
 		}
@@ -722,12 +776,12 @@ void Instrument::CheckStopLoss()
 		tradedSpread = trader->GetHeadSpread(mainIns->name, mainIns->relativeIns->name, direction==E_DIR_UP?E_LONG:E_SHORT);
 	}
 
+	vector<Order*> ods;
+	vector<Order*>::iterator iter;
 	if(direction == E_DIR_UP){
 		if((bidSpread + stopLoss*priceTick) <= tradedSpread){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
-			vector<Order*> ods;
-			vector<Order*>::iterator iter;
 
 			if(mainIns == firstOpenIns){
 				trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
@@ -763,14 +817,46 @@ void Instrument::CheckStopLoss()
 					oc = E_CLOSE_Y;
 					vol = lockedPositionYesterday/submitMax>0?submitMax:lockedPositionYesterday%submitMax;
 				}
-				Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
-				trader->submit_order(new_order);
-				return;
+				trader->GetOrder(firstCloseIns->name, oc, ls, ods);
+				if(ods.size()==0){
+					if(vol>0){
+						Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
+						trader->submit_order(new_order);
+						return;
+					}
+				}else{
+					//check to update price
+					for(iter==ods.begin(); iter!=ods.end();iter++){
+						if(mainIns == firstCloseIns){
+							if((*iter)->submit_price > firstCloseIns->lastQuote->BidPrice1
+							&& (*iter)->canceling == false
+							&& (*iter)->state != E_ORIGINAL){
+								trader->cancel_order(*iter);
+							}
+						}else{
+							if((*iter)->submit_price < firstCloseIns->lastQuote->AskPrice1
+							&& (*iter)->canceling == false
+							&& (*iter)->state != E_ORIGINAL){
+								trader->cancel_order(*iter);
+							}
+						}
+					}
+				}
 			}else{
+				//cancel open orders to prepare to stoploss	
 				CancelOrders(ods);
 			}			
 		}else{
 			if(needToStopLoss == true){
+				if(mainIns == firstCloseIns){
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
+					CancelOrders(ods);
+				}else{
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
+					CancelOrders(ods);
+				}
 			}
 			needToStopLoss = false;
 		}
@@ -778,7 +864,85 @@ void Instrument::CheckStopLoss()
 		if((askSpread - stopLoss*priceTick) >= tradedSpread){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
+			vector<Order*> ods;
+			vector<Order*>::iterator iter;
+
+			if(mainIns == firstOpenIns){
+				trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
+			}else{
+				trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
+			}
+			if(ods.size()>0){
+				trader->log("Wait for second leg match\n");
+				return;
+			}
+			//check if has open order, if have cancel
+			if(mainIns == firstOpenIns){
+				trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
+			}else{
+				trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
+			}
+			if(ods.size()==0){
+				const char* nm = firstCloseIns->name;
+				double px = 0.0;
+				EOpenClose oc;
+				ELongShort ls;
+				int vol = 0;
+				if(mainIns == firstCloseIns){
+					ls = E_SHORT;
+					px = firstCloseIns->lastQuote->AskPrice1;
+				}else{
+					ls = E_LONG;
+					px = firstCloseIns->lastQuote->BidPrice1;
+				}
+				if(lockedPositionToday > 0){
+					oc = E_CLOSE_T;
+					vol = lockedPositionToday/submitMax>0?submitMax:lockedPositionToday%submitMax;
+				}else if(lockedPositionYesterday>0){
+					oc = E_CLOSE_Y;
+					vol = lockedPositionYesterday/submitMax>0?submitMax:lockedPositionYesterday%submitMax;
+				}
+				trader->GetOrder(firstCloseIns->name, oc, ls, ods);
+				if(ods.size()==0){
+					if(vol>0){
+						Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
+						trader->submit_order(new_order);
+						return;
+					}
+				}else{
+					//check to update price
+					for(iter==ods.begin(); iter!=ods.end();iter++){
+						if(mainIns == firstCloseIns){
+							if((*iter)->submit_price < firstCloseIns->lastQuote->AskPrice1
+							&& (*iter)->canceling == false
+							&& (*iter)->state != E_ORIGINAL){
+								trader->cancel_order(*iter);
+							}
+						}else{
+							if((*iter)->submit_price > firstCloseIns->lastQuote->BidPrice1
+							&& (*iter)->canceling == false
+							&& (*iter)->state != E_ORIGINAL){
+								trader->cancel_order(*iter);
+							}
+						}
+					}
+				}
+			}else{
+				//cancel open orders to prepare to stoploss	
+				CancelOrders(ods);
+			}			
 		}else{
+			if(needToStopLoss == true){
+				if(mainIns == firstCloseIns){
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
+					CancelOrders(ods);
+				}else{
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
+					trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
+					CancelOrders(ods);
+				}
+			}
 			needToStopLoss = false;
 		}
 	}
