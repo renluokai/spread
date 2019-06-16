@@ -767,13 +767,36 @@ void Instrument::CheckStopLoss()
 	int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
 	int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
 	double tradedSpread = 0.0;
+
+	const char *f, *r;
+	bool forwardIsMain;
+	ELongShort ls;
+	if(insType==E_INS_FORWARD){
+		f = this->name;
+		r = this->relativeIns->name;
+		if(this==mainIns){
+			forwardIsMain = true;
+		}else{
+			forwardIsMain = false;
+		}
+	}else{
+		r = this->name;
+		f = this->relativeIns->name;
+		if(this==mainIns){
+			forwardIsMain = false;
+		}else{
+			forwardIsMain = true;
+		}
+	}
+	ls = direction==E_DIR_UP?E_LONG:E_SHORT;
+
 	if(lockedPositionYesterday>0){
 		tradedSpread = 
-		trader->GetAverageSpread(mainIns->name, mainIns->relativeIns->name,
+		trader->GetAverageSpread(f, r,
 								lockedPositionYesterday, lockedPositionToday, 
-								direction==E_DIR_UP?E_LONG:E_SHORT);
+								ls, forwardIsMain);
 	}else{
-		tradedSpread = trader->GetHeadSpread(mainIns->name, mainIns->relativeIns->name, direction==E_DIR_UP?E_LONG:E_SHORT);
+		tradedSpread = trader->GetHeadSpread(f, r, ls, forwardIsMain);
 	}
 
 	vector<Order*> ods;

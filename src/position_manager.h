@@ -17,9 +17,11 @@ public:
 	int  GetPosition(const char* ins, EPositionType posType);
 	void GeneratePositionFromQryMatch();	
 
-	double GetHeadSpread(const char *main, const char *second,ELongShort ls);
-	double GetAverageSpread(const char *main, const char *second, 
-						int volumeYesterday, int volumeToday, ELongShort ls);
+	double GetHeadSpread(const char *forward, const char *recent,
+						ELongShort ls, bool forwardIsMain);
+	double GetAverageSpread(const char *forward, const char *recent, 
+						int volumeYesterday, int volumeToday,
+						ELongShort ls, bool forwardIsMain);
 public:
 	struct PositionEntry{
 		string instrument;
@@ -48,7 +50,7 @@ public:
 		Position position[P_LONGSHORT];
 	};
 private:
-	map<string, PositionInfo> instrument_position_info;
+	map<string, PositionInfo> insPositionInfo;
 	map<string, QryMatch> instrument_qry_match;
 	map<string, YesterdayPosition> instrument_yesterday_position;
 };

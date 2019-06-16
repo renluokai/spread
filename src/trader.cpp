@@ -304,19 +304,22 @@ void Trader::UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int
 	positionManager->UpdateQryMatch(instrument, oc, ls,volume, price);
 }
 
-double Trader::GetAverageSpread(const char *main, const char *second, 
-						int volumeYesterday, int volumeToday, ELongShort ls)
+double Trader::GetAverageSpread(const char *forward, const char *recent, 
+						int volumeYesterday, int volumeToday,
+						ELongShort ls, bool forwardIsMain)
 {
 	double spread=0.0;
-	spread =
-		positionManager->GetAverageSpread(main, second, volumeYesterday,
-											volumeToday, ls);
+	spread = positionManager->GetAverageSpread(forward, recent,
+											volumeYesterday,
+											volumeToday, ls,
+											forwardIsMain);
 	return spread;
 }
-double Trader::GetHeadSpread(const char *main, const char *second,
-							ELongShort ls)
+double Trader::GetHeadSpread(const char *forward, const char *recent,
+					ELongShort ls, bool forwardIsMain)
 {
 	double spread=0.0;
-	spread = positionManager->GetHeadSpread(main, second, ls);
+	spread = positionManager->GetHeadSpread(forward, recent, ls,
+											forwardIsMain);
 	return spread;
 }
