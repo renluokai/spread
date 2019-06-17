@@ -6,11 +6,11 @@
 	<main_contract>0</main_contract>
     <open_with>0</open_with>
     <close_with>0</close_with>
-    <open_threshold>-500</open_threshold>
-    <close_threshold>-450</close_threshold>
+    <open_threshold>-780</open_threshold>
+    <close_threshold>-730</close_threshold>
 	<!-- 0看涨 1看跌!-->
     <direction>0</direction>
-    <stop_loss>0</stop_loss>
+    <stop_loss>5000</stop_loss>
     <stop_loss_option>0</stop_loss_option>
     <max_postion>3</max_postion>
     <submit_max>1</submit_max>
