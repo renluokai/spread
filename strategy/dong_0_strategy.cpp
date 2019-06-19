@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
+#include <fstream>
 #include <iostream>
 #include "../utility/tinyxml2.h"
 #include "../include/trader.h"
@@ -190,7 +191,50 @@ bool Dong0Strategy::on_init()
 	Instrument::maxPosition = max_position_;
 	Instrument::direction = direction_==0 ? E_DIR_UP : E_DIR_DOWN;
 	Instrument::loop = true;
+	string 	positionFileName = "position.cfg";
+	fstream position_file; 
+	position_file.open(positionFileName, position_file.in);
+	if(!position_file.is_open()){
+		trader_->log("failed to open position.log file, so there is no old position loaded\n");
+	}else{
+		int tradingDay = trader_->GetTradingDay();
+		trader_->log("let's process old position\n");
+		while(position_file.eof()==false){
+			char buffer[128]={0};
+			position_file.getline(buffer,128);
+			int date=0;
+			int volume=0;
+			double spread=0.0;
+			int f=0, s=0;
+			for(int i=0;i<128;i++){
+				if(buffer[i]==' '){
+					if(f==0){
+						f=i;
+					}else{
+						s=i;
+					}
+				}
+			}
+			date = atoi(buffer);
+			spread = atof(buffer+f+1);
+			volume = atoi(buffer+s+1);
 
+			LockedSpread lockedSpread;
+			lockedSpread.date = date;
+			lockedSpread.volume = volume;
+			lockedSpread.spread = spread;
+			if(volume!=0){
+				if(date<tradingDay){
+					Instrument::lockedSpreadY.push_back(lockedSpread);
+				}else{
+					Instrument::lockedSpreadT.push_back(lockedSpread);
+				}
+			}
+			//Instrument::lockedSpread
+		}
+	}
+	Instrument::ShowLockedSpread();
+	
 	instruments.insert(make_pair(forward_contract_, forward_ins));
 	instruments.insert(make_pair(recent_contract_, recent_ins));
 	quote_channel_->subscribe(forward_contract_);

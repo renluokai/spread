@@ -69,10 +69,10 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 		bret = DoSettlementInfoConfirm();
 		if(bret == false) return false;
 	}
-
 	bret = DoQryInstrument();
 	if(bret == false) return false;
 
+#if 0
 	bret = DoQryOrder();
 	if(bret == false) return false;
 
@@ -85,7 +85,7 @@ bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 
 	bret = DoQryTrade();
 	if(bret == false) return false;
-
+#endif
 	return true;
 }
 
@@ -239,6 +239,8 @@ log_stream_<<'['<<__FUNCTION__<<']'<<"TradingDay="<<pRspUserLogin->TradingDay<<"
 }
 	if(bIsLast == true){
 		if(login_ok_ == false && (pRspInfo == NULL || pRspInfo->ErrorID == 0)){
+			
+			tradingDay = atoi(trade_api_->GetTradingDay());
 			if(pRspUserLogin){
 				session_id_ = pRspUserLogin->SessionID;
 				front_id_ = pRspUserLogin->FrontID;
@@ -499,6 +501,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 	o.order_local_id = order_ref_2_order_local_id[pTrade->OrderRef];	
 	o.match_volume = pTrade->Volume;
 	o.match_price = pTrade->Price;
+	o.date = atoi(pTrade->TradingDay);
 
 	if(pTrade->OffsetFlag == THOST_FTDC_OF_Open){
 		if(pTrade->Direction==THOST_FTDC_D_Buy){
@@ -1139,3 +1142,4 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 		}
 	}
 }
+

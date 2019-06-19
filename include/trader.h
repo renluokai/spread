@@ -28,6 +28,7 @@ public:
 	bool RegisterQuoteChannel(QuoteChannel*, int id);
 	bool RegisterTradeChannel(TradeChannel*, int id);
 
+	int GetTradingDay(int id=0);
 	int GetPosition(const char* ins, EPositionType posType);
 	int GetLongPosition(const char* ins);
 	int GetShortPosition(const char* ins);

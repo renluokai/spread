@@ -1,8 +1,23 @@
 #ifndef INSTRUMENT_H__
 #define INSTRUMENT_H__
+#include <list>
 #include "../include/trader.h"
+
 class Quote;
 class Order;
+struct LockedSpread{
+	int date;
+	int volume;
+	double spread;
+	bool operator <(const LockedSpread& lkP){
+		return spread - lkP.spread < 0.000001;
+	}
+};
+struct MatchInfo{
+	int date;
+	int volume;
+	double price;
+};
 enum InsType
 {
 	E_INS_INVALID,
@@ -21,12 +36,7 @@ enum EDirection
 	E_DIR_UP,
 	E_DIR_DOWN,
 };
-enum SpreadCondition{
-	SC_NORMAL,
-	SC_OPEN_NEW,
-	SC_STOP_LOSS,
-	SC_TARGET_PROFIT,
-};
+
 class Instrument
 {
 public:
@@ -43,9 +53,9 @@ public:
 	void CheckStopLoss();
 	void CalcSpread(bool rct=true);
 	void CancelOrders(vector<Order*> &ods);
-	int	 CalcLockedPosition(const char* main, const char* second, EDirection dir);
-	int	 CalcLockedPositionYesterday(const char* main, const char* second, EDirection dir);
-	int	 CalcLockedPositionToday(const char* main, const char* second, EDirection dir);
+	int	 CalcLockedPosition();
+	int	 CalcLockedPositionYesterday();
+	int	 CalcLockedPositionToday();
 	void FullOpenLong(int lockedPosition);
 	void DoNotFullOpenLong();
 
@@ -57,6 +67,7 @@ public:
 
 	void FullCloseShort(int lockedPosition);
 	void DoNotFullCloseShort();
+static void ShowLockedSpread();
 	char 		name[64];
 	bool 		reached;
 	InsType 	insType;
@@ -66,9 +77,11 @@ public:
 
 	Trader		*trader;
 
-
-	static SpreadCondition bidSpreadCondition;
-	static SpreadCondition askSpreadCondition;
+	
+	static list<LockedSpread> lockedSpreadT;
+	static list<LockedSpread> lockedSpreadY;
+	static list<MatchInfo> firstOpenMatch;
+	static list<MatchInfo> firstCloseMatch;
 
 	static Instrument*	firstOpenIns;
 	static Instrument*	firstCloseIns;

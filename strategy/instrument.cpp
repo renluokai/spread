@@ -7,6 +7,10 @@
 using namespace std;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
 
+list<LockedSpread> 	Instrument::lockedSpreadY;
+list<LockedSpread> 	Instrument::lockedSpreadT;
+list<MatchInfo> 	Instrument::firstOpenMatch;
+list<MatchInfo> 	Instrument::firstCloseMatch;
 Instrument*	Instrument::firstOpenIns = NULL;
 Instrument*	Instrument::firstCloseIns = NULL;
 Instrument*	Instrument::secondOpenIns = NULL;
@@ -59,7 +63,7 @@ void Instrument::on_quote(Quote *q)
 
 	if(direction == E_DIR_UP)
 	{
-		int lockedPosition = CalcLockedPosition(mainIns->name, mainIns->relativeIns->name, direction);
+		int lockedPosition = CalcLockedPosition();
 		{
 			char buffer[256]={0};
 			
@@ -98,7 +102,7 @@ void Instrument::on_quote(Quote *q)
 			}
 		}
 	}else if(direction == E_DIR_DOWN){
-		int lockedPosition = CalcLockedPosition(mainIns->name, mainIns->relativeIns->name, direction);
+		int lockedPosition = CalcLockedPosition();
 		{
 			char buffer[256]={0};
 			sprintf(buffer, "Locked position is %d\n", lockedPosition);
@@ -170,8 +174,31 @@ void Instrument::on_match(Order* o)
 			int vol = o->match_volume;
 			Order* new_order = trader->NewOrder(nm, px, vol, E_OPEN, o->long_short == E_LONG ? E_SHORT : E_LONG);
 			trader->submit_order(new_order);
+			MatchInfo matchInfo;
+			matchInfo.date = o->date;
+			matchInfo.volume = o->match_volume;
+			matchInfo.price = o->match_price;
+			firstOpenMatch.push(matchInfo);
 		}else{
-			//second leg, do nothing
+			//second leg, need to update lockedSpread
+			LockedSpread lockedSpread;
+			int reminder=o->match_volume;
+			while(reminder>0){
+				if(firstOpenMatch.front().volume > reminder){
+					lockedSpread.date = o->date;
+					lockedSpread.volume = reminder;
+					double spread=0.0;
+					if(insType==E_INS_FORWARD){
+						spread = o->match_price - firstOpenMatch.front().price;
+					}else{
+						spread = firstOpenMatch.front().price - o->match_price;
+					}
+					lockedSpread.spread = spread;
+					lockedSpreadT.push_back(lockedSpread);
+				}else{
+					
+				}
+			}
 		}
 	}else{
 	//close
@@ -184,12 +211,16 @@ void Instrument::on_match(Order* o)
 			const char* nm = secondCloseIns->name;
 			double px = o->long_short == E_LONG ? secondCloseIns->lastQuote->AskPrice1 :secondCloseIns->lastQuote->BidPrice1;
 			int vol = o->match_volume;
-			//TODO
-			//need to calc today position and yesterday position
+
 			Order* new_order = trader->NewOrder(nm, px, vol, o->open_close, o->long_short == E_LONG ? E_SHORT : E_LONG);
 			trader->submit_order(new_order);
+			MatchInfo matchInfo;
+			matchInfo.date = o->date;
+			matchInfo.volume = o->match_volume;
+			matchInfo.price = o->match_price;
+			firstCloseMatch.push(matchInfo);
 		}else{
-			//second leg, do nothing
+			//second leg, need to update lockedSpread
 		}
 	}
 }
@@ -230,45 +261,52 @@ void Instrument::on_insert(Order*)
 	cout<<__FUNCTION__<<": "<<name<<endl;
 }
 
-int Instrument::CalcLockedPosition(const char* main, const char* second, EDirection dir)
+int Instrument::CalcLockedPosition()
 {
-	int m=0,s=0;
-	if(dir == E_DIR_UP)	{
-		m = trader->GetLongPosition(main);
-		s = trader->GetShortPosition(second);
-		return min(m,s);
-	}else{
-		m = trader->GetShortPosition(main);
-		s = trader->GetLongPosition(second);
-		return min(m,s);
+	list<LockedSpread>::iterator iter;
+
+	int y=0;
+	int t=0;
+	for(iter=lockedSpreadY.begin();
+		iter!=lockedSpreadY.end();
+		iter++)
+	{
+		y+=iter->volume;
+	}
+
+	for(iter=lockedSpreadT.begin();
+		iter!=lockedSpreadT.end();
+		iter++)
+	{
+		t+=iter->volume;
 	}
 }
-int Instrument::CalcLockedPositionYesterday(const char* main, const char* second, EDirection dir)
+int Instrument::CalcLockedPositionYesterday()
 {
-	int m=0,s=0;
-	if(dir == E_DIR_UP)	{
-		m = trader->GetLongPositionYesterday(main);
-		s = trader->GetShortPositionYesterday(second);
-		return min(m,s);
-	}else{
-		m = trader->GetShortPositionYesterday(main);
-		s = trader->GetLongPositionYesterday(second);
-		return min(m,s);
+	list<LockedSpread>::iterator iter;
+
+	int y=0;
+	for(iter=lockedSpreadY.begin();
+		iter!=lockedSpreadY.end();
+		iter++)
+	{
+		y+=iter->volume;
 	}
+	return y;
 }
 
-int Instrument::CalcLockedPositionToday(const char* main, const char* second, EDirection dir)
+int Instrument::CalcLockedPositionToday()
 {
-	int m=0,s=0;
-	if(dir == E_DIR_UP)	{
-		m = trader->GetLongPositionToday(main);
-		s = trader->GetShortPositionToday(second);
-		return min(m,s);
-	}else{
-		m = trader->GetShortPositionToday(main);
-		s = trader->GetLongPositionToday(second);
-		return min(m,s);
+	list<LockedSpread>::iterator iter;
+
+	int t=0;
+	for(iter=lockedSpreadT.begin();
+		iter!=lockedSpreadT.end();
+		iter++)
+	{
+		t+=iter->volume;
 	}
+	return t;
 }
 void Instrument::CancelOrders(vector<Order*> &ods)
 {
@@ -444,8 +482,8 @@ void Instrument::FullCloseLong(int lockedPosition)
 				double price = firstCloseIns->lastQuote->AskPrice1;
 				int vol = 0;
 				EOpenClose oc;
-				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
-				int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionYesterday = CalcLockedPositionYesterday();
+				int lockedPositionToday = CalcLockedPositionToday();
 				if(lockedPositionToday>0){
 					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
 					oc  = E_CLOSE_T;
@@ -498,8 +536,8 @@ void Instrument::FullCloseLong(int lockedPosition)
 				double price = firstCloseIns->lastQuote->BidPrice1;
 				int vol = 0;
 				EOpenClose oc;
-				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
-				int lockedPositionToday = CalcLockedPositionToday(firstCloseIns->name, firstCloseIns->relativeIns->name,direction);
+				int lockedPositionYesterday = CalcLockedPositionYesterday();
+				int lockedPositionToday = CalcLockedPositionToday();
 				if(lockedPositionToday>0){
 					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
 					oc  = E_CLOSE_T;
@@ -708,8 +746,8 @@ void Instrument::FullCloseShort(int lockedPosition)
 				double price = firstCloseIns->lastQuote->AskPrice1;
 				int vol = 0;
 				EOpenClose oc;
-				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
-				int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionYesterday = CalcLockedPositionYesterday();
+				int lockedPositionToday = CalcLockedPositionToday();
 				if(lockedPositionToday){
 					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
 					oc = E_CLOSE_T;
@@ -762,8 +800,8 @@ void Instrument::FullCloseShort(int lockedPosition)
 				double price = firstCloseIns->lastQuote->AskPrice1;
 				int vol = 0;
 				EOpenClose oc;
-				int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
-				int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+				int lockedPositionYesterday = CalcLockedPositionYesterday();
+				int lockedPositionToday = CalcLockedPositionToday();
 				if(lockedPositionToday){
 					vol = lockedPositionToday/submitMax>=1?submitMax:lockedPositionToday%submitMax;
 					oc = E_CLOSE_T;
@@ -811,8 +849,8 @@ void Instrument::DoNotFullCloseShort()
 }
 void Instrument::CheckStopLoss()
 {
-	int lockedPositionYesterday = CalcLockedPositionYesterday(mainIns->name, mainIns->relativeIns->name,direction);
-	int lockedPositionToday = CalcLockedPositionToday(mainIns->name, mainIns->relativeIns->name,direction);
+	int lockedPositionYesterday = CalcLockedPositionYesterday();
+	int lockedPositionToday = CalcLockedPositionToday();
 	double tradedSpread = 0.0;
 
 	const char *f, *r;
@@ -1015,5 +1053,31 @@ void Instrument::CheckStopLoss()
 			}
 			needToStopLoss = false;
 		}
+	}
+}
+
+void Instrument::ShowLockedSpread()
+{
+	list<LockedSpread>::iterator iter;
+	lockedSpreadY.sort();
+	lockedSpreadT.sort();
+	Trader::GetTrader()->log("Yesterday locked position:\n");
+	for(iter=lockedSpreadY.begin();
+		iter!=lockedSpreadY.end();
+		iter++)
+	{
+		char buffer[128]={0};
+		sprintf(buffer,"%d %f %d\n",iter->date, iter->spread, iter->volume);
+		Trader::GetTrader()->log(buffer);
+	}
+
+	Trader::GetTrader()->log("Yesterday locked position:\n");
+	for(iter=lockedSpreadT.begin();
+		iter!=lockedSpreadT.end();
+		iter++)
+	{
+		char buffer[128]={0};
+		sprintf(buffer,"%d %f %d\n",iter->date, iter->spread, iter->volume);
+		Trader::GetTrader()->log(buffer);
 	}
 }

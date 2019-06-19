@@ -188,6 +188,15 @@ bool Trader::RegisterTradeChannel(TradeChannel* channel, int id)
 	else
 		return false;
 }
+int Trader::GetTradingDay(int id)
+{
+	int tradingDay=0;
+
+	if(tradeChannels.count(id) != 0){
+		return tradeChannels[id]->GetTradingDay();
+	}
+	return tradingDay;
+}
 
 bool Trader::submit_order(Order* o, int channel_id)
 {

@@ -10,6 +10,7 @@
     <close_threshold>-730</close_threshold>
 	<!-- 0看涨 1看跌!-->
     <direction>0</direction>
+    <locked_position>0</locked_position>
     <stop_loss>5000</stop_loss>
     <stop_loss_option>0</stop_loss_option>
     <max_postion>3</max_postion>

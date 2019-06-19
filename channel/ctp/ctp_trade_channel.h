@@ -23,6 +23,7 @@ public:
 	virtual bool close();
 	virtual bool submit(Order*);
 	virtual bool cancel(Order*);
+	virtual int GetTradingDay(){return tradingDay;};
 
 private:
 
@@ -81,5 +82,6 @@ private:
 	int order_ref_init_;
 	int order_ref_delta_;
 	int order_ref_high_;
+	int tradingDay;
 };
 #endif /* CTP_TRADE_CHANNEL_H__ */

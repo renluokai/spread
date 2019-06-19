@@ -9,5 +9,6 @@ public:
 	virtual bool close()=0;
 	virtual bool submit(Order*)=0;
 	virtual bool cancel(Order*)=0;
+	virtual int GetTradingDay()=0;
 };
 #endif /* I_TRADE_H__ */
