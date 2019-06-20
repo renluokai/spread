@@ -71,6 +71,7 @@ bool OrderManager::UpdateOrder(Order* o)
 			id = o->order_local_id;
 			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
 			tmp->total_matched += o->match_volume;
+			o->stop_loss = tmp->stop_loss;
 			if(tmp->total_matched == tmp->submit_volume){
 				instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
 				return true;

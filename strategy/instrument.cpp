@@ -182,6 +182,10 @@ void Instrument::on_match(Order* o)
 			firstOpenMatch.push_back(matchInfo);
 		}else{
 			//second leg, need to update lockedSpread
+			const char *targetFile="position.cfg";
+			fstream tmp;
+			tmp.open(targetFile,fstream::app);
+
 			LockedSpread lockedSpread;
 			int reminder=o->match_volume;
 			while(reminder>0){
@@ -209,9 +213,12 @@ void Instrument::on_match(Order* o)
 					}
 					lockedSpread.spread = spread;
 					lockedSpreadT.push_back(lockedSpread);
+
+					tmp<<lockedSpread.date<<" "<<lockedSpread.spread<<" "<<lockedSpread.volume<<endl;
 					firstOpenMatch.pop_front();	
 				}
 			}
+			tmp.close();
 		}
 	}else{
 	//close
@@ -226,6 +233,7 @@ void Instrument::on_match(Order* o)
 			int vol = o->match_volume;
 
 			Order* new_order = trader->NewOrder(nm, px, vol, o->open_close, o->long_short == E_LONG ? E_SHORT : E_LONG);
+			new_order->stop_loss = o->stop_loss;
 			trader->submit_order(new_order);
 			MatchInfo matchInfo;
 			matchInfo.date = o->date;
@@ -297,6 +305,7 @@ void Instrument::on_cancel(Order* o)
 			}
 		}
 		Order* new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
+		new_order->stop_loss = o->stop_loss;
 		trader->submit_order(new_order);
 	}
 
@@ -326,6 +335,7 @@ int Instrument::CalcLockedPosition()
 	{
 		t+=iter->volume;
 	}
+	return y+t;
 }
 int Instrument::CalcLockedPositionYesterday()
 {
@@ -898,36 +908,12 @@ void Instrument::CheckStopLoss()
 	int lockedPositionYesterday = CalcLockedPositionYesterday();
 	int lockedPositionToday = CalcLockedPositionToday();
 	double tradedSpread = 0.0;
-
-	const char *f, *r;
-	bool forwardIsMain;
-	ELongShort ls;
-	if(insType==E_INS_FORWARD){
-		f = this->name;
-		r = this->relativeIns->name;
-		if(this==mainIns){
-			forwardIsMain = true;
-		}else{
-			forwardIsMain = false;
-		}
+	if(stopLossType == E_STOPLOSS_AVERAGE){
+		tradedSpread = GetAverageSpread();
+	}else if(stopLossType == E_STOPLOSS_TICKBYTICK){
+		tradedSpread = GetBadSpread();
 	}else{
-		r = this->name;
-		f = this->relativeIns->name;
-		if(this==mainIns){
-			forwardIsMain = false;
-		}else{
-			forwardIsMain = true;
-		}
-	}
-	ls = direction==E_DIR_UP?E_LONG:E_SHORT;
-
-	if(lockedPositionYesterday>0){
-		tradedSpread = 
-		trader->GetAverageSpread(f, r,
-								lockedPositionYesterday, lockedPositionToday, 
-								ls, forwardIsMain);
-	}else{
-		tradedSpread = trader->GetHeadSpread(f, r, ls, forwardIsMain);
+		return;
 	}
 
 	vector<Order*> ods;
@@ -1163,4 +1149,46 @@ void Instrument::UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss,
 		perror("Update position file failed");
 		exit(1);
 	}
+}
+
+double Instrument::GetAverageSpread()
+{
+	double totalSpread=0.0;
+	double totalVolume=0.0;
+
+	list<LockedSpread>::iterator iter;
+	for(iter=lockedSpreadY.begin();
+		iter!=lockedSpreadY.end();
+		iter++)
+	{
+		totalSpread += iter->spread*iter->volume;
+		totalVolume += iter->volume;
+	}
+
+	for(iter=lockedSpreadT.begin();
+		iter!=lockedSpreadT.end();
+		iter++)
+	{
+		totalSpread += iter->spread*iter->volume;
+		totalVolume += iter->volume;
+	}
+	return totalSpread/totalVolume;
+}
+
+double Instrument::GetBadSpread()
+{
+	double spread=0.0;
+	lockedSpreadT.sort();
+	lockedSpreadY.sort();
+	list<LockedSpread> tmp;
+	list<LockedSpread> tmpT=lockedSpreadT;
+	list<LockedSpread> tmpY=lockedSpreadT;
+	
+	tmp.merge(tmpT);
+	tmp.merge(tmpY);
+
+	if(direction==E_DIR_UP){
+		tmp.reverse();
+	}
+	return tmp.front().spread;
 }

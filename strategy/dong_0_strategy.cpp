@@ -95,6 +95,13 @@ bool Dong0Strategy::load_config()
 	if(!element)PARSE_ERROR("direction");
 	direction_ = atoi(element->GetText());
 
+	element = root_element->FirstChildElement("stop_loss");
+	if(!element)PARSE_ERROR("stop_loss");
+	stop_loss_ = atoi(element->GetText());
+	element = root_element->FirstChildElement("stop_loss_type");
+	if(!element)PARSE_ERROR("stop_loss_type");
+	stop_loss_type_ = atoi(element->GetText());
+
 	element = root_element->FirstChildElement("max_postion");
 	if(!element)PARSE_ERROR("max_postion");
 	max_position_ = atoi(element->GetText());
@@ -182,6 +189,14 @@ bool Dong0Strategy::on_init()
 	Instrument::openWith = open_with_==0?E_INS_RECENT:E_INS_FORWARD;
 	Instrument::firstOpenIns = open_with_==0?recent_ins:forward_ins;
 	Instrument::secondOpenIns = Instrument::firstOpenIns->relativeIns;
+	Instrument::stopLoss = stop_loss_;
+	if(stop_loss_type_==0){
+		Instrument::stopLossType = E_STOPLOSS_AVERAGE;
+	}else if(stop_loss_type_==1){
+		Instrument::stopLossType = E_STOPLOSS_TICKBYTICK;
+	}else{
+		Instrument::stopLossType = E_STOPLOSS_NO;
+	}
 
 	Instrument::closeWith = close_with_==0?E_INS_RECENT:E_INS_FORWARD;
 	Instrument::firstCloseIns = close_with_==0?recent_ins:forward_ins;

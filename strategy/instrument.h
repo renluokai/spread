@@ -69,6 +69,8 @@ public:
 	void DoNotFullCloseShort();
 
 	void UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss, bool isToday);
+	double GetAverageSpread();
+	double GetBadSpread();
 static void ShowLockedSpread();
 	char 		name[64];
 	bool 		reached;
