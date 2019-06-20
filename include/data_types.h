@@ -75,6 +75,7 @@ struct Order : public Data{
 		state = E_ORIGINAL;
 		canceling = false;
 		date = 0;
+		stop_loss =false;
 	}
 	virtual void clear_data()
 	{
@@ -113,6 +114,7 @@ struct Order : public Data{
 	int insert_time;
 	int date;
 	bool canceling;
+	bool stop_loss;
 
 	int match_volume;//each match volume
 	double match_price;//each match volume

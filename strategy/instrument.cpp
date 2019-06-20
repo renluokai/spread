@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -178,13 +179,14 @@ void Instrument::on_match(Order* o)
 			matchInfo.date = o->date;
 			matchInfo.volume = o->match_volume;
 			matchInfo.price = o->match_price;
-			firstOpenMatch.push(matchInfo);
+			firstOpenMatch.push_back(matchInfo);
 		}else{
 			//second leg, need to update lockedSpread
 			LockedSpread lockedSpread;
 			int reminder=o->match_volume;
 			while(reminder>0){
 				if(firstOpenMatch.front().volume > reminder){
+					firstOpenMatch.front().volume -= reminder;
 					lockedSpread.date = o->date;
 					lockedSpread.volume = reminder;
 					double spread=0.0;
@@ -196,7 +198,18 @@ void Instrument::on_match(Order* o)
 					lockedSpread.spread = spread;
 					lockedSpreadT.push_back(lockedSpread);
 				}else{
-					
+					reminder -= firstOpenMatch.front().volume;
+					lockedSpread.date= o->date;
+					lockedSpread.volume = firstOpenMatch.front().volume;
+					double spread=0.0;
+					if(insType==E_INS_FORWARD){
+						spread = o->match_price - firstOpenMatch.front().price;
+					}else{
+						spread = firstOpenMatch.front().price - o->match_price;
+					}
+					lockedSpread.spread = spread;
+					lockedSpreadT.push_back(lockedSpread);
+					firstOpenMatch.pop_front();	
 				}
 			}
 		}
@@ -218,9 +231,42 @@ void Instrument::on_match(Order* o)
 			matchInfo.date = o->date;
 			matchInfo.volume = o->match_volume;
 			matchInfo.price = o->match_price;
-			firstCloseMatch.push(matchInfo);
+			firstCloseMatch.push_back(matchInfo);
 		}else{
 			//second leg, need to update lockedSpread
+			LockedSpread lockedSpread;
+			int reminder=o->match_volume;
+			while(reminder>0){
+				if(firstCloseMatch.front().volume > reminder){
+					firstCloseMatch.front().volume -= reminder;
+					lockedSpread.date = o->date;
+					lockedSpread.volume = reminder;
+					double spread=0.0;
+					if(insType==E_INS_FORWARD){
+						spread = o->match_price - firstOpenMatch.front().price;
+					}else{
+						spread = firstOpenMatch.front().price - o->match_price;
+					}
+					lockedSpread.spread = spread;
+					lockedSpreadT.push_back(lockedSpread);
+				}else{
+					reminder -= firstOpenMatch.front().volume;
+					lockedSpread.date= o->date;
+					lockedSpread.volume = firstOpenMatch.front().volume;
+					double spread=0.0;
+					if(insType==E_INS_FORWARD){
+						spread = o->match_price - firstOpenMatch.front().price;
+					}else{
+						spread = firstOpenMatch.front().price - o->match_price;
+					}
+					lockedSpread.spread = spread;
+					lockedSpreadT.push_back(lockedSpread);
+					firstOpenMatch.pop_front();	
+				}
+				UpdateLockedSpread(lockedSpread, 
+								o->stop_loss?true:false,
+								o->open_close==E_CLOSE_Y?false:true);
+			}
 		}
 	}
 }
@@ -1079,5 +1125,42 @@ void Instrument::ShowLockedSpread()
 		char buffer[128]={0};
 		sprintf(buffer,"%d %f %d\n",iter->date, iter->spread, iter->volume);
 		Trader::GetTrader()->log(buffer);
+	}
+}
+
+void Instrument::UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss, bool isToday)
+{
+
+	list<LockedSpread>* lkp = isToday?&lockedSpreadT:&lockedSpreadY;
+	if((direction == E_DIR_UP && isStopLoss==true)
+	|| 	direction == E_DIR_DOWN && isStopLoss==false ){
+			(*lkp).sort();
+			(*lkp).reverse();
+	}
+	int reminder = lockedSpread.volume;
+	
+	while(reminder>0){
+		if((*lkp).front().volume > reminder){
+			(*lkp).front().volume-=reminder;
+		}else{
+			reminder -= (*lkp).front().volume;
+			(*lkp).pop_front();	
+		}
+	}
+	const char *tmpFile="./tmp.cfg";
+	const char *targetFile="position.cfg";
+	fstream tmp;
+	tmp.open(tmpFile,tmp.out);
+	list<LockedSpread>::iterator iter=(*lkp).begin();
+	for(;iter!=(*lkp).end();iter++){
+		tmp<<iter->date<<" "<<iter->spread<<" "<<iter->volume<<endl;
+	}
+	tmp.close();
+	int status=0;
+	status = rename(tmpFile,targetFile);
+	if(status !=0){
+		trader->log("Update position file failed");
+		perror("Update position file failed");
+		exit(1);
 	}
 }

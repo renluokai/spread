@@ -67,6 +67,8 @@ public:
 
 	void FullCloseShort(int lockedPosition);
 	void DoNotFullCloseShort();
+
+	void UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss, bool isToday);
 static void ShowLockedSpread();
 	char 		name[64];
 	bool 		reached;
