@@ -183,8 +183,7 @@ void Instrument::on_match(Order* o)
 		}else{
 			//second leg, need to update lockedSpread
 			const char *targetFile="position.cfg";
-			fstream tmp;
-			tmp.open(targetFile,fstream::app);
+			FILE *tmp=fopen(targetFile,"a");
 
 			LockedSpread lockedSpread;
 			int reminder=o->match_volume;
@@ -213,12 +212,15 @@ void Instrument::on_match(Order* o)
 					}
 					lockedSpread.spread = spread;
 					lockedSpreadT.push_back(lockedSpread);
-
-					tmp<<lockedSpread.date<<" "<<lockedSpread.spread<<" "<<lockedSpread.volume<<endl;
+					char buffer[128]={0};
+					sprintf(buffer,"%d %f %d\n",lockedSpread.date, lockedSpread.spread, lockedSpread.volume);
+					trader->log(buffer);
+					fwrite(buffer, strlen(buffer),1,tmp);
+					fflush(tmp);
 					firstOpenMatch.pop_front();	
 				}
 			}
-			tmp.close();
+			fclose(tmp);
 		}
 	}else{
 	//close
@@ -251,25 +253,23 @@ void Instrument::on_match(Order* o)
 					lockedSpread.volume = reminder;
 					double spread=0.0;
 					if(insType==E_INS_FORWARD){
-						spread = o->match_price - firstOpenMatch.front().price;
+						spread = o->match_price - firstCloseMatch.front().price;
 					}else{
-						spread = firstOpenMatch.front().price - o->match_price;
+						spread = firstCloseMatch.front().price - o->match_price;
 					}
 					lockedSpread.spread = spread;
-					lockedSpreadT.push_back(lockedSpread);
 				}else{
-					reminder -= firstOpenMatch.front().volume;
+					reminder -= firstCloseMatch.front().volume;
 					lockedSpread.date= o->date;
-					lockedSpread.volume = firstOpenMatch.front().volume;
+					lockedSpread.volume = firstCloseMatch.front().volume;
 					double spread=0.0;
 					if(insType==E_INS_FORWARD){
-						spread = o->match_price - firstOpenMatch.front().price;
+						spread = o->match_price - firstCloseMatch.front().price;
 					}else{
-						spread = firstOpenMatch.front().price - o->match_price;
+						spread = firstCloseMatch.front().price - o->match_price;
 					}
 					lockedSpread.spread = spread;
-					lockedSpreadT.push_back(lockedSpread);
-					firstOpenMatch.pop_front();	
+					firstCloseMatch.pop_front();	
 				}
 				UpdateLockedSpread(lockedSpread, 
 								o->stop_loss?true:false,
@@ -1136,7 +1136,7 @@ void Instrument::UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss,
 	const char *tmpFile="./tmp.cfg";
 	const char *targetFile="position.cfg";
 	fstream tmp;
-	tmp.open(tmpFile,tmp.out);
+	tmp.open(tmpFile,fstream::out);
 	list<LockedSpread>::iterator iter=(*lkp).begin();
 	for(;iter!=(*lkp).end();iter++){
 		tmp<<iter->date<<" "<<iter->spread<<" "<<iter->volume<<endl;
@@ -1182,7 +1182,7 @@ double Instrument::GetBadSpread()
 	lockedSpreadY.sort();
 	list<LockedSpread> tmp;
 	list<LockedSpread> tmpT=lockedSpreadT;
-	list<LockedSpread> tmpY=lockedSpreadT;
+	list<LockedSpread> tmpY=lockedSpreadY;
 	
 	tmp.merge(tmpT);
 	tmp.merge(tmpY);
