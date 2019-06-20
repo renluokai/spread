@@ -919,7 +919,7 @@ void Instrument::CheckStopLoss()
 	vector<Order*> ods;
 	vector<Order*>::iterator iter;
 	if(direction == E_DIR_UP){
-		if((bidSpread + stopLoss*priceTick) <= tradedSpread){
+		if((askSpread + stopLoss*priceTick) <= tradedSpread){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
 
@@ -1001,7 +1001,7 @@ void Instrument::CheckStopLoss()
 			needToStopLoss = false;
 		}
 	}else{
-		if((askSpread - stopLoss*priceTick) >= tradedSpread){
+		if((bidSpread - stopLoss*priceTick) >= tradedSpread){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
 			vector<Order*> ods;
