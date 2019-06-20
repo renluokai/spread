@@ -1103,7 +1103,7 @@ void Instrument::ShowLockedSpread()
 		Trader::GetTrader()->log(buffer);
 	}
 
-	Trader::GetTrader()->log("Yesterday locked position:\n");
+	Trader::GetTrader()->log("Today locked position:\n");
 	for(iter=lockedSpreadT.begin();
 		iter!=lockedSpreadT.end();
 		iter++)
