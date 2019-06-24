@@ -28,6 +28,7 @@ StopLoss	Instrument::stopLossType = E_STOPLOSS_NO;
 int			Instrument::stopLoss = 0;
 EDirection	Instrument::direction = E_DIR_INVALID;
 int			Instrument::maxPosition = 0;
+int			Instrument::openCount=0;
 int			Instrument::submitMax = 0;
 bool		Instrument::loop = true;
 bool		Instrument::needToStopLoss=false;
@@ -180,6 +181,7 @@ void Instrument::on_match(Order* o)
 			matchInfo.volume = o->match_volume;
 			matchInfo.price = o->match_price;
 			firstOpenMatch.push_back(matchInfo);
+			openCount += o->match_volume;
 		}else{
 			//second leg, need to update lockedSpread
 			const char *targetFile="position.cfg";
@@ -412,7 +414,8 @@ void Instrument::FullOpenLong(int lockedPosition)
 				}
 			}
 		}else{
-			int remaindVolume = maxPosition - lockedPosition;
+			//int remaindVolume = maxPosition - lockedPosition;
+			int remaindVolume = maxPosition - openCount;
 			if(remaindVolume<=0){
 				trader->log("Don't open new position\n");
 			}else{
@@ -460,7 +463,8 @@ void Instrument::FullOpenLong(int lockedPosition)
 				}
 			}
 		}else{
-			int remaindVolume = maxPosition - lockedPosition;
+			//int remaindVolume = maxPosition - lockedPosition;
+			int remaindVolume = maxPosition - openCount;
 			if(remaindVolume<=0){
 				trader->log("Don't open new position\n");
 			}else{
@@ -676,7 +680,8 @@ void Instrument::FullOpenShort(int lockedPosition)
 				}
 			}
 		}else{
-			int remaindVolume = maxPosition - lockedPosition;
+			//int remaindVolume = maxPosition - lockedPosition;
+			int remaindVolume = maxPosition - openCount;
 			if(remaindVolume<=0){
 				trader->log("Don't open new position\n");
 			}else{
@@ -724,7 +729,8 @@ void Instrument::FullOpenShort(int lockedPosition)
 				}
 			}
 		}else{
-			int remaindVolume = maxPosition - lockedPosition;
+			//int remaindVolume = maxPosition - lockedPosition;
+			int remaindVolume = maxPosition - openCount;
 			if(remaindVolume<=0){
 				trader->log("Don't open new position\n");
 			}else{

@@ -103,6 +103,7 @@ static void ShowLockedSpread();
 	static int			stopLoss;
 	static EDirection	direction;
 	static int			maxPosition;
+	static int			openCount;
 	static int			submitMax;
 	static bool			loop;
 	static bool			needToStopLoss;
