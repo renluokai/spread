@@ -151,6 +151,14 @@ bool Dong0Strategy::load_config()
 	child_element = element->FirstChildElement("broker");
 	if(!child_element)PARSE_ERROR("broker");
 	STRCPY(trade_cfg_->broker_id,child_element->GetText());
+
+	child_element = element->FirstChildElement("auth_code");
+	if(!child_element)PARSE_ERROR("auth_code");
+	STRCPY(trade_cfg_->auth_code,child_element->GetText());
+
+	child_element = element->FirstChildElement("app_id");
+	if(!child_element)PARSE_ERROR("app_id");
+	STRCPY(trade_cfg_->app_id,child_element->GetText());
 	return true;
 }
 

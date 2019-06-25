@@ -209,14 +209,14 @@ log_stream_<<"[ ReqOrderAction ] "
 void CtpTradeChannel::OnFrontConnected()
 {
 	log_stream_<<'['<<__FUNCTION__<<']'<<endl;
-	if(login_ok_ == false){
-		CThostFtdcReqUserLoginField LoginField={0};
-		STRCPY(LoginField.BrokerID, cfg_->broker_id);
-		STRCPY(LoginField.UserID, cfg_->user);
-		STRCPY(LoginField.Password, cfg_->password);
-		log_stream_<<"ReqUserLogin :["<<LoginField.BrokerID<<"] ["<<LoginField.UserID<<"] ["<<LoginField.Password<<"]\n";
-		trade_api_->ReqUserLogin(&LoginField, request_id_++);
-	}
+	CThostFtdcReqAuthenticateField authField={0};
+
+	STRCPY(authField.BrokerID, cfg_->broker_id);
+	STRCPY(authField.UserID, cfg_->user);
+	STRCPY(authField.AppID, cfg_->app_id);
+	STRCPY(authField.AuthCode, cfg_->auth_code);
+	trade_api_->ReqAuthenticate(&authField, request_id_++);
+log_stream_<<"ReqAuthenticate ["<<authField.BrokerID<<"] ["<<authField.UserID<<"] ["<<authField.AppID<<"] ["<<authField.AuthCode<<"]\n";
 	return;
 }
 
@@ -237,6 +237,12 @@ log_stream_<<'['<<__FUNCTION__<<']'<<"TradingDay="<<pRspUserLogin->TradingDay<<"
 <<"FFEXTime="<<pRspUserLogin->FFEXTime<<" | "
 <<"INETime="<<pRspUserLogin->INETime<<endl;
 }
+if(pRspInfo==NULL){
+log_stream_<<"pRspInfo==NULL"<<" | ";
+}else{
+log_stream_<<"ErrorID="<<pRspInfo->ErrorID<<" ErrorMsg="<<pRspInfo->ErrorMsg<<" | ";
+}
+log_stream_<<" nRequestID="<<nRequestID<<" bIsLast="<<bIsLast<<endl;
 	if(bIsLast == true){
 		if(login_ok_ == false && (pRspInfo == NULL || pRspInfo->ErrorID == 0)){
 			
@@ -648,8 +654,8 @@ void CtpTradeChannel::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument,
 		instInfo.ExchangeID		= std::string(pInstrument->ExchangeID);
 		instInfo.VolumeMultiple	= pInstrument->VolumeMultiple;
 		instInfo.PriceTick		= pInstrument->PriceTick;
-		instInfo.MinBuyVolume	= pInstrument->MinBuyVolume;
-		instInfo.MinSellVolume	= pInstrument->MinSellVolume;
+		//instInfo.MinBuyVolume	= pInstrument->MinBuyVolume;
+		//instInfo.MinSellVolume	= pInstrument->MinSellVolume;
 		trader_->add_instrument_info(&instInfo);
 log_stream_<<"["<<__FUNCTION__<<"] "<<"InstrumentID="<<pInstrument->InstrumentID<<" | "
 <<"ExchangeID="<<pInstrument->ExchangeID<<" | "
@@ -681,10 +687,8 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"InstrumentID="<<pInstrument->InstrumentID
 <<"StrikePrice="<<pInstrument->StrikePrice<<" | "
 <<"OptionsType="<<pInstrument->OptionsType<<" | "
 <<"UnderlyingMultiple="<<pInstrument->UnderlyingMultiple<<" | "
-<<"CombinationType="<<pInstrument->CombinationType<<" | "
-<<"MinBuyVolume="<<pInstrument->MinBuyVolume<<" | "
-<<"MinSellVolume="<<pInstrument->MinSellVolume<<" | "
-<<"InstrumentCode="<<pInstrument->InstrumentCode<<" | ";
+<<"CombinationType="<<pInstrument->CombinationType<<" | ";
+
 if(pRspInfo){
 log_stream_<<"pRspInfo->ErrorID="<<pRspInfo->ErrorID<<" | "
 <<"pRspInfo->ErrorMsg="<<pRspInfo->ErrorMsg<<" | ";
@@ -1143,3 +1147,29 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 	}
 }
 
+void CtpTradeChannel::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+	if(pRspAuthenticateField==NULL){
+log_stream_<<"[ "<<__FUNCTION__<<" ] pRspAuthenticateField=NULL | ";
+	}else{
+log_stream_<<"[ "<<__FUNCTION__<<" ] BrokerID="<<pRspAuthenticateField->BrokerID<<" | "
+<<"UserID="<<pRspAuthenticateField->UserID<<" | "
+<<"UserProductInfo="<<pRspAuthenticateField->UserProductInfo<<" | "
+<<"AppID="<<pRspAuthenticateField->AppID<<" | "
+<<"AppType="<<pRspAuthenticateField->AppType<<" | ";
+	}
+if(pRspInfo==NULL){
+log_stream_<<"pRspInfo==NULL | ";
+}else{
+log_stream_<<"ErrorID="<<pRspInfo->ErrorID<<" ErrorMsg="<<pRspInfo->ErrorMsg<<" | ";
+}
+log_stream_<<" nRequestID="<<nRequestID<<" bIsLast="<<bIsLast<<endl;
+	if(login_ok_ == false){
+		CThostFtdcReqUserLoginField LoginField={0};
+		STRCPY(LoginField.BrokerID, cfg_->broker_id);
+		STRCPY(LoginField.UserID, cfg_->user);
+		STRCPY(LoginField.Password, cfg_->password);
+		log_stream_<<"ReqUserLogin ["<<LoginField.BrokerID<<"] ["<<LoginField.UserID<<"] ["<<LoginField.Password<<"]\n";
+		trade_api_->ReqUserLogin(&LoginField, request_id_++);
+	}
+}
