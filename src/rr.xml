@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <forward_contract>ni1908</forward_contract>
-    <recent_contract>ni1907</recent_contract>
+    <forward_contract>rb2001</forward_contract>
+    <recent_contract>rb1910</recent_contract>
 	<!-- 0 近期合约 1远期合约!-->
 	<main_contract>0</main_contract>
     <open_with>0</open_with>
     <close_with>0</close_with>
-    <open_threshold>-7050</open_threshold>
-    <close_threshold>6080</close_threshold>
+    <open_threshold>-284</open_threshold>
+    <close_threshold>-287</close_threshold>
 	<!-- 0看涨 1看跌!-->
-    <direction>0</direction>
+    <direction>1</direction>
     <locked_position>0</locked_position>
-    <stop_loss>3</stop_loss>
+    <stop_loss>4</stop_loss>
     <stop_loss_type>1</stop_loss_type>
-    <max_postion>3</max_postion>
+    <max_postion>1</max_postion>
     <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>

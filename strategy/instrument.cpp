@@ -380,8 +380,8 @@ void Instrument::CancelOrders(vector<Order*> &ods)
 void Instrument::FullOpenLong(int lockedPosition)
 {
 	trader->log(__FUNCTION__);trader->log("\n");
-	if(mainIns==firstOpenIns){
-		//open from main instrument
+	if(E_INS_FORWARD==firstOpenIns->insType){
+		//open from forward instrument
 		vector<Order*> ods;
 		vector<Order*>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
@@ -431,7 +431,7 @@ void Instrument::FullOpenLong(int lockedPosition)
 			}
 		}
 	}else{
-		//open from second instrument
+		//open from recent instrument
 		vector<Order*> ods;
 		vector<Order*>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
@@ -484,7 +484,7 @@ void Instrument::FullOpenLong(int lockedPosition)
 
 void Instrument::DoNotFullOpenLong()
 {
-	if(mainIns==firstOpenIns){
+	if(E_INS_FORWARD==firstOpenIns->insType){
 		vector<Order*> ods;
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()==0){
@@ -505,8 +505,8 @@ void Instrument::DoNotFullOpenLong()
 
 void Instrument::FullCloseLong(int lockedPosition)
 {
-	if(mainIns==firstCloseIns){
-		//close from main instrument
+	if(E_INS_FORWARD==firstCloseIns->insType){
+		//close from forward instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
@@ -560,7 +560,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 			}
 		}
 	}else{
-		//close from second instrument
+		//close from recent instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
@@ -617,7 +617,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 }
 void Instrument::DoNotFullCloseLong()
 {
-	if(mainIns==firstCloseIns){
+	if(E_INS_FORWARD==firstCloseIns->insType){
 		vector<Order*> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		if(ods.size()==0){
@@ -631,12 +631,12 @@ void Instrument::DoNotFullCloseLong()
 		}			
 	}else{
 		vector<Order*> ods;
-		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		if(ods.size()==0){
 		}else{
 			CancelOrders(ods);
 		}			
-		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()==0){
 		}else{
 			CancelOrders(ods);
@@ -647,8 +647,8 @@ void Instrument::DoNotFullCloseLong()
 void Instrument::FullOpenShort(int lockedPosition)
 {
 	trader->log(__FUNCTION__);trader->log("\n");
-	if(mainIns==firstOpenIns){
-		//open from main instrument
+	if(E_INS_FORWARD==firstOpenIns->insType){
+		//open from forward instrument
 		vector<Order*> ods;
 		vector<Order*>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
@@ -750,7 +750,7 @@ void Instrument::FullOpenShort(int lockedPosition)
 
 void Instrument::DoNotFullOpenShort()
 {
-	if(mainIns==firstOpenIns){
+	if(E_INS_FORWARD==firstOpenIns->insType){
 		vector<Order*> ods;
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()==0){
@@ -771,8 +771,8 @@ void Instrument::DoNotFullOpenShort()
 
 void Instrument::FullCloseShort(int lockedPosition)
 {
-	if(mainIns==firstCloseIns){
-		//close from main instrument
+	if(E_INS_FORWARD==firstCloseIns->insType){
+		//close from forward instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
@@ -883,7 +883,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 }
 void Instrument::DoNotFullCloseShort()
 {
-	if(mainIns==firstCloseIns){
+	if(E_INS_FORWARD==firstCloseIns->insType){
 		vector<Order*> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		if(ods.size()==0){
@@ -897,12 +897,12 @@ void Instrument::DoNotFullCloseShort()
 		}			
 	}else{
 		vector<Order*> ods;
-		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		if(ods.size()==0){
 		}else{
 			CancelOrders(ods);
 		}			
-		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
+		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()==0){
 		}else{
 			CancelOrders(ods);
@@ -929,7 +929,7 @@ void Instrument::CheckStopLoss()
 			trader->log("let's stop loss");
 			needToStopLoss = true;
 
-			if(mainIns == firstOpenIns){
+			if(E_INS_FORWARD == firstOpenIns->insType){
 				trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
 			}else{
 				trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
@@ -938,7 +938,7 @@ void Instrument::CheckStopLoss()
 				trader->log("Wait for second leg match\n");
 				return;
 			}
-			if(mainIns == firstOpenIns){
+			if(E_INS_FORWARD == firstOpenIns->insType){
 				trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 			}else{
 				trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
@@ -949,7 +949,7 @@ void Instrument::CheckStopLoss()
 				EOpenClose oc;
 				ELongShort ls;
 				int vol = 0;
-				if(mainIns == firstCloseIns){
+				if(E_INS_FORWARD == firstCloseIns->insType){
 					ls = E_LONG;
 					px = firstCloseIns->lastQuote->BidPrice1;
 				}else{
@@ -964,6 +964,7 @@ void Instrument::CheckStopLoss()
 					vol = lockedPositionYesterday/submitMax>0?submitMax:lockedPositionYesterday%submitMax;
 				}
 				trader->GetOrder(firstCloseIns->name, oc, ls, ods);
+				//if there is no close order,just submit it
 				if(ods.size()==0){
 					if(vol>0){
 						Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
@@ -971,9 +972,9 @@ void Instrument::CheckStopLoss()
 						return;
 					}
 				}else{
-					//check to update price
+					//check to update the close orders' price
 					for(iter==ods.begin(); iter!=ods.end();iter++){
-						if(mainIns == firstCloseIns){
+						if(E_INS_FORWARD == firstCloseIns->insType){
 							if((*iter)->submit_price > firstCloseIns->lastQuote->BidPrice1
 							&& (*iter)->canceling == false
 							&& (*iter)->state != E_ORIGINAL){
@@ -994,7 +995,7 @@ void Instrument::CheckStopLoss()
 			}			
 		}else{
 			if(needToStopLoss == true){
-				if(mainIns == firstCloseIns){
+				if(E_INS_FORWARD == firstCloseIns->insType){
 					trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 					trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 					CancelOrders(ods);
@@ -1007,13 +1008,14 @@ void Instrument::CheckStopLoss()
 			needToStopLoss = false;
 		}
 	}else{
+		//do E_DIR_DOWN stop loss check
 		if((bidSpread - stopLoss*priceTick) >= tradedSpread){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
 			vector<Order*> ods;
 			vector<Order*>::iterator iter;
 
-			if(mainIns == firstOpenIns){
+			if(E_INS_RECENT == firstOpenIns->insType){
 				trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
 			}else{
 				trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
@@ -1023,7 +1025,7 @@ void Instrument::CheckStopLoss()
 				return;
 			}
 			//check if has open order, if have cancel
-			if(mainIns == firstOpenIns){
+			if(E_INS_FORWARD == firstOpenIns->insType){
 				trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
 			}else{
 				trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
@@ -1034,7 +1036,7 @@ void Instrument::CheckStopLoss()
 				EOpenClose oc;
 				ELongShort ls;
 				int vol = 0;
-				if(mainIns == firstCloseIns){
+				if(E_INS_FORWARD == firstCloseIns->insType){
 					ls = E_SHORT;
 					px = firstCloseIns->lastQuote->AskPrice1;
 				}else{
@@ -1058,7 +1060,7 @@ void Instrument::CheckStopLoss()
 				}else{
 					//check to update price
 					for(iter==ods.begin(); iter!=ods.end();iter++){
-						if(mainIns == firstCloseIns){
+						if(E_INS_FORWARD == firstCloseIns->insType){
 							if((*iter)->submit_price < firstCloseIns->lastQuote->AskPrice1
 							&& (*iter)->canceling == false
 							&& (*iter)->state != E_ORIGINAL){
@@ -1079,7 +1081,7 @@ void Instrument::CheckStopLoss()
 			}			
 		}else{
 			if(needToStopLoss == true){
-				if(mainIns == firstCloseIns){
+				if(E_INS_FORWARD == firstCloseIns->insType){
 					trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 					trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 					CancelOrders(ods);
