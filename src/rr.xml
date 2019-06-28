@@ -2,13 +2,13 @@
 <config>
     <forward_contract>rb2001</forward_contract>
     <recent_contract>rb1910</recent_contract>
-	<!-- 0 近期合约 1远期合约!-->
-	<main_contract>0</main_contract>
+    <!-- 0 近期合约 1远期合约!-->
+    <main_contract>0</main_contract>
     <open_with>0</open_with>
     <close_with>0</close_with>
     <open_threshold>-284</open_threshold>
     <close_threshold>-287</close_threshold>
-	<!-- 0看涨 1看跌!-->
+    <!-- 0看涨 1看跌!-->
     <direction>1</direction>
     <locked_position>0</locked_position>
     <stop_loss>4</stop_loss>

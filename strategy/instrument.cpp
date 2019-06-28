@@ -494,7 +494,7 @@ void Instrument::DoNotFullOpenLong()
 		}			
 	}else{
 		vector<Order*> ods;
-		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
+		trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()==0){
 			return;
 		}else{
@@ -512,7 +512,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
 			vector<Order*>::iterator iter = ods.begin();
-			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
+			double newPrice = secondCloseIns->lastQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
 				&& (*iter)->state != E_ORIGINAL
@@ -566,7 +566,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()!=0){
 			vector<Order*>::iterator iter = ods.begin();
-			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
+			double newPrice = secondCloseIns->lastQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
 				&& (*iter)->state != E_ORIGINAL
@@ -697,7 +697,7 @@ void Instrument::FullOpenShort(int lockedPosition)
 			}
 		}
 	}else{
-		//open from second instrument
+		//open from recent instrument
 		vector<Order*> ods;
 		vector<Order*>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
@@ -760,7 +760,7 @@ void Instrument::DoNotFullOpenShort()
 		}			
 	}else{
 		vector<Order*> ods;
-		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
+		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()==0){
 			return;
 		}else{
@@ -778,7 +778,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()!=0){
 			vector<Order*>::iterator iter = ods.begin();
-			double newPrice = firstCloseIns->lastQuote->BidPrice1; 
+			double newPrice = secondCloseIns->lastQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
 				&& (*iter)->state != E_ORIGINAL
@@ -826,13 +826,13 @@ void Instrument::FullCloseShort(int lockedPosition)
 			}
 		}
 	}else{
-		//close from second instrument
+		//close from recent instrument
 		vector<Order*> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
 			vector<Order*>::iterator iter = ods.begin();
-			double newPrice = firstCloseIns->lastQuote->AskPrice1; 
+			double newPrice = secondCloseIns->lastQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
 				&& (*iter)->state != E_ORIGINAL

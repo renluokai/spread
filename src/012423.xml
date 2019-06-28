@@ -2,14 +2,14 @@
 <config>
     <forward_contract>ni1908</forward_contract>
     <recent_contract>ni1907</recent_contract>
-	<main_contract>0</main_contract>
+    <main_contract>0</main_contract>
     <open_with>0</open_with>
     <open_threshold>-140</open_threshold>
     <close_with>0</close_with>
     <close_threshold>50</close_threshold>
     <direction>0</direction>
     <stop_loss>0</stop_loss>
-    <stop_loss_option>0</stop_loss_option>
+    <stop_loss_type>1</stop_loss_type>
     <max_postion>5</max_postion>
     <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
@@ -23,6 +23,8 @@
         <front>tcp://180.168.146.187:10001</front>
         <user>012423</user>
         <password>Rlk1234567</password>
+        <auth_code>WZ8SXDW8ANHL2XFU</auth_code>
+        <app_id>Client_HLTai_1.0</app_id>
         <broker>9999</broker>
     </trade_channel>
 </config>
