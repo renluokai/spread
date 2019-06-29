@@ -797,7 +797,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 				trader->log("Has no position to close\n");
 			}else{
 				const char* nm = firstCloseIns->name;
-				double price = firstCloseIns->lastQuote->AskPrice1;
+				double price = firstCloseIns->lastQuote->BidPrice1;
 				int vol = 0;
 				EOpenClose oc;
 				int lockedPositionYesterday = CalcLockedPositionYesterday();
