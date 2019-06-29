@@ -73,7 +73,7 @@ void Instrument::on_quote(Quote *q)
 			trader->log(buffer);
 		}
 		if(lockedPosition ==0){
-			if(bidSpread <= openThreshold){
+			if(IsOpenLong()){
 				//full the open condition
 				FullOpenLong(lockedPosition);
 			}
@@ -87,7 +87,7 @@ void Instrument::on_quote(Quote *q)
 			//check stoploss and do respective action
 			CheckStopLoss();	
 			//full the close condition
-			if(askSpread >= closeThreshold)
+			if(IsCloseLong())
 			{
 				FullCloseLong(lockedPosition);
 			}else{
@@ -95,7 +95,7 @@ void Instrument::on_quote(Quote *q)
 				DoNotFullCloseLong();
 			}
 			//full the open condition
-			if(bidSpread <= openThreshold)
+			if(IsOpenLong())
 			{
 				FullOpenLong(lockedPosition);
 			}else{
@@ -111,7 +111,7 @@ void Instrument::on_quote(Quote *q)
 			trader->log(buffer);
 		}
 		if(lockedPosition ==0){
-			if(askSpread >= openThreshold){
+			if(IsOpenShort()){
 				//full the open condition
 				FullOpenShort(lockedPosition);
 			}
@@ -125,14 +125,14 @@ void Instrument::on_quote(Quote *q)
 			//check stoploss and do respective action
 			CheckStopLoss();	
 			//full the close condition
-			if(bidSpread <= closeThreshold)
+			if(IsCloseShort())
 			{
 				FullCloseShort(lockedPosition);
 			}else{
 				DoNotFullCloseLong();
 			}
 			//full the open condition
-			if(askSpread >= openThreshold)
+			if(IsOpenShort())
 			{
 				FullOpenShort(lockedPosition);
 			}else{
@@ -620,10 +620,6 @@ void Instrument::DoNotFullCloseLong()
 	if(E_INS_FORWARD==firstCloseIns->insType){
 		vector<Order*> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
-		if(ods.size()==0){
-		}else{
-			CancelOrders(ods);
-		}			
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()==0){
 		}else{
@@ -632,10 +628,6 @@ void Instrument::DoNotFullCloseLong()
 	}else{
 		vector<Order*> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
-		if(ods.size()==0){
-		}else{
-			CancelOrders(ods);
-		}			
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()==0){
 		}else{
@@ -735,7 +727,7 @@ void Instrument::FullOpenShort(int lockedPosition)
 				trader->log("Don't open new position\n");
 			}else{
 				const char* nm = firstOpenIns->name;
-				double price = firstOpenIns->lastQuote->AskPrice1;
+				double price = firstOpenIns->lastQuote->BidPrice1;
 				int vol = remaindVolume/submitMax>=1?submitMax:remaindVolume%submitMax;
 				if(vol==0){
 					trader->log("Cann't open 0 volume order\n");
@@ -886,10 +878,6 @@ void Instrument::DoNotFullCloseShort()
 	if(E_INS_FORWARD==firstCloseIns->insType){
 		vector<Order*> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
-		if(ods.size()==0){
-		}else{
-			CancelOrders(ods);
-		}			
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()==0){
 		}else{
@@ -898,10 +886,6 @@ void Instrument::DoNotFullCloseShort()
 	}else{
 		vector<Order*> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
-		if(ods.size()==0){
-		}else{
-			CancelOrders(ods);
-		}			
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()==0){
 		}else{
@@ -925,7 +909,7 @@ void Instrument::CheckStopLoss()
 	vector<Order*> ods;
 	vector<Order*>::iterator iter;
 	if(direction == E_DIR_UP){
-		if((askSpread + stopLoss*priceTick) <= tradedSpread){
+		if(IsStopLoss(tradedSpread)){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
 
@@ -1009,7 +993,7 @@ void Instrument::CheckStopLoss()
 		}
 	}else{
 		//do E_DIR_DOWN stop loss check
-		if((bidSpread - stopLoss*priceTick) >= tradedSpread){
+		if(IsStopLoss(tradedSpread)){
 			trader->log("let's stop loss");
 			needToStopLoss = true;
 			vector<Order*> ods;
@@ -1199,4 +1183,89 @@ double Instrument::GetBadSpread()
 		tmp.reverse();
 	}
 	return tmp.front().spread;
+}
+
+bool Instrument::IsOpenLong()
+{
+	if(firstOpenIns->insType==E_INS_FORWARD){
+		if(bidSpread<=openThreshold){
+			return true;
+		}
+	}else{
+		if(askSpread<=openThreshold){
+			return true;
+		}
+	}
+	return false;
+}
+bool Instrument::IsOpenShort()
+{
+	if(firstOpenIns->insType==E_INS_FORWARD){
+		if(askSpread>=openThreshold){
+			return true;
+		}
+	}else{
+		if(bidSpread>=openThreshold){
+			return true;
+		}
+	}
+	return false;
+}
+bool Instrument::IsCloseLong()
+{
+	if(firstCloseIns->insType==E_INS_FORWARD){
+		if(askSpread>=closeThreshold){
+			return true;
+		}
+	}else{
+		if(bidSpread>=closeThreshold){
+			return true;
+		}
+	}
+	return false;
+}
+bool Instrument::IsCloseShort()
+{
+	if(firstCloseIns->insType==E_INS_FORWARD){
+		if(bidSpread<=closeThreshold){
+			return true;
+		}
+	}else{
+		if(askSpread<=closeThreshold){
+			return true;
+		}
+	}
+	return false;
+}
+bool Instrument::IsStopLoss(double tradedSpread)
+{
+	if(direction==E_DIR_UP){
+		if(firstCloseIns->insType==E_INS_FORWARD){
+			if((askSpread+stopLoss*priceTick) <= tradedSpread){
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			if((bidSpread+stopLoss*priceTick) <= tradedSpread){
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}else{
+		if(firstCloseIns->insType==E_INS_FORWARD){
+			if((bidSpread+stopLoss*priceTick) >= tradedSpread){
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			if((askSpread+stopLoss*priceTick) >= tradedSpread){
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}	
 }

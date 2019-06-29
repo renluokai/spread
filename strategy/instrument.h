@@ -71,6 +71,11 @@ public:
 	void UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss, bool isToday);
 	double GetAverageSpread();
 	double GetBadSpread();
+	bool IsOpenLong();
+	bool IsOpenShort();
+	bool IsCloseLong();
+	bool IsCloseShort();
+	bool IsStopLoss(double tradedSpread);
 static void ShowLockedSpread();
 	char 		name[64];
 	bool 		reached;
