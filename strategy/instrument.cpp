@@ -129,7 +129,7 @@ void Instrument::on_quote(Quote *q)
 			{
 				FullCloseShort(lockedPosition);
 			}else{
-				DoNotFullCloseLong();
+				DoNotFullCloseShort();
 			}
 			//full the open condition
 			if(IsOpenShort())
@@ -276,6 +276,11 @@ void Instrument::on_match(Order* o)
 				UpdateLockedSpread(lockedSpread, 
 								o->stop_loss?true:false,
 								o->open_close==E_CLOSE_Y?false:true);
+			}
+
+			int lockedPosition = CalcLockedPosition();
+			if(needToStopLoss==true && lockedPosition==0){
+				needToStopLoss=false;
 			}
 		}
 	}
@@ -957,7 +962,7 @@ void Instrument::CheckStopLoss()
 					}
 				}else{
 					//check to update the close orders' price
-					for(iter==ods.begin(); iter!=ods.end();iter++){
+					for(iter=ods.begin(); iter!=ods.end();iter++){
 						if(E_INS_FORWARD == firstCloseIns->insType){
 							if((*iter)->submit_price > firstCloseIns->lastQuote->BidPrice1
 							&& (*iter)->canceling == false
@@ -1043,7 +1048,7 @@ void Instrument::CheckStopLoss()
 					}
 				}else{
 					//check to update price
-					for(iter==ods.begin(); iter!=ods.end();iter++){
+					for(iter=ods.begin(); iter!=ods.end();iter++){
 						if(E_INS_FORWARD == firstCloseIns->insType){
 							if((*iter)->submit_price < firstCloseIns->lastQuote->AskPrice1
 							&& (*iter)->canceling == false
@@ -1255,13 +1260,13 @@ bool Instrument::IsStopLoss(double tradedSpread)
 		}
 	}else{
 		if(firstCloseIns->insType==E_INS_FORWARD){
-			if((bidSpread+stopLoss*priceTick) >= tradedSpread){
+			if((bidSpread-stopLoss*priceTick) >= tradedSpread){
 				return true;
 			}else{
 				return false;
 			}
 		}else{
-			if((askSpread+stopLoss*priceTick) >= tradedSpread){
+			if((askSpread-stopLoss*priceTick) >= tradedSpread){
 				return true;
 			}else{
 				return false;

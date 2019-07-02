@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <forward_contract>ni1908</forward_contract>
-    <recent_contract>ni1907</recent_contract>
+    <forward_contract>ag2002</forward_contract>
+    <recent_contract>ag1912</recent_contract>
     <main_contract>0</main_contract>
     <open_with>0</open_with>
-    <open_threshold>-140</open_threshold>
+    <open_threshold>21</open_threshold>
     <close_with>0</close_with>
-    <close_threshold>50</close_threshold>
-    <direction>0</direction>
-    <stop_loss>0</stop_loss>
+    <close_threshold>20</close_threshold>
+    <direction>1</direction>
+    <stop_loss>3</stop_loss>
     <stop_loss_type>1</stop_loss_type>
-    <max_postion>5</max_postion>
-    <submit_max>1</submit_max>
+    <max_postion>50</max_postion>
+    <submit_max>5</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>

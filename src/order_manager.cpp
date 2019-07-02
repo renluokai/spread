@@ -61,10 +61,12 @@ bool OrderManager::UpdateOrder(Order* o)
 			tmp->state = E_REJECT;
 			STRCPY(tmp->state_msg, o->state_msg);
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
+			cout<<"AFTER RECECT:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
 			return true;
 		case E_CANCEL:
 			id = o->order_local_id;
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
+			cout<<"AFTER CANCEL:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
 			return true;
 		break;
 		case E_MATCH:
@@ -133,7 +135,13 @@ void OrderManager::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vecto
 		map<int, Order*>::iterator odIter = ods->orders[oc][ls].begin();
 		for(; odIter != ods->orders[oc][ls].end(); odIter++){
 			Order* tmp = odIter->second;
+			if(tmp==NULL)continue;
 			odVec.push_back(tmp);
+			{
+				char buffer[256]={0};
+				sprintf(buffer,"order pointer is:%p\n",tmp);
+				Trader::GetTrader()->log(buffer);
+			}
 		}
 	}
 }
