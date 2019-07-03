@@ -8,6 +8,7 @@
     <close_with>0</close_with>
     <close_threshold>20</close_threshold>
     <direction>1</direction>
+    <trigger_spread>1</trigger_spread>
     <stop_loss>3</stop_loss>
     <stop_loss_type>1</stop_loss_type>
     <max_postion>50</max_postion>

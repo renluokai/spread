@@ -95,6 +95,10 @@ bool Dong0Strategy::load_config()
 	if(!element)PARSE_ERROR("direction");
 	direction_ = atoi(element->GetText());
 
+	element = root_element->FirstChildElement("trigger_spread");
+	if(!element)PARSE_ERROR("trigger_spread");
+	trigger_spread_ = atoi(element->GetText());
+
 	element = root_element->FirstChildElement("stop_loss");
 	if(!element)PARSE_ERROR("stop_loss");
 	stop_loss_ = atoi(element->GetText());
@@ -197,6 +201,8 @@ bool Dong0Strategy::on_init()
 	Instrument::openWith = open_with_==0?E_INS_RECENT:E_INS_FORWARD;
 	Instrument::firstOpenIns = open_with_==0?recent_ins:forward_ins;
 	Instrument::secondOpenIns = Instrument::firstOpenIns->relativeIns;
+	Instrument::triggerSpread = 
+					trigger_spread_==0?E_INS_RECENT:E_INS_FORWARD;
 	Instrument::stopLoss = stop_loss_;
 	if(stop_loss_type_==0){
 		Instrument::stopLossType = E_STOPLOSS_AVERAGE;

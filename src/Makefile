@@ -3,7 +3,7 @@
 vpath %.h ../include
 CPPFLAGS += -g -std=gnu++11
 utility := ../utility/tinyxml2.o
-shangdong0 := ../strategy/instrument.o ../strategy/dong_0_strategy.o
+shangdong0 := ../strategy/instrument.o ../strategy/dong_0_strategy.o ../strategy/forecast.o
 channels := ../channel/ctp/ctp_quote_channel.o ../channel/ctp/ctp_trade_channel.o
 objects := $(utility) helper.o handler.o $(channels) $(shangdong0) position_manager.o order_manager.o trader.o trade_main.o 
 t: $(objects)  

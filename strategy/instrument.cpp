@@ -23,6 +23,7 @@ double		Instrument::openThreshold = 0.0;
 double		Instrument::closeThreshold = 0.0;
 InsType		Instrument::openWith = E_INS_INVALID;
 InsType		Instrument::closeWith = E_INS_INVALID; 
+InsType		Instrument::triggerSpread = E_INS_INVALID; 
 
 StopLoss	Instrument::stopLossType = E_STOPLOSS_NO;
 int			Instrument::stopLoss = 0;
@@ -56,10 +57,13 @@ void Instrument::on_quote(Quote *q)
 	if(relativeIns->reached == false){
 		return;
 	}
-	if(insType == E_INS_FORWARD){
-		CalcSpread(false);
-	}else{
-		CalcSpread();
+
+	if(insType == triggerSpread){
+		if(insType == E_INS_FORWARD){
+			CalcSpread(false);
+		}else{
+			CalcSpread();
+		}
 	}
 	ShowQuote();
 
@@ -238,6 +242,9 @@ void Instrument::on_match(Order* o)
 
 			Order* new_order = trader->NewOrder(nm, px, vol, o->open_close, o->long_short == E_LONG ? E_SHORT : E_LONG);
 			new_order->stop_loss = o->stop_loss;
+			if(o->stop_loss == true){
+				openCount += o->match_volume;
+			}
 			trader->submit_order(new_order);
 			MatchInfo matchInfo;
 			matchInfo.date = o->date;
@@ -940,10 +947,10 @@ void Instrument::CheckStopLoss()
 				int vol = 0;
 				if(E_INS_FORWARD == firstCloseIns->insType){
 					ls = E_LONG;
-					px = firstCloseIns->lastQuote->BidPrice1;
+					px = firstCloseIns->lastQuote->AskPrice1;
 				}else{
 					ls = E_SHORT;
-					px = firstCloseIns->lastQuote->AskPrice1;
+					px = firstCloseIns->lastQuote->BidPrice1;
 				}
 				if(lockedPositionToday > 0){
 					oc = E_CLOSE_T;
@@ -964,13 +971,13 @@ void Instrument::CheckStopLoss()
 					//check to update the close orders' price
 					for(iter=ods.begin(); iter!=ods.end();iter++){
 						if(E_INS_FORWARD == firstCloseIns->insType){
-							if((*iter)->submit_price > firstCloseIns->lastQuote->BidPrice1
+							if((*iter)->submit_price > firstCloseIns->lastQuote->AskPrice1
 							&& (*iter)->canceling == false
 							&& (*iter)->state != E_ORIGINAL){
 								trader->cancel_order(*iter);
 							}
 						}else{
-							if((*iter)->submit_price < firstCloseIns->lastQuote->AskPrice1
+							if((*iter)->submit_price < firstCloseIns->lastQuote->BidPrice1
 							&& (*iter)->canceling == false
 							&& (*iter)->state != E_ORIGINAL){
 								trader->cancel_order(*iter);
@@ -1027,10 +1034,10 @@ void Instrument::CheckStopLoss()
 				int vol = 0;
 				if(E_INS_FORWARD == firstCloseIns->insType){
 					ls = E_SHORT;
-					px = firstCloseIns->lastQuote->AskPrice1;
+					px = firstCloseIns->lastQuote->BidPrice1;
 				}else{
 					ls = E_LONG;
-					px = firstCloseIns->lastQuote->BidPrice1;
+					px = firstCloseIns->lastQuote->AskPrice1;
 				}
 				if(lockedPositionToday > 0){
 					oc = E_CLOSE_T;
@@ -1050,13 +1057,13 @@ void Instrument::CheckStopLoss()
 					//check to update price
 					for(iter=ods.begin(); iter!=ods.end();iter++){
 						if(E_INS_FORWARD == firstCloseIns->insType){
-							if((*iter)->submit_price < firstCloseIns->lastQuote->AskPrice1
+							if((*iter)->submit_price < firstCloseIns->lastQuote->BidPrice1
 							&& (*iter)->canceling == false
 							&& (*iter)->state != E_ORIGINAL){
 								trader->cancel_order(*iter);
 							}
 						}else{
-							if((*iter)->submit_price > firstCloseIns->lastQuote->BidPrice1
+							if((*iter)->submit_price > firstCloseIns->lastQuote->AskPrice1
 							&& (*iter)->canceling == false
 							&& (*iter)->state != E_ORIGINAL){
 								trader->cancel_order(*iter);

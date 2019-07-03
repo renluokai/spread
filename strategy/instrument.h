@@ -104,6 +104,8 @@ static void ShowLockedSpread();
 	static double		closeThreshold;
 	static InsType		openWith;
 	static InsType		closeWith; 
+	static InsType		triggerSpread; 
+
 	static StopLoss		stopLossType;
 	static int			stopLoss;
 	static EDirection	direction;

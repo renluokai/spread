@@ -39,6 +39,7 @@ private:
 	int recent_cancel_max_;
 	int direction_;
 	int submit_max_;
+	int trigger_spread_;
 	int max_position_;
 	int stop_loss_;
 	int stop_loss_type_;
