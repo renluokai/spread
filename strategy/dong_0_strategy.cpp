@@ -8,6 +8,7 @@
 #include "../utility/tinyxml2.h"
 #include "../include/trader.h"
 #include "dong_0_strategy.h"
+#include "forecast.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -114,6 +115,10 @@ bool Dong0Strategy::load_config()
 	if(!element)PARSE_ERROR("submit_max");
 	submit_max_ = atoi(element->GetText());
 
+	element = root_element->FirstChildElement("volume_ratio");
+	if(!element)PARSE_ERROR("volume_ratio");
+	volume_ratio_ = atof(element->GetText());
+
 	element = root_element->FirstChildElement("forward_cancel_max");
 	if(!element)PARSE_ERROR("forward_cancel_max");
 	forward_cancel_max_ = atoi(element->GetText());
@@ -189,7 +194,8 @@ bool Dong0Strategy::on_init()
 
 	forward_ins->insType = E_INS_FORWARD;
 	recent_ins->insType = E_INS_RECENT;
-
+	
+	Forecast::volumeRatio = volume_ratio_;
 	forward_ins->cancelMax = forward_cancel_max_;
 	recent_ins->cancelMax = recent_cancel_max_;
 

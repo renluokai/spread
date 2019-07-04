@@ -43,6 +43,7 @@ private:
 	int max_position_;
 	int stop_loss_;
 	int stop_loss_type_;
+	double volume_ratio_;
 	
 private:
 	sem_t quit_sem_;

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "instrument.h"
+#include "forecast.h"
 #include "../include/data_types.h"
 using namespace std;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
@@ -438,8 +439,14 @@ void Instrument::FullOpenLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
-				trader->submit_order(o);
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstOpenIns->lastQuote, E_OPEN, E_LONG);
+				if(forecast){
+					Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}else{
@@ -487,8 +494,15 @@ void Instrument::FullOpenLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
-				trader->submit_order(o);
+
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstOpenIns->lastQuote, E_OPEN, E_SHORT);
+				if(forecast){
+					Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}
@@ -567,8 +581,14 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, oc, E_LONG);
-				trader->submit_order(o);
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstCloseIns->lastQuote, oc, E_LONG);
+				if(forecast){
+					Order* o =trader->NewOrder(nm, price, vol, oc, E_LONG);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}else{
@@ -621,8 +641,14 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, oc, E_SHORT);
-				trader->submit_order(o);
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstCloseIns->lastQuote, oc, E_SHORT);
+				if(forecast){
+					Order* o = trader->NewOrder(nm, price, vol, oc, E_SHORT);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}
@@ -696,8 +722,15 @@ void Instrument::FullOpenShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
-				trader->submit_order(o);
+				
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstOpenIns->lastQuote, E_OPEN, E_SHORT);
+				if(forecast){
+					Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}else{
@@ -745,8 +778,14 @@ void Instrument::FullOpenShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
-				trader->submit_order(o);
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstOpenIns->lastQuote, E_OPEN, E_LONG);
+				if(forecast){
+					Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}
@@ -825,8 +864,15 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				Order* o =trader->NewOrder(nm, price, vol, oc, E_SHORT);
-				trader->submit_order(o);
+
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstCloseIns->lastQuote, oc, E_SHORT);
+				if(forecast){
+					Order* o =trader->NewOrder(nm, price, vol, oc, E_SHORT);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}else{
@@ -879,8 +925,15 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->log("Can't open volume 0 close order\n");
 					return;
 				}
-				Order* o = trader->NewOrder(nm, price, vol, oc, E_LONG);
-				trader->submit_order(o);
+
+				bool forecast = Forecast::OrderWillSuccess(price, 
+					firstCloseIns->lastQuote, oc, E_LONG);
+				if(forecast){
+					Order* o = trader->NewOrder(nm, price, vol, oc, E_LONG);
+					trader->submit_order(o);
+				}else{
+					trader->log("Forecast the order will not success, don't submit it\n");
+				}
 			}
 		}
 	}

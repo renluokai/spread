@@ -13,6 +13,7 @@
     <stop_loss_type>1</stop_loss_type>
     <max_postion>50</max_postion>
     <submit_max>5</submit_max>
+    <volume_ratio>0.8</volume_ratio>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>
