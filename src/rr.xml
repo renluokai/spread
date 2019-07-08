@@ -13,6 +13,8 @@
     <locked_position>0</locked_position>
     <stop_loss>4</stop_loss>
     <stop_loss_type>1</stop_loss_type>
+    <trigger_spread>0</trigger_spread>
+    <volume_ratio>0</volume_ratio>
     <max_postion>1</max_postion>
     <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
