@@ -20,12 +20,12 @@
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>
-        <front>tcp://180.168.146.187:10031</front>
+        <front>tcp://180.168.146.187:10111</front>
         <user>115385</user>
         <password>Rlk170310</password>
     </quote_channel>
     <trade_channel>
-        <front>tcp://180.168.146.187:10030</front>
+        <front>tcp://180.168.146.187:10101</front>
         <user>115385</user>
         <password>Rlk170310</password>
         <auth_code>WZ8SXDW8ANHL2XFU</auth_code>

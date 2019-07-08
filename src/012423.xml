@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <forward_contract>ag2002</forward_contract>
-    <recent_contract>ag1912</recent_contract>
+    <forward_contract>rb2001</forward_contract>
+    <recent_contract>rb1910</recent_contract>
     <main_contract>0</main_contract>
     <open_with>0</open_with>
-    <open_threshold>21</open_threshold>
     <close_with>0</close_with>
-    <close_threshold>20</close_threshold>
+    <open_threshold>-267</open_threshold>
+    <close_threshold>-270</close_threshold>
     <direction>1</direction>
     <trigger_spread>1</trigger_spread>
     <stop_loss>3</stop_loss>
@@ -17,12 +17,12 @@
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>
-        <front>tcp://180.168.146.187:10011</front>
+        <front>tcp://180.168.146.187:10111</front>
         <user>012423</user>
         <password>Rlk1234567</password>
     </quote_channel>
     <trade_channel>
-        <front>tcp://180.168.146.187:10001</front>
+        <front>tcp://180.168.146.187:10101</front>
         <user>012423</user>
         <password>Rlk1234567</password>
         <auth_code>WZ8SXDW8ANHL2XFU</auth_code>
