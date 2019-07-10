@@ -439,8 +439,11 @@ void Instrument::FullOpenLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(E_OPEN,E_LONG)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstOpenIns->lastQuote, E_OPEN, E_LONG);
+				}
 				if(forecast){
 					Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
 					trader->submit_order(o);
@@ -494,9 +497,11 @@ void Instrument::FullOpenLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(E_OPEN,E_SHORT)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstOpenIns->lastQuote, E_OPEN, E_SHORT);
+				}
 				if(forecast){
 					Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
 					trader->submit_order(o);
@@ -581,8 +586,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(oc,E_LONG)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstCloseIns->lastQuote, oc, E_LONG);
+				}
 				if(forecast){
 					Order* o =trader->NewOrder(nm, price, vol, oc, E_LONG);
 					trader->submit_order(o);
@@ -641,8 +649,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(oc,E_SHORT)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstCloseIns->lastQuote, oc, E_SHORT);
+				}
 				if(forecast){
 					Order* o = trader->NewOrder(nm, price, vol, oc, E_SHORT);
 					trader->submit_order(o);
@@ -722,9 +733,11 @@ void Instrument::FullOpenShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;	
+				if(IsForecast(E_OPEN,E_SHORT)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstOpenIns->lastQuote, E_OPEN, E_SHORT);
+				}
 				if(forecast){
 					Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
 					trader->submit_order(o);
@@ -778,8 +791,11 @@ void Instrument::FullOpenShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(E_OPEN,E_LONG)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstOpenIns->lastQuote, E_OPEN, E_LONG);
+				}
 				if(forecast){
 					Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
 					trader->submit_order(o);
@@ -864,9 +880,11 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->log("Cann't open 0 volume order\n");
 					return;
 				}
-
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(oc,E_SHORT)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstCloseIns->lastQuote, oc, E_SHORT);
+				}
 				if(forecast){
 					Order* o =trader->NewOrder(nm, price, vol, oc, E_SHORT);
 					trader->submit_order(o);
@@ -925,9 +943,11 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->log("Can't open volume 0 close order\n");
 					return;
 				}
-
-				bool forecast = Forecast::OrderWillSuccess(price, 
+				bool forecast=true;
+				if(IsForecast(oc,E_LONG)==true){
+					forecast = Forecast::OrderWillSuccess(price, 
 					firstCloseIns->lastQuote, oc, E_LONG);
+				}
 				if(forecast){
 					Order* o = trader->NewOrder(nm, price, vol, oc, E_LONG);
 					trader->submit_order(o);
@@ -1333,4 +1353,54 @@ bool Instrument::IsStopLoss(double tradedSpread)
 			}
 		}
 	}	
+}
+
+bool Instrument::IsForecast(EOpenClose oc, ELongShort ls)
+{
+	if(direction==E_DIR_UP){
+		if(oc==E_OPEN){//open order
+			if(ls==E_LONG){
+				if(bidSpread<openThreshold){
+					return false;
+				}
+			}else{
+				if(askSpread<openThreshold){
+					return false;
+				}
+			}
+		}else{//close order
+			if(ls==E_LONG){
+				if(askSpread>closeThreshold){
+					return false;
+				}
+			}else{
+				if(bidSpread>closeThreshold){
+					return false;
+				}
+			}
+		}
+	}else{
+		if(oc==E_OPEN){//open order
+			if(ls==E_LONG){
+				if(bidSpread>openThreshold){
+					return false;
+				}
+			}else{
+				if(askSpread>openThreshold){
+					return false;
+				}
+			}
+		}else{//close order
+			if(ls==E_LONG){
+				if(askSpread<closeThreshold){
+					return false;
+				}
+			}else{
+				if(bidSpread<closeThreshold){
+					return false;
+				}
+			}
+		}
+	}
+	return true;
 }

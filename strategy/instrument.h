@@ -76,6 +76,7 @@ public:
 	bool IsCloseLong();
 	bool IsCloseShort();
 	bool IsStopLoss(double tradedSpread);
+	bool IsForecast(EOpenClose oc, ELongShort ls);
 static void ShowLockedSpread();
 	char 		name[64];
 	bool 		reached;
