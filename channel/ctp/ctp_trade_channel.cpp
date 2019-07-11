@@ -222,6 +222,9 @@ log_stream_<<"ReqAuthenticate ["<<authField.BrokerID<<"] ["<<authField.UserID<<"
 
 void CtpTradeChannel::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
+if(session_id_!=0){
+	return;
+}
 if(login_ok_ == false && pRspUserLogin){
 log_stream_<<'['<<__FUNCTION__<<']'<<"TradingDay="<<pRspUserLogin->TradingDay<<" | "
 <<"LoginTime="<<pRspUserLogin->LoginTime<<" | "
@@ -306,7 +309,7 @@ log_stream_<<'['<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 void CtpTradeChannel::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo)
 {
 
-//if(order_ref_2_order_local_id.count(pInputOrder->OrderRef)==1){
+if(order_ref_2_order_local_id.count(pInputOrder->OrderRef)==1){
 log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 <<"InvestorID="<<pInputOrder->InvestorID<<" | "
 <<"InstrumentID="<<pInputOrder->InstrumentID<<" | "
@@ -346,7 +349,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 	STRCPY(o.state_msg, pRspInfo->ErrorMsg);
 	handler_->push(&o);
 	log_stream_<<endl;
-//}
+}
 }
 
 void CtpTradeChannel::OnRtnOrder(CThostFtdcOrderField *pOrder)
@@ -448,14 +451,15 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 		STRCPY(o.state_msg, pOrder->StatusMsg);
 		if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertSubmitted
 		|| pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted)
-		&& strlen(pOrder->OrderSysID) > 0
-		&& order_ref_has_inserted.count(pOrder->OrderRef) == 0){
+		&& (strlen(pOrder->OrderSysID) > 0)
+		&& (order_ref_has_inserted.count(pOrder->OrderRef) == 0)){
 			order_ref_has_inserted.insert(pOrder->OrderRef);
 			o.state = E_INSERT;
 			STRCPY(o.order_system_id, pOrder->OrderSysID);
 			o.submit_price = pOrder->LimitPrice;
 			o.submit_volume = pOrder->VolumeTotalOriginal;
-		}else if(pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertRejected
+		}else if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertRejected
+		||pOrder->OrderSubmitStatus ==THOST_FTDC_OSS_CancelRejected)
 		&& pOrder->OrderStatus == THOST_FTDC_OST_Canceled){
 			o.state = E_REJECT;
 		}else if( pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted
@@ -470,6 +474,9 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 
 void CtpTradeChannel::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
+if(order_ref_2_order_local_id.count(pTrade->OrderRef)==0){
+	return;
+}
 log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 <<"InvestorID="<<pTrade->InvestorID<<" | "
 <<"InstrumentID="<<pTrade->InstrumentID<<" | "
