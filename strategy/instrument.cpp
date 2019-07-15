@@ -34,6 +34,8 @@ int			Instrument::openCount=0;
 int			Instrument::submitMax = 0;
 bool		Instrument::loop = true;
 bool		Instrument::needToStopLoss=false;
+vector<int>	Instrument::openTime;
+vector<int>	Instrument::closeTime;
 
 Instrument::Instrument(char *ins_name)
 {

@@ -7,6 +7,7 @@
 #include <iostream>
 #include "../utility/tinyxml2.h"
 #include "../include/trader.h"
+#include "../include/helper.h"
 #include "dong_0_strategy.h"
 #include "forecast.h"
 
@@ -119,6 +120,28 @@ bool Dong0Strategy::load_config()
 	if(!element)PARSE_ERROR("volume_ratio");
 	volume_ratio_ = atof(element->GetText());
 
+	char tmp[128]={0};	
+	element = root_element->FirstChildElement("open_time");
+	if(!element)PARSE_ERROR("open_time");
+	//trader_->log(element->GetText());
+	STRCPY(tmp,element->GetText());
+	for(int i=0;i<128;i++){
+		if(tmp[i]!=' '){
+			open_time_[i]=tmp[i];
+		}
+	}
+
+	memset(tmp, 128, 0);
+	element = root_element->FirstChildElement("close_time");
+	if(!element)PARSE_ERROR("close_time");
+	//trader_->log(element->GetText());
+	STRCPY(tmp,element->GetText());
+	for(int i=0;i<128;i++){
+		if(tmp[i]!=' '){
+			close_time_[i]=tmp[i];
+		}
+	}
+
 	element = root_element->FirstChildElement("forward_cancel_max");
 	if(!element)PARSE_ERROR("forward_cancel_max");
 	forward_cancel_max_ = atoi(element->GetText());
@@ -225,6 +248,49 @@ bool Dong0Strategy::on_init()
 	Instrument::submitMax = submit_max_;
 	Instrument::maxPosition = max_position_;
 	Instrument::direction = direction_==0 ? E_DIR_UP : E_DIR_DOWN;
+
+	string ot=string(open_time_);
+	string ct=string(close_time_);
+	size_t beg=0,end=0;
+	vector<string> ot_v, ct_v;
+	end =ot.find_first_of(',');
+	while(end!=string::npos){
+		ot_v.push_back(string(ot,beg,end));
+		beg=end+1;
+		end=ot.find_first_of(',',beg);
+	}
+	if(beg<ot.size()){
+		ot_v.push_back(string(ot,beg));
+	}
+
+	beg=0;end=0;
+	end =ct.find_first_of(',');
+	while(end!=string::npos){
+		ct_v.push_back(string(ct,beg,end));
+		beg=end+1;
+		end=ct.find_first_of(',',beg);
+	}
+	if(beg<ct.size()){
+		ct_v.push_back(string(ct,beg));
+	}
+	if(ot_v.size()!=ct_v.size()){
+		cout<<"open_time must has same num as close_time!!!\n";
+		return false;
+	}
+	for(int i=0;i<ot_v.size();i++){
+		if((ot_v[i][8]!='+'&& ot_v[i][8]!='-')
+		|| (ct_v[i][8]!='+'&& ct_v[i][8]!='-'))
+		{
+			cout<<"time must has format as HH:MM:SS+/-S*!!!\n";
+			return false;
+		}
+		int o=Time::Hhmmss2sec(string(ot_v[i],0,8).c_str())+atoi(string(ot_v[i],8).c_str());
+		int c=Time::Hhmmss2sec(string(ct_v[i],0,8).c_str())+atoi(string(ct_v[i],8).c_str());
+		Instrument::openTime.push_back(o);
+		Instrument::closeTime.push_back(c);
+		cout<<"open:"<<o<<" close:"<<c<<endl;
+	}
+
 	Instrument::loop = true;
 	string 	positionFileName = "position.cfg";
 	fstream position_file; 

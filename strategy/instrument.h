@@ -1,6 +1,7 @@
 #ifndef INSTRUMENT_H__
 #define INSTRUMENT_H__
 #include <list>
+#include <vector>
 #include "../include/trader.h"
 
 class Quote;
@@ -115,5 +116,7 @@ static void ShowLockedSpread();
 	static int			submitMax;
 	static bool			loop;
 	static bool			needToStopLoss;
+	static vector<int>	openTime;
+	static vector<int>	closeTime;
 };
 #endif /* INSTRUMENT_H__ */ 

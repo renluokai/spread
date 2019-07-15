@@ -30,6 +30,8 @@ private:
 	TradeChannel* trade_channel_;
 	char *forward_contract_;
 	char *recent_contract_;
+	char open_time_[128]={0};
+	char close_time_[128]={0};
 	int main_contract_;
 	int open_with_;
 	int close_with_;

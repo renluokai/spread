@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <forward_contract>ni1909</forward_contract>
-    <recent_contract>ni1908</recent_contract>
+    <forward_contract>rb1910</forward_contract>
+    <recent_contract>rb2001</recent_contract>
     <main_contract>0</main_contract>
     <open_with>0</open_with>
     <close_with>0</close_with>
-    <open_threshold>240</open_threshold>
-    <close_threshold>200</close_threshold>
+    <open_threshold>-228</open_threshold>
+    <close_threshold>-235</close_threshold>
     <direction>1</direction>
     <trigger_spread>0</trigger_spread>
-    <stop_loss>20</stop_loss>
+    <stop_loss>5</stop_loss>
     <stop_loss_type>1</stop_loss_type>
-    <max_postion>5</max_postion>
-    <submit_max>1</submit_max>
+    <max_postion>50</max_postion>
+    <submit_max>3</submit_max>
     <volume_ratio>0.8</volume_ratio>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
+    <open_time>21:00:00+10,09:00:00+10,10:30:00+10,13:30:00+30</open_time>
+    <close_time>23:00:00-30,10:15:00-30,11:30:00-30,15:00:00-30</close_time>
     <quote_channel>
         <front>tcp://180.168.146.187:10111</front>
         <user>012423</user>

@@ -29,7 +29,6 @@ CtpTradeChannel::CtpTradeChannel()
 
 bool CtpTradeChannel::open(Config *cfg, Handler *hdlr)
 {
-	printf("TREAD THREAD ID IS:%d\n",pthread_self());
 	cfg_ = cfg;
 	handler_ = hdlr;
 	int ret = 0;
