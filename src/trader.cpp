@@ -87,7 +87,7 @@ bool Trader::run(Strategy *s){
 	size_t c=0;
 	Data *data = NULL;
 	Order* o = NULL;
-	log("input :s to start system");
+	log("input :s to start system\n");
 	while(1){
 		//cout<<"#"<<c++<<" run running..."<<endl;
 		data = handler->pop();

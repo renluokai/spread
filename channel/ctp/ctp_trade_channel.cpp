@@ -446,6 +446,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 				o.long_short = E_LONG;
 			}
 		}
+		o.submit_price = pOrder->LimitPrice;
 		o.order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
 		STRCPY(o.state_msg, pOrder->StatusMsg);
 		if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertSubmitted
@@ -455,16 +456,18 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 			order_ref_has_inserted.insert(pOrder->OrderRef);
 			o.state = E_INSERT;
 			STRCPY(o.order_system_id, pOrder->OrderSysID);
-			o.submit_price = pOrder->LimitPrice;
 			o.submit_volume = pOrder->VolumeTotalOriginal;
+			log_stream_<<"REPORT insert"<<endl;
 		}else if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertRejected
 		||pOrder->OrderSubmitStatus ==THOST_FTDC_OSS_CancelRejected)
 		&& pOrder->OrderStatus == THOST_FTDC_OST_Canceled){
 			o.state = E_REJECT;
+			log_stream_<<"REPORT reject"<<endl;
 		}else if( pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted
 		&& pOrder->OrderStatus == THOST_FTDC_OST_Canceled){
 			o.state = E_CANCEL;
 			o.canceled_volume = pOrder->VolumeTotal - pOrder->VolumeTraded;
+			log_stream_<<"REPORT cancel"<<endl;
 		}
 		handler_->push(&o);
 	}
@@ -1116,7 +1119,7 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 	if(pOrder->OrderStatus == THOST_FTDC_OST_PartTradedQueueing 
 	|| pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing){
 		Order o;
-		order_ref_has_inserted.insert(pOrder->OrderRef);
+		//order_ref_has_inserted.insert(pOrder->OrderRef);
 		STRCPY(o.instrument, pOrder->InstrumentID);
 		if(pOrder->Direction == THOST_FTDC_D_Buy){
 			if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){

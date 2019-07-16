@@ -6,18 +6,17 @@
     <main_contract>0</main_contract>
     <open_with>0</open_with>
     <close_with>0</close_with>
-    <open_threshold>-241</open_threshold>
-    <close_threshold>-235</close_threshold>
+    <open_threshold>-250</open_threshold>
+    <close_threshold>-257</close_threshold>
     <!-- 0看涨 1看跌!-->
-    <direction>0</direction>
+    <direction>1</direction>
     <locked_position>0</locked_position>
     <stop_loss>5</stop_loss>
     <stop_loss_type>1</stop_loss_type>
     <trigger_spread>0</trigger_spread>
-    <volume_ratio>0</volume_ratio>
+    <volume_ratio>0.8</volume_ratio>
     <max_postion>2</max_postion>
     <submit_max>1</submit_max>
-    <volume_ratio>0.8</volume_ratio>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <open_time>21:00:00+30,09:00:00+30,10:30:00+30,13:30:00+30</open_time>

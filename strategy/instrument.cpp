@@ -153,8 +153,9 @@ void Instrument::on_quote(Quote *q)
 void Instrument::ShowQuote()
 {
 	char buffer[256]={0};
-	sprintf(buffer,"Q %s %s %.5f %d %.5f %d %.5f %.5f\n",
+	sprintf(buffer,"Q %s %s %s %.5f %d %.5f %d %.5f %.5f\n",
 			insType==E_INS_FORWARD?"F":"R",
+			lastQuote->UpdateTime,
 			lastQuote->InstrumentID,
 			lastQuote->BidPrice1,
 			lastQuote->BidVolume1,
@@ -999,7 +1000,7 @@ void Instrument::CheckStopLoss()
 	vector<Order*>::iterator iter;
 	if(direction == E_DIR_UP){
 		if(IsStopLoss(tradedSpread)){
-			trader->log("let's stop loss");
+			trader->log("let's stop loss\n");
 			needToStopLoss = true;
 
 			if(E_INS_FORWARD == firstOpenIns->insType){
