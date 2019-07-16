@@ -157,6 +157,14 @@ void Trader::process_command(Command* cmd)
 		if(startToTrade == false){
 			startToTrade = true;
 		}
+	}else if(strncmp(cmd->buffer, ":set ", 5)==0){
+		log(cmd->buffer);
+		strategy->set_option(cmd->buffer+5);
+	}else if(strcmp(cmd->buffer, ":set\n")==0){
+		log(cmd->buffer);
+		char opts[256]={0};
+		strategy->get_option(opts);
+		
 	}
 }
 

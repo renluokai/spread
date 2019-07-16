@@ -15,6 +15,8 @@ public:
 	virtual void on_quote(Quote *q);
 	virtual void on_error(Error *e);
 	virtual void on_notify(Notify *n);
+	virtual void set_option(const char*);
+	virtual void get_option(char* buffer);
 private:
 	bool load_config();
 private:

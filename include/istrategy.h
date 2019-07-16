@@ -8,5 +8,7 @@ public:
 	virtual void on_quote(Quote *q)=0;
 	virtual void on_error(Error *e)=0;
 	virtual void on_notify(Notify *n)=0;
+	virtual void set_option(const char*)=0;
+	virtual void get_option(char *buffer)=0;
 };
 #endif /* I_STRATEGY_H__ */

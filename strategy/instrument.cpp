@@ -60,14 +60,16 @@ void Instrument::on_quote(Quote *q)
 	if(relativeIns->reached == false){
 		return;
 	}
-
-	if(insType == triggerSpread){
+	static bool firstCalcSpread=true;
+	if(insType == triggerSpread || firstCalcSpread == true){
+		firstCalcSpread=false;
 		if(insType == E_INS_FORWARD){
 			CalcSpread(false);
 		}else{
 			CalcSpread();
 		}
 	}
+	
 	ShowQuote();
 
 	if(direction == E_DIR_UP)

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <forward_contract>rb1910</forward_contract>
-    <recent_contract>rb2001</recent_contract>
-    <main_contract>0</main_contract>
-    <open_with>0</open_with>
-    <close_with>0</close_with>
-    <open_threshold>-228</open_threshold>
-    <close_threshold>-235</close_threshold>
-    <direction>1</direction>
+    <forward_contract>cu1909</forward_contract>
+    <recent_contract>cu1908</recent_contract>
+    <main_contract>1</main_contract>
+    <open_with>1</open_with>
+    <close_with>1</close_with>
+    <open_threshold>70</open_threshold>
+    <close_threshold>90</close_threshold>
+    <direction>0</direction>
     <trigger_spread>0</trigger_spread>
-    <stop_loss>5</stop_loss>
+    <stop_loss>2</stop_loss>
     <stop_loss_type>1</stop_loss_type>
-    <max_postion>50</max_postion>
-    <submit_max>3</submit_max>
+    <max_postion>30</max_postion>
+    <submit_max>2</submit_max>
     <volume_ratio>0.8</volume_ratio>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>

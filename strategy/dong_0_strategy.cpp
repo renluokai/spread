@@ -407,3 +407,54 @@ void Dong0Strategy::on_notify(Notify *n)
 {
 	cout<<"CALLING: "<<__FUNCTION__<<endl;
 }
+
+void Dong0Strategy::set_option(const char*newCfg)
+{
+	string opts=string(newCfg);
+	map<string,string> key_value;
+	map<string,string>::iterator iter;
+	size_t beg=0, end=0;
+	end=opts.find_first_of("=",beg);
+	while(end!=string::npos){
+		string key,value;
+		key=string(opts,beg,end-beg);
+		char keyBuf[250]={0};
+		char keyBufCnt=0;
+		for(size_t i=0;i<key.size();i++){
+			if(key[i]!=' '){
+				keyBuf[keyBufCnt++]=key[i];
+			}
+		}
+		key=string(keyBuf);
+		size_t vb=0,ve=0;		
+		vb=opts.find_first_not_of(" \n",end+1);
+		if(vb==string::npos){
+			break;
+		}
+		ve=opts.find_first_of("\n ",vb);
+		value=string(opts,vb,ve-vb);
+		key_value.insert(make_pair(key,value));
+		beg=ve+1;
+		end=opts.find_first_of("=",beg);
+	}
+	for(iter=key_value.begin();iter!=key_value.end();iter++){
+		if(iter->first=="open"){
+			Instrument::openThreshold=atof(iter->second.c_str());
+		}else if(iter->first=="close"){
+			Instrument::closeThreshold=atof(iter->second.c_str());
+		}else if(iter->first=="dir"){
+			Instrument::direction=atoi(iter->second.c_str())==0?E_DIR_UP:E_DIR_DOWN;
+		}else if(iter->first=="ratio"){
+			Forecast::volumeRatio=atof(iter->second.c_str());
+		}
+	}
+}
+
+void Dong0Strategy::get_option(char*buffer)
+{
+	int d=Instrument::direction==E_DIR_UP?0:1;
+	sprintf(buffer, "open=%f close=%f dir=%d ratio=%f\n",
+			Instrument::openThreshold, Instrument::closeThreshold,
+			d, Forecast::volumeRatio);
+	trader_->log(buffer);
+}
