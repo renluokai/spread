@@ -17,8 +17,8 @@ t: $(objects)
 	g++ -g -c  $@ $^
 
 log:
-	@mv *.log history_log	
-	@mv *.con history_log	
+	@mv *.log ./history
+	@mv *.con ./history	
 clean:
 	rm -rf $(objects)	
 #%.d: %.cpp
