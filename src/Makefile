@@ -1,5 +1,7 @@
 .PHONY: t
 .PHONY: clean
+.PHONY: clean
+.PHONY: log
 vpath %.h ../include
 CPPFLAGS += -g -std=gnu++11
 utility := ../utility/tinyxml2.o
@@ -13,9 +15,13 @@ t: $(objects)
 *.o:*.cpp
 *.o:*.cpp
 	g++ -g -c  $@ $^
+
+log:
+	@mv *.log history_log	
+	@mv *.con history_log	
 clean:
 	rm -rf $(objects)	
-%.d: %.cpp
-	g++ -M $(CPPFLAGS) $< > $@.$$$$;					\
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;	\
-	#rm -f $@.$$$$
+#%.d: %.cpp
+#	g++ -M $(CPPFLAGS) $< > $@.$$$$;					\
+#	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;	\
+#	#rm -f $@.$$$$
