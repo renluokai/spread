@@ -353,9 +353,6 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 
 void CtpTradeChannel::OnRtnOrder(CThostFtdcOrderField *pOrder)
 {
-	if(pOrder->SessionID!= session_id_){
-		return;
-	}else{
 log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 <<"InvestorID="<<pOrder->InvestorID<<" | "
 <<"InstrumentID="<<pOrder->InstrumentID<<" | "
@@ -470,7 +467,6 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 			log_stream_<<"REPORT cancel"<<endl;
 		}
 		handler_->push(&o);
-	}
 }
 #if 1
 
@@ -1178,5 +1174,28 @@ log_stream_<<" nRequestID="<<nRequestID<<" bIsLast="<<bIsLast<<endl;
 		STRCPY(LoginField.Password, cfg_->password);
 		log_stream_<<"ReqUserLogin ["<<LoginField.BrokerID<<"] ["<<LoginField.UserID<<"] ["<<LoginField.Password<<"]\n";
 		trade_api_->ReqUserLogin(&LoginField, request_id_++);
+	}
+}
+
+void CtpTradeChannel::OnFrontDisconnected(int nReason){
+	login_ok_=false;
+	session_id_=0;
+log_stream_<<"[ "<<__FUNCTION__<<" ] ";
+	switch(nReason){
+		case 0x1001:
+			log_stream_<<"网络读失败"<<endl;
+			break;
+		case 0x1002:
+			log_stream_<<"网络写失败"<<endl;
+			break;
+		case 0x2001:
+			log_stream_<<"接收心跳超时"<<endl;
+			break;
+		case 0x2002:
+			log_stream_<<"发送心跳失败"<<endl;
+			break;
+		case 0x2003:
+			log_stream_<<"收到错误报文"<<endl;
+			break;
 	}
 }
