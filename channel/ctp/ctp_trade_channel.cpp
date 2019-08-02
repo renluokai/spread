@@ -221,7 +221,7 @@ log_stream_<<"ReqAuthenticate ["<<authField.BrokerID<<"] ["<<authField.UserID<<"
 
 void CtpTradeChannel::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-if(session_id_!=0){
+if(login_ok_==true){
 	return;
 }
 if(login_ok_ == false && pRspUserLogin){
@@ -308,7 +308,6 @@ log_stream_<<'['<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 void CtpTradeChannel::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo)
 {
 
-if(order_ref_2_order_local_id.count(pInputOrder->OrderRef)==1){
 log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 <<"InvestorID="<<pInputOrder->InvestorID<<" | "
 <<"InstrumentID="<<pInputOrder->InstrumentID<<" | "
@@ -348,7 +347,6 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 	STRCPY(o.state_msg, pRspInfo->ErrorMsg);
 	handler_->push(&o);
 	log_stream_<<endl;
-}
 }
 
 void CtpTradeChannel::OnRtnOrder(CThostFtdcOrderField *pOrder)
@@ -472,9 +470,6 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 
 void CtpTradeChannel::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
-if(order_ref_2_order_local_id.count(pTrade->OrderRef)==0){
-	return;
-}
 log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 <<"InvestorID="<<pTrade->InvestorID<<" | "
 <<"InstrumentID="<<pTrade->InstrumentID<<" | "
