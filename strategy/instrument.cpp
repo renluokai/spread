@@ -416,6 +416,10 @@ void Instrument::FullOpenLong(int lockedPosition)
 			return;
 		}
 
+		{
+			char buffer[256]={0};
+			sprintf(buffer,"needToStopLoss=%s\n",needToStopLoss?"true":"false");
+		}
 		if(needToStopLoss==true && lockedPosition>0){
 			return;
 		}
@@ -475,6 +479,10 @@ void Instrument::FullOpenLong(int lockedPosition)
 			return;
 		}
 
+		{
+			char buffer[256]={0};
+			sprintf(buffer,"needToStopLoss=%s\n",needToStopLoss?"true":"false");
+		}
 		if(needToStopLoss==true && lockedPosition>0){
 			return;
 		}
@@ -710,7 +718,10 @@ void Instrument::FullOpenShort(int lockedPosition)
 			}
 			return;
 		}
-
+		{
+			char buffer[256]={0};
+			sprintf(buffer,"needToStopLoss=%s\n",needToStopLoss?"true":"false");
+		}
 		if(needToStopLoss==true && lockedPosition>0){
 			return;
 		}
@@ -769,6 +780,10 @@ void Instrument::FullOpenShort(int lockedPosition)
 			return;
 		}
 
+		{
+			char buffer[256]={0};
+			sprintf(buffer,"needToStopLoss=%s\n",needToStopLoss?"true":"false");
+		}
 		if(needToStopLoss==true && lockedPosition>0){
 			return;
 		}
@@ -985,6 +1000,8 @@ void Instrument::DoNotFullCloseShort()
 }
 void Instrument::CheckStopLoss()
 {
+	trader->log(__FUNCTION__);
+	trader->log("\n");
 	int lockedPositionYesterday = CalcLockedPositionYesterday();
 	int lockedPositionToday = CalcLockedPositionToday();
 	double tradedSpread = 0.0;
@@ -1084,7 +1101,7 @@ void Instrument::CheckStopLoss()
 	}else{
 		//do E_DIR_DOWN stop loss check
 		if(IsStopLoss(tradedSpread)){
-			trader->log("let's stop loss");
+			trader->log("let's stop loss\n");
 			needToStopLoss = true;
 			vector<Order*> ods;
 			vector<Order*>::iterator iter;

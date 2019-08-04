@@ -122,6 +122,7 @@ bool CtpTradeChannel::submit(Order *o)
 		default:
 			break;
 	}
+	new_order.RequestID=request_id_;
 	memset(new_order.CombOffsetFlag, 0, sizeof(new_order.CombOffsetFlag));
 	switch(o->open_close){
 		case E_OPEN:
@@ -577,11 +578,11 @@ void CtpTradeChannel::NewOrder(CThostFtdcInputOrderField *o)
 	///有效期类型
 	o->TimeCondition = THOST_FTDC_TC_GFD;
 	///GTD日期
-	TThostFtdcDateType	GTDDate;
+	STRCPY(o->GTDDate,"");
 	///成交量类型
 	o->VolumeCondition = THOST_FTDC_VC_AV;
 	///最小成交量
-	o->MinVolume = 0;
+	o->MinVolume = 1;
 	///触发条件
 	o->ContingentCondition = THOST_FTDC_CC_Immediately;
 	///止损价
@@ -593,7 +594,7 @@ void CtpTradeChannel::NewOrder(CThostFtdcInputOrderField *o)
 	///业务单元
 	TThostFtdcBusinessUnitType	BusinessUnit;
 	///请求编号
-	TThostFtdcRequestIDType	RequestID;
+	//TThostFtdcRequestIDType	RequestID;
 	///用户强评标志
 	TThostFtdcBoolType	UserForceClose;
 	///互换单标志
@@ -607,11 +608,11 @@ void CtpTradeChannel::NewOrder(CThostFtdcInputOrderField *o)
 	///币种代码
 	TThostFtdcCurrencyIDType	CurrencyID;
 	///交易编码
-	TThostFtdcClientIDType	ClientID;
+	//TThostFtdcClientIDType	ClientID;
 	///IP地址
-	TThostFtdcIPAddressType	IPAddress;
+	//TThostFtdcIPAddressType	IPAddress;
 	///Mac地址
-	TThostFtdcMacAddressType	MacAddress;
+	//TThostFtdcMacAddressType	MacAddress;
 }
 
 void CtpTradeChannel::OnRspQryInvestor(CThostFtdcInvestorField *pInvestor, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)

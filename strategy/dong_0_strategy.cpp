@@ -65,18 +65,51 @@ bool Dong0Strategy::load_config()
 
 	root_element = doc.RootElement();
 
-	element = root_element->FirstChildElement("forward_contract");
-	if(!element)PARSE_ERROR("forward_contract");
-	STRCPY(forward_contract_,element->GetText());
+	char contract1[32]={0};
+	char contract2[32]={0};
+	element = root_element->FirstChildElement("contract1");
+	if(!element)PARSE_ERROR("contract1");
+	STRCPY(contract1,element->GetText());
 
-	element = root_element->FirstChildElement("recent_contract");
-	if(!element)PARSE_ERROR("recent_contract");
-	STRCPY(recent_contract_,element->GetText());
+	element = root_element->FirstChildElement("contract2");
+	if(!element)PARSE_ERROR("contract2");
+	STRCPY(contract2,element->GetText());
+	int c1=0;
+	int c2=0;
+	for(int i=0;i<32;i++){
+		if(isdigit(contract1[i])!=0){
+			c1=atoi(contract1+i);
+			break;
+		}
+	}
 
-	element = root_element->FirstChildElement("main_contract");
-	if(!element)PARSE_ERROR("main_contract");
-	main_contract_ = atoi(element->GetText());
-
+	for(int i=0;i<32;i++){
+		if(isdigit(contract2[i])!=0){
+			c2=atoi(contract2+i);
+			break;
+		}
+	}
+	int c1year=c1/100;	
+	int c2year=c2/100;	
+	int c1mon=c1%100;
+	int c2mon=c2%100;
+	if(c1year==c2year){
+		if(c1mon>c2mon){
+			STRCPY(forward_contract_, contract1);
+			STRCPY(recent_contract_, contract2);
+		}else{
+			STRCPY(forward_contract_, contract2);
+			STRCPY(recent_contract_, contract1);
+		}
+	}else{
+		if(c1year>c2year){
+			STRCPY(forward_contract_, contract1);
+			STRCPY(recent_contract_, contract2);
+		}else{
+			STRCPY(forward_contract_, contract2);
+			STRCPY(recent_contract_, contract1);
+		}
+	}
 	element = root_element->FirstChildElement("open_with");
 	if(!element)PARSE_ERROR("open_with");
 	open_with_ = atoi(element->GetText());
@@ -248,7 +281,19 @@ bool Dong0Strategy::on_init()
 	Instrument::submitMax = submit_max_;
 	Instrument::maxPosition = max_position_;
 	Instrument::direction = direction_==0 ? E_DIR_UP : E_DIR_DOWN;
-
+	{
+		if(Instrument::direction==E_DIR_UP){
+			if(Instrument::openThreshold >= Instrument::closeThreshold){	
+				trader_->log("ERROR: expect up, openspread >= closespread\n");
+				return false;
+			}
+		}else{
+			if(Instrument::openThreshold <= Instrument::closeThreshold){	
+				trader_->log("ERROR: expect down, openspread <= closespread\n");
+				return false;
+			}
+		}
+	}
 	string ot=string(open_time_);
 	string ct=string(close_time_);
 	size_t beg=0,end=0;
