@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <forward_contract>cu1909</forward_contract>
-    <recent_contract>cu1908</recent_contract>
-    <main_contract>1</main_contract>
+    <contract1>cu1910</contract1>
+    <contract2>cu1909</contract2>
     <open_with>1</open_with>
     <close_with>1</close_with>
     <open_threshold>70</open_threshold>

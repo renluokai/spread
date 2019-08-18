@@ -22,7 +22,7 @@ Order* OrderManager::FillNewOrder(Order* o, const char* instrument, double price
 	return o;
 }
 
-bool OrderManager::UpdateOrder(Order* o)
+Order* OrderManager::UpdateOrder(Order* o)
 {
 	Order *tmp = NULL;
 	int id=0;
@@ -62,12 +62,13 @@ bool OrderManager::UpdateOrder(Order* o)
 			STRCPY(tmp->state_msg, o->state_msg);
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
 			cout<<"AFTER RECECT:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
-			return true;
+			return tmp;
 		case E_CANCEL:
 			id = o->order_local_id;
+			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
 			cout<<"AFTER CANCEL:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
-			return true;
+			return tmp;
 		break;
 		case E_MATCH:
 			id = o->order_local_id;
@@ -76,11 +77,11 @@ bool OrderManager::UpdateOrder(Order* o)
 			o->stop_loss = tmp->stop_loss;
 			if(tmp->total_matched == tmp->submit_volume){
 				instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
-				return true;
+				return tmp;
 			}
 		break;
 	}
-	return false;
+	return NULL;
 }
 void ShowOrder(std::pair<int, Order*> io)
 {

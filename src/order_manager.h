@@ -15,7 +15,7 @@ public:
 	}
 	Order* FillNewOrder(Order* o, const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 
-	bool UpdateOrder(Order* o);
+	Order* UpdateOrder(Order* o);
 	bool HaveOrder(const char* ins);
 
 	void ShowOrders(const char* ins=NULL);

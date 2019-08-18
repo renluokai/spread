@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "../include/helper.h"
 void Time::FullTime(char*  buffer)
@@ -8,7 +9,7 @@ void Time::FullTime(char*  buffer)
 	struct tm ts;
 	clock_gettime(CLOCK_REALTIME,&tv);
 	localtime_r(&tv.tv_sec, &ts);
-	sprintf(buffer, "%04d%02d%02d:%02d:%02d:%02d.%06d",
+	sprintf(buffer, "%04d%02d%02d_%02d%02d%02d.%06d",
 			ts.tm_year+1900,
 			ts.tm_mon+1,
 			ts.tm_mday,
@@ -16,6 +17,7 @@ void Time::FullTime(char*  buffer)
 			ts.tm_min,
 			ts.tm_sec,
 			tv.tv_nsec);
+	memset(buffer+22,0,1);
 }
 int Time::Hhmmss2sec(const char* timeStr)
 {

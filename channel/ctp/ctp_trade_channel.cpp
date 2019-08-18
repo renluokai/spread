@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <iostream>
 #include "ctp_trade_channel.h"
+#include "../../include/helper.h"
 
 using namespace std;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
@@ -146,7 +147,9 @@ bool CtpTradeChannel::submit(Order *o)
 	}
 	
 	int ret = 0;
-log_stream_<<"[ ReqOrderInsert] "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" [ ReqOrderInsert] "
 <<"BrokerID="<<new_order.BrokerID<<" | "
 <<"InvestorID="<<new_order.InvestorID<<" | "
 <<"InstrumentID="<<new_order.InstrumentID<<" | "
@@ -194,7 +197,9 @@ bool CtpTradeChannel::cancel(Order *o)
 	STRCPY(a.InstrumentID, o->instrument);
 	a.ActionFlag = THOST_FTDC_AF_Delete;
 	int ret = 0;
-log_stream_<<"[ ReqOrderAction ] "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" [ ReqOrderAction ] "
 <<"BrokerID="<<a.BrokerID<<" | "
 <<"InvestorID="<<a.InvestorID<<" | "
 <<"UserID="<<a.UserID<<" | "
@@ -208,7 +213,9 @@ log_stream_<<"[ ReqOrderAction ] "
 
 void CtpTradeChannel::OnFrontConnected()
 {
-	log_stream_<<'['<<__FUNCTION__<<']'<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<']'<<endl;
 	CThostFtdcReqAuthenticateField authField={0};
 
 	STRCPY(authField.BrokerID, cfg_->broker_id);
@@ -226,7 +233,9 @@ if(login_ok_==true){
 	return;
 }
 if(login_ok_ == false && pRspUserLogin){
-log_stream_<<'['<<__FUNCTION__<<']'<<"TradingDay="<<pRspUserLogin->TradingDay<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<']'<<"TradingDay="<<pRspUserLogin->TradingDay<<" | "
 <<"LoginTime="<<pRspUserLogin->LoginTime<<" | "
 <<"BrokerID="<<pRspUserLogin->BrokerID<<" | "
 <<"UserID="<<pRspUserLogin->UserID<<" | "
@@ -268,7 +277,9 @@ log_stream_<<" nRequestID="<<nRequestID<<" bIsLast="<<bIsLast<<endl;
 void CtpTradeChannel::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	if(pInputOrder != NULL){
-log_stream_<<'['<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 <<"InvestorID="<<pInputOrder->InvestorID<<" | "
 <<"InstrumentID="<<pInputOrder->InstrumentID<<" | "
 <<"OrderRef="<<pInputOrder->OrderRef<<" | "
@@ -309,7 +320,9 @@ log_stream_<<'['<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 void CtpTradeChannel::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo)
 {
 
-log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 <<"InvestorID="<<pInputOrder->InvestorID<<" | "
 <<"InstrumentID="<<pInputOrder->InstrumentID<<" | "
 <<"OrderRef="<<pInputOrder->OrderRef<<" | "
@@ -352,7 +365,9 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerID<<" | "
 
 void CtpTradeChannel::OnRtnOrder(CThostFtdcOrderField *pOrder)
 {
-log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 <<"InvestorID="<<pOrder->InvestorID<<" | "
 <<"InstrumentID="<<pOrder->InstrumentID<<" | "
 <<"OrderRef="<<pOrder->OrderRef<<" | "
@@ -471,7 +486,9 @@ log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" | "
 
 void CtpTradeChannel::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
-log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" | "
 <<"InvestorID="<<pTrade->InvestorID<<" | "
 <<"InstrumentID="<<pTrade->InstrumentID<<" | "
 <<"OrderRef="<<pTrade->OrderRef<<" | "
@@ -619,7 +636,9 @@ void CtpTradeChannel::OnRspQryInvestor(CThostFtdcInvestorField *pInvestor, CThos
 {
 
 	if(pInvestor != NULL){
-log_stream_<<"["<<__FUNCTION__<<"] "<<"InvestorID="<<pInvestor->InvestorID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"InvestorID="<<pInvestor->InvestorID<<" | "
 <<"BrokerID="<<pInvestor->BrokerID<<" | "
 <<"InvestorGroupID="<<pInvestor->InvestorGroupID<<" | "
 <<"InvestorName="<<pInvestor->InvestorName<<" | "
@@ -656,7 +675,9 @@ void CtpTradeChannel::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument,
 		//instInfo.MinBuyVolume	= pInstrument->MinBuyVolume;
 		//instInfo.MinSellVolume	= pInstrument->MinSellVolume;
 		trader_->add_instrument_info(&instInfo);
-log_stream_<<"["<<__FUNCTION__<<"] "<<"InstrumentID="<<pInstrument->InstrumentID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"InstrumentID="<<pInstrument->InstrumentID<<" | "
 <<"ExchangeID="<<pInstrument->ExchangeID<<" | "
 <<"InstrumentName="<<pInstrument->InstrumentName<<" | "
 <<"ExchangeInstID="<<pInstrument->ExchangeInstID<<" | "
@@ -702,7 +723,9 @@ log_stream_<<"bIslast="<<bIsLast<<endl;
 void CtpTradeChannel::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	if(SettlementInfoConfirmed==false && pSettlementInfoConfirm != NULL){
-log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pSettlementInfoConfirm->BrokerID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pSettlementInfoConfirm->BrokerID<<" | "
 <<"InvestorID="<<pSettlementInfoConfirm->InvestorID<<" | "
 <<"ConfirmDate="<<pSettlementInfoConfirm->ConfirmDate<<" | "
 <<"ConfirmTime="<<pSettlementInfoConfirm->ConfirmTime<<endl;
@@ -715,7 +738,9 @@ void CtpTradeChannel::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirm
 {
 	if(SettlementInfoConfirmed==false
 	&& pSettlementInfoConfirm != NULL){
-log_stream_<<"["<<__FUNCTION__<<"] "<<"BrokerID="<<pSettlementInfoConfirm->BrokerID<<" | "
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pSettlementInfoConfirm->BrokerID<<" | "
 <<"InvestorID="<<pSettlementInfoConfirm->InvestorID<<" | "
 <<"ConfirmDate="<<pSettlementInfoConfirm->ConfirmDate<<" | "
 <<"ConfirmTime="<<pSettlementInfoConfirm->ConfirmTime<<endl;
@@ -745,7 +770,9 @@ bool CtpTradeChannel::DoQryInvestor()
 {
 	Delay(1);
 	CThostFtdcQryInvestorField QryInvestor={0};
-log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryInvestor(&QryInvestor, request_id_++);	
 	return Wait(30, "ReqQryInvestor");
 }
@@ -754,7 +781,9 @@ bool CtpTradeChannel::DoQryInstrument()
 {
 	Delay(1);
 	CThostFtdcQryInstrumentField qry_ins = {0};
-log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryInstrument(&qry_ins, request_id_++);
 	return Wait(30, "ReqQryInstrument");
 }
@@ -763,7 +792,9 @@ bool CtpTradeChannel::DoQryOrder()
 {
 	Delay(1);
 	CThostFtdcQryOrderField qryOrder={0};
-log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryOrder(&qryOrder, request_id_++);
 	return Wait(30, "ReqQryOrder");
 }
@@ -771,7 +802,9 @@ bool CtpTradeChannel::DoQryPosition()
 {
 	Delay(1);
 	CThostFtdcQryInvestorPositionField Position={0};
-log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQryInvestorPosition(&Position, request_id_++);
 	return Wait(30, "ReqQryInvestorPosition");
 }
@@ -790,7 +823,9 @@ bool CtpTradeChannel::DoQrySettlementInfoConfirm ()
 	STRCPY(qry_cfm.BrokerID, cfg_->broker_id);
 	STRCPY(qry_cfm.InvestorID, investor_id_);
 
-log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqQrySettlementInfoConfirm(&qry_cfm, request_id_++);
 	return Wait(30,"ReqQrySettlementInfoConfirm");
 }
@@ -804,7 +839,9 @@ bool CtpTradeChannel::DoSettlementInfoConfirm ()
 	TThostFtdcDateType	ConfirmDate;
 	///确认时间
 	TThostFtdcTimeType	ConfirmTime;
-log_stream_<<"["<<__FUNCTION__<<"]"<<endl;
+char buffer[24]={0};
+Time::FullTime(buffer);
+log_stream_<<buffer<<" ["<<__FUNCTION__<<"]"<<endl;
 	trade_api_->ReqSettlementInfoConfirm(&settl_cfm, request_id_++);
 	Wait(30,"ReqSettlementInfoConfirm");
 }

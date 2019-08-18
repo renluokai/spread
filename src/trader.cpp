@@ -87,6 +87,7 @@ bool Trader::run(Strategy *s){
 	size_t c=0;
 	Data *data = NULL;
 	Order* o = NULL;
+	Order* tmp=NULL;
 	log("input :s to start system\n");
 	while(1){
 		//cout<<"#"<<c++<<" run running..."<<endl;
@@ -94,9 +95,13 @@ bool Trader::run(Strategy *s){
 		switch(data->type){
 			case E_ORDER_TYPE:
 				o = (Order*)data;
-				if(orderManager->UpdateOrder(o)){
-					handler->back(data);
+				{
+					tmp = orderManager->UpdateOrder(o);
+					if(tmp)
+						handler->back(tmp);
 				}
+				handler->back(data);
+				
 #if 0
 				if(o->state == E_MATCH){
 					UpdatePosition(o->instrument, o->open_close,

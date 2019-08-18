@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <contract1>ni1910</contract1>
-    <contract2>ni1909</contract2>
+    <contract2>ni1911</contract2>
 	<!-- 0 近期合约 1远期合约!-->
     <open_with>0</open_with>
     <close_with>0</close_with>
-    <open_threshold>210</open_threshold>
-    <close_threshold>170</close_threshold>
+    <open_threshold>-130</open_threshold>
+    <close_threshold>-180</close_threshold>
 	<!-- 0看涨 1看跌!-->
     <direction>1</direction>
-    <locked_position>0</locked_position>
     <stop_loss>4</stop_loss>
     <stop_loss_type>1</stop_loss_type>
     <volume_ratio>0.8</volume_ratio>
