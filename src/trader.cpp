@@ -33,7 +33,7 @@ Trader::Trader()
 	startToTrade = false;
 }
 
-void Trader::log(const char* msg)
+void Trader::log(const char* msg,int type)
 {
 	cout<<msg<<std::flush;
 	log_stream<<msg<<std::flush;
@@ -100,15 +100,8 @@ bool Trader::run(Strategy *s){
 					if(tmp)
 						handler->back(tmp);
 				}
-				handler->back(data);
-				
-#if 0
-				if(o->state == E_MATCH){
-					UpdatePosition(o->instrument, o->open_close,
-									o->long_short, o->match_volume, o->match_price);
-				}
-#endif
 				strategy->on_order((Order*)data);
+				handler->back(data);
 				break;
 			case E_QUOTE_TYPE:
 				if(startToTrade == false){
@@ -139,7 +132,6 @@ void Trader::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int
 }
 void Trader::process_command(Command* cmd)
 {
-	//cout<<"USER COMMAND PROCESSING:"<<cmd->buffer<<endl;
 	if(strcmp(cmd->buffer,":q\n") == 0){
 		cout<<"EXITING"<<endl;
 	}

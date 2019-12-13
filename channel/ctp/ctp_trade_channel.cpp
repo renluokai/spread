@@ -518,6 +518,7 @@ log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" 
 <<"SettlementID="<<pTrade->SettlementID<<" | "
 <<"BrokerOrderSeq="<<pTrade->BrokerOrderSeq<<" | "
 <<"TradeSource="<<pTrade->TradeSource<<endl;
+
 	Order o;
 	o.state = E_MATCH;
 	STRCPY(o.instrument, pTrade->InstrumentID);
@@ -557,6 +558,7 @@ log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" 
 			break;
 	}
 	handler_->push(&o);
+	log_stream_<<"REPORT match"<<endl;
 }
 #endif
 char* CtpTradeChannel::GetOrderRef()

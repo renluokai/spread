@@ -17,16 +17,10 @@ using std::list;
 		perror("SafeList sem init error");\
 		exit(errno);\
 	}\
-	int sem_value=0;\
-	ret = sem_getvalue(psem, &sem_value);\
-	printf("sem current value is:%d\n", sem_value);\
 }while(0)
 
 #define SEM_WAIT(psem) do {\
 	int ret =  -1;\
-	int sem_value=0;\
-	ret = sem_getvalue(psem, &sem_value);\
-	printf("sem current value is:%d\n", sem_value);\
 	ret = sem_wait(psem);\
 	if(ret != 0 ){\
 		perror("SafeList sem wait error");\
@@ -36,9 +30,6 @@ using std::list;
 
 #define SEM_POST(psem) do {\
 	int ret =  -1;\
-	int sem_value=0;\
-	ret = sem_getvalue(psem, &sem_value);\
-	printf("sem current value is:%d\n", sem_value);\
 	ret = sem_post(psem);\
 	if(ret != 0 ){\
 		perror("SafeList sem post error");\

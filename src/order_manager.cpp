@@ -76,7 +76,16 @@ Order* OrderManager::UpdateOrder(Order* o)
 			tmp->total_matched += o->match_volume;
 			o->stop_loss = tmp->stop_loss;
 			if(tmp->total_matched == tmp->submit_volume){
+				char buffer[250]={0};
+				sprintf(buffer,"order size:%d\n",
+					instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()
+				);
+				Trader::GetTrader()->log(buffer);
 				instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
+				bzero(buffer,250);
+				sprintf(buffer,"order size:%d\n",
+					instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()
+				);
 				return tmp;
 			}
 		break;

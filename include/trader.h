@@ -50,7 +50,9 @@ public:
 	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
 
 	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
-	void log(const char* msg);
+	//11 quote1;12 quote2; 21 trade1;22 trade2; 31 set 
+	void log(const char* msg,int type=11);
+	
 public:
 	void add_instrument_info(InstrumentInfo*);
 	InstrumentInfo* get_instrument_info(const char* ins); 

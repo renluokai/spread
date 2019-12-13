@@ -73,7 +73,7 @@ bool CtpQuoteChannel::subscribe(const char *ins)
 	instrument[0] = const_cast<char*>(ins);
 	
 	int ret = quote_api_->SubscribeMarketData(instrument, 1);
-log_stream_<<"["<<__FUNCTION__<<"] "<<instrument<<std::endl;
+log_stream_<<"["<<__FUNCTION__<<"] "<<instrument[0]<<std::endl;
 	instruments_.push_back(instrument);
 	return !ret;
 }
