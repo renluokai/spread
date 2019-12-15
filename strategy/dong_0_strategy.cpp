@@ -446,11 +446,11 @@ void Dong0Strategy::on_quote(Quote *q)
 }
 void Dong0Strategy::on_error(Error  *e)
 {
-	cout<<"CALLING: "<<__FUNCTION__<<endl;
+	//cout<<"CALLING: "<<__FUNCTION__<<endl;
 }
 void Dong0Strategy::on_notify(Notify *n)
 {
-	cout<<"CALLING: "<<__FUNCTION__<<endl;
+	//cout<<"CALLING: "<<__FUNCTION__<<endl;
 }
 
 void Dong0Strategy::set_option(const char*newCfg)
@@ -493,13 +493,18 @@ void Dong0Strategy::set_option(const char*newCfg)
 			Forecast::volumeRatio=atof(iter->second.c_str());
 		}
 	}
+	get_option(NULL);
 }
 
-void Dong0Strategy::get_option(char*buffer)
+void Dong0Strategy::get_option(char*buff)
 {
+	char buffer[256]={0};
 	int d=Instrument::direction==E_DIR_UP?0:1;
-	sprintf(buffer, "open=%f close=%f dir=%d ratio=%f\n",
+	sprintf(buffer, "cfg open=%f close=%f dir=%d ratio=%f\n",
 			Instrument::openThreshold, Instrument::closeThreshold,
 			d, Forecast::volumeRatio);
+	if(buff!=NULL){
+		memcpy(buff, buffer, 256);
+	}
 	trader_->log(buffer);
 }

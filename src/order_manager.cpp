@@ -61,13 +61,13 @@ Order* OrderManager::UpdateOrder(Order* o)
 			tmp->state = E_REJECT;
 			STRCPY(tmp->state_msg, o->state_msg);
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
-			cout<<"AFTER RECECT:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
+			//cout<<"AFTER RECECT:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
 			return tmp;
 		case E_CANCEL:
 			id = o->order_local_id;
 			tmp = instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls][id];
 			instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].erase(id);
-			cout<<"AFTER CANCEL:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
+			//cout<<"AFTER CANCEL:"<<instrument_order_info[o->instrument]->orders[ocls[id].oc][ocls[id].ls].size()<<endl;
 			return tmp;
 		break;
 		case E_MATCH:
@@ -94,7 +94,7 @@ Order* OrderManager::UpdateOrder(Order* o)
 }
 void ShowOrder(std::pair<int, Order*> io)
 {
-	cout<<io.first<<"\t";io.second->ShowOrder();
+	//cout<<io.first<<"\t";io.second->ShowOrder();
 }
 void ShowOrdersInfo(std::pair<string, OrderManager::Orders*> os)
 {

@@ -152,7 +152,7 @@ void Instrument::on_quote(Quote *q)
 void Instrument::ShowQuote()
 {
 	char buffer[256]={0};
-	sprintf(buffer,"Q %s %s %s %.5f %d %.5f %d %.5f %.5f\n",
+	sprintf(buffer,"Q %s %s %s %.5f %d %.5f %d %.5f %.5f",
 			insType==E_INS_FORWARD?"F":"R",
 			lastQuote->UpdateTime,
 			lastQuote->InstrumentID,
@@ -301,6 +301,11 @@ void Instrument::on_match(Order* o)
 void Instrument::on_reject(Order*)
 {
 	cout<<__FUNCTION__<<": "<<name<<endl;
+	trader->log("***************************************\n");
+	trader->log("*  下单被拒绝，请检查配置或者资金     *\n");
+	trader->log("*  退出中...                          *\n");
+	trader->log("***************************************\n");
+	exit(1);
 }
 
 void Instrument::on_cancel(Order* o)

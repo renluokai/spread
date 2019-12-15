@@ -21,4 +21,4 @@ find ${COMM_LIB}  -name "*.def" >>cscope.files
 find ${COMM_LIB}  -name "*.py" >>cscope.files
 
 cscope -i cscope.files
-
+ctags -R

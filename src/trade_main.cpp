@@ -12,7 +12,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	cout<<"Let's go!"<<endl;
-
+	//freopen("/dev/null", "w", stdout);
+	freopen("/dev/null", "w", stderr);
 	Trader *my_trader = Trader::GetTrader();
 	Dong0Strategy dong_0_strategy(argc, argv);
 	my_trader->run(&dong_0_strategy);

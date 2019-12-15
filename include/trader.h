@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <ncurses.h>
 #include "istrategy.h"
 #include "handler.h"
 #include "data_types.h"
@@ -15,6 +16,13 @@ class OrderManager;
 class PositionManager;
 
 class Trader{
+	enum{
+		QUOTE_WINDOW,
+		CONFIG_WINDOW,
+		POSITION_WINDOW,
+		NOTIFY_WINDOW,
+		USER_INPUT_WINDOW,
+	};
 public:
 	static Trader* GetTrader();
 public:
@@ -51,7 +59,8 @@ public:
 
 	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 	//11 quote1;12 quote2; 21 trade1;22 trade2; 31 set 
-	void log(const char* msg,int type=11);
+	void log(const char* msg,int wintype=11, bool instype=false);
+	WINDOW * get_user_input_window(){return user_input_window;}
 	
 public:
 	void add_instrument_info(InstrumentInfo*);
@@ -79,5 +88,12 @@ private:
 	bool startToTrade;
 private:
 	static Trader* instance_;
+private:
+	WINDOW *quote_R_window;
+	WINDOW *quote_F_window;
+	WINDOW *trade_window;
+	WINDOW *config_window;
+	WINDOW *user_input_window;
+	WINDOW *notify_window;
 };
 #endif /* TRADER_H_  */

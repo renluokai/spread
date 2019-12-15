@@ -1,6 +1,7 @@
 #include <iostream>
 #include <time.h>
 
+
 #include "position_manager.h"
 #include "order_manager.h"
 
@@ -18,7 +19,6 @@ Trader* Trader::GetTrader()
 //constructor
 Trader::Trader()
 {
-
 	time_t now_sec = time(NULL);
 	tm tm_now = *localtime(&now_sec);
 	char buffer[256] = {0};
@@ -31,12 +31,36 @@ Trader::Trader()
 	orderManager = new OrderManager;
 	positionManager = new PositionManager;
 	startToTrade = false;
+
+	initscr();
+	quote_R_window = NULL;
+	quote_F_window = NULL;
+	config_window = NULL;
+	user_input_window = NULL;
+	notify_window = NULL;
 }
 
-void Trader::log(const char* msg,int type)
+void Trader::log(const char* msg,int type, bool instype)
 {
-	cout<<msg<<std::flush;
-	log_stream<<msg<<std::flush;
+//	cout<<msg<<std::flush;
+	if(msg[0]=='Q'){
+		if(msg[2]=='F'){
+			wclear(quote_F_window);	
+			mvwprintw(quote_F_window, 0, 0, msg);
+			wrefresh(quote_F_window);
+		}else{
+			wclear(quote_R_window);	
+			mvwprintw(quote_R_window, 0, 0, msg);
+			wrefresh(quote_R_window);
+		}
+		log_stream<<msg<<std::endl;
+	}else if(strncmp(msg,"cfg", 3)==0){
+			wclear(config_window);	
+			mvwprintw(config_window, 0, 0, msg+4);
+			wrefresh(config_window);
+	}else{
+		log_stream<<msg<<std::flush;
+	}
 }
 //get handler, the main data center
 Handler* Trader::get_handler()
@@ -47,10 +71,33 @@ Handler* Trader::get_handler()
 //collect user input
 void * user_command_fn(void* p)
 {
+
 	char *str;
+	cbreak();
 	while(1){
+		WINDOW *user_input_window = Trader::GetTrader()->get_user_input_window();
+RETRY:
+		wmove(user_input_window, 0, 0);
 		Command cmd;
-		str = fgets(cmd.buffer, sizeof(cmd.buffer), stdin);
+		int pos = 0;
+		int c;
+		while(1){
+			c = getch();	
+			//printw("%c",c);
+			waddch(user_input_window,c);
+			wrefresh(user_input_window);
+			cmd.buffer[pos++] = c;
+			if(pos==1 && cmd.buffer[0]!=':'){
+				mvwprintw(user_input_window,1, 0, "CMD must start with :");
+				goto RETRY;
+			}
+			if(c == '\n'){
+				break;
+			}
+			//str = fgets(cmd.buffer, sizeof(cmd.buffer), stdin);
+		}
+		mvwprintw(user_input_window,1, 0, cmd.buffer);
+		wrefresh(user_input_window);
 		Trader::GetTrader()->get_handler()->push(&cmd);
 	}
 }
@@ -88,6 +135,8 @@ bool Trader::run(Strategy *s){
 	Data *data = NULL;
 	Order* o = NULL;
 	Order* tmp=NULL;
+	clear();
+	refresh();
 	log("input :s to start system\n");
 	while(1){
 		//cout<<"#"<<c++<<" run running..."<<endl;
@@ -152,6 +201,13 @@ void Trader::process_command(Command* cmd)
 	}
 	else if(strcmp(cmd->buffer,":s\n")==0){
 		if(startToTrade == false){
+			quote_R_window = newwin(1, 0, 0, 0);
+			quote_F_window = newwin(1, 0, 1, 0);
+			//wborder(quote_F_window, ' ', ' ', ' ',' ',' ',' ','-','-');
+			user_input_window = newwin(2, 0, LINES-2, 0);
+
+			config_window = newwin(2, 0, LINES-5, 0);
+			//wborder(config_window, ' ', ' ', ' ',' ',' ',' ','-','-');
 			startToTrade = true;
 		}
 	}else if(strncmp(cmd->buffer, ":set ", 5)==0){

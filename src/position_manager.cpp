@@ -5,7 +5,6 @@ void PositionManager::UpdatePosition(string instrument, EOpenClose oc, ELongShor
 {
 //if openclose is open, add a new entry at positionlist tail
 //if openclose is close, sub volume from positionlist head	
-    cout<<__FUNCTION__<<endl<<instrument<<"\t"<<volume<<"\t"<<price<<endl;
 	if(insPositionInfo.count(instrument)==0){
 		insPositionInfo.insert(make_pair(instrument, PositionInfo()));
 	}
@@ -153,7 +152,6 @@ void PositionManager::UpdateQryMatch(string instrument, EOpenClose oc, ELongShor
 	case E_SHORT:
 		l = "E_SHORT";break;
 	}
-	cout<<instrument<<"\t"<<volume<<"\t"<<price<<o<<l<<endl;
 	if(instrument_qry_match.count(instrument)==0){
 		instrument_qry_match.insert(make_pair(instrument, QryMatch()));
 	}
@@ -256,7 +254,6 @@ void PositionManager::UpdateYesterdayPosition(string instrument, ELongShort ls, 
 	}
 }
 void ShowMatchEntry(PositionManager::PositionEntry pe){
-	cout<<pe.instrument<<"\t"<<pe.volume<<"\t"<<pe.price<<endl;
 }
 
 void PositionManager::ShowQryMatch()
@@ -265,50 +262,50 @@ void PositionManager::ShowQryMatch()
 	iter = instrument_qry_match.begin();
 	for(;iter!=instrument_qry_match.end(); iter++){
 		if(iter->second.qryMatchList[E_OPEN][E_LONG].size()>0){
-			cout<<"----------open long----------"<<endl;
+			//cout<<"----------open long----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_OPEN][E_LONG].begin(),
 				(iter->second.qryMatchList)[E_OPEN][E_LONG].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE][E_LONG].size()>0){
-			cout<<"----------close long----------"<<endl;
+			//cout<<"----------close long----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE][E_LONG].begin(),
 				(iter->second.qryMatchList)[E_CLOSE][E_LONG].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE_T][E_LONG].size()>0){
-			cout<<"----------close today long----------"<<endl;
+			//cout<<"----------close today long----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE_T][E_LONG].begin(),
 				(iter->second.qryMatchList)[E_CLOSE_T][E_LONG].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE_Y][E_LONG].size()>0){
-			cout<<"----------close yesterday long----------"<<endl;
+			//cout<<"----------close yesterday long----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE_Y][E_LONG].begin(),
 				(iter->second.qryMatchList)[E_CLOSE_Y][E_LONG].end(),
 				ShowMatchEntry);
 		}
 
 		if(iter->second.qryMatchList[E_OPEN][E_SHORT].size()>0){
-			cout<<"----------open short----------"<<endl;
+			//cout<<"----------open short----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_OPEN][E_SHORT].begin(),
 				(iter->second.qryMatchList)[E_OPEN][E_SHORT].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE][E_SHORT].size()>0){
-			cout<<"----------close short----------"<<endl;
+			//cout<<"----------close short----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE][E_SHORT].begin(),
 				(iter->second.qryMatchList)[E_CLOSE][E_SHORT].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].size()>0){
-			cout<<"----------close today short----------"<<endl;
+			//cout<<"----------close today short----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].begin(),
 				(iter->second.qryMatchList)[E_CLOSE_T][E_SHORT].end(),
 				ShowMatchEntry);
 		}
 		if((iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].size()>0){
-			cout<<"----------close yesterday short----------"<<endl;
+			//cout<<"----------close yesterday short----------"<<endl;
 			for_each((iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].begin(),
 				(iter->second.qryMatchList)[E_CLOSE_Y][E_SHORT].end(),
 				ShowMatchEntry);

@@ -99,7 +99,6 @@ bool CtpTradeChannel::submit(Order *o)
 	CThostFtdcInputOrderField new_order={0};
 	NewOrder(&new_order);
 	
-	cout<<o->instrument<<endl;
 	STRCPY(new_order.ExchangeID,o->exchange_id);
 	STRCPY(new_order.InstrumentID, o->instrument);
 	new_order.LimitPrice = o->submit_price;
@@ -554,7 +553,6 @@ log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" 
 			o.open_close = E_CLOSE_Y;
 			break;
 		default:
-			cout<<"ERROR LONG SHORT"<<endl;
 			break;
 	}
 	handler_->push(&o);
@@ -578,8 +576,6 @@ void CtpTradeChannel::NewOrder(CThostFtdcInputOrderField *o)
 	//STRCPY(o->InstrumentID, "cu1905");
 	///报单引用
 	STRCPY(o->OrderRef, GetOrderRef());
-	cout<<"OrderRef is:"<<o->OrderRef<<endl;
-	cout<<"time is:"<<time(NULL)<<endl;
 	///用户代码
 	STRCPY(o->UserID, cfg_->user);
 	///报单价格条件
@@ -718,7 +714,6 @@ log_stream_<<"pRspInfo->ErrorID="<<pRspInfo->ErrorID<<" | "
 log_stream_<<"bIslast="<<bIsLast<<endl;
 	};
 	if(bIsLast == true){
-		cout<<"Unlock sem"<<endl;
 		sem_post(&sem_);
 	}
 }
