@@ -1,31 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <contract1>ni2002</contract1>
-    <contract2>ni2001</contract2>
+    <contract1 vf="65" mf="40">cu2004</contract1>
+    <contract2 vf="65" mf="40">cu2005</contract2>
 	<!-- 0 近期合约 1远期合约!-->
+    <main_contract openlow="2" openhigh="60" closelow="2" closehigh="60">0</main_contract>
     <open_with>0</open_with>
     <close_with>0</close_with>
-    <open_threshold>150</open_threshold>
-    <close_threshold>210</close_threshold>
+    <open_threshold>120</open_threshold>
+    <close_threshold>100</close_threshold>
 	<!-- 0看涨 1看跌!-->
-    <direction>0</direction>
-    <stop_loss>6</stop_loss>
+    <direction>1</direction>
+    <stop_loss>4</stop_loss>
     <stop_loss_type>0</stop_loss_type>
     <volume_ratio>0.95</volume_ratio>
     <open_time>21:00:00+10,09:00:00+10,10:30:00+10,13:30:00+30</open_time>
     <close_time>23:00:00-30,10:15:00-30,11:30:00-30,15:00:00-30</close_time>
     <trigger_spread>0</trigger_spread>
-    <max_postion>6</max_postion>
-    <submit_max>2</submit_max>
+    <max_postion>40</max_postion>
+    <submit_max>3</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>
-        <front>tcp://180.168.146.187:10131</front>
+        <front>tcp://180.168.146.187:10111</front>
         <user>115385</user>
         <password>Rlk170310</password>
     </quote_channel>
     <trade_channel>
-        <front>tcp://180.168.146.187:10130</front>
+        <front>tcp://180.168.146.187:10101</front>
         <user>115385</user>
         <password>Rlk170310</password>
         <auth_code>WZ8SXDW8ANHL2XFU</auth_code>

@@ -14,7 +14,7 @@ t: $(objects)
 	rm -rf $(objects)
 *.o:*.cpp
 *.o:*.cpp
-	g++ -g -c  $@ $^
+	g++ -std=c++11 -g -c  $@ $^
 
 log:
 	@mv *.log ./history

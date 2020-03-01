@@ -6,6 +6,8 @@ class Forecast{
 public:
 static bool 
 	OrderWillSuccess(double price, Quote *qt, EOpenClose oc, ELongShort ls);
+static void
+	QuoteDirection(Quote &qt);
 static double volumeRatio;
 };
 #endif //FORECAST_H__

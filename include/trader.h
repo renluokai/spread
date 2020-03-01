@@ -2,6 +2,7 @@
 #define TRADER_H__
 #include <map>
 #include <vector>
+#include <list>
 #include <string>
 #include <fstream>
 #include <ncurses.h>
@@ -36,6 +37,8 @@ public:
 	bool RegisterQuoteChannel(QuoteChannel*, int id);
 	bool RegisterTradeChannel(TradeChannel*, int id);
 
+	void quit();
+
 	int GetTradingDay(int id=0);
 	int GetPosition(const char* ins, EPositionType posType);
 	int GetLongPosition(const char* ins);
@@ -60,6 +63,7 @@ public:
 	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 	//11 quote1;12 quote2; 21 trade1;22 trade2; 31 set 
 	void log(const char* msg,int wintype=11, bool instype=false);
+	void log(const string &msg);
 	WINDOW * get_user_input_window(){return user_input_window;}
 	
 public:
@@ -87,13 +91,13 @@ private:
 	std::fstream log_stream;
 	bool startToTrade;
 private:
-	static Trader* instance_;
-private:
 	WINDOW *quote_R_window;
 	WINDOW *quote_F_window;
 	WINDOW *trade_window;
 	WINDOW *config_window;
 	WINDOW *user_input_window;
 	WINDOW *notify_window;
+
+	list<string> trade_log;
 };
 #endif /* TRADER_H_  */

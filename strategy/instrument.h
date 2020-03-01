@@ -25,11 +25,20 @@ enum InsType
 	E_INS_FORWARD,
 	E_INS_RECENT,
 };
+
+enum ForecastType
+{
+	E_FORECAST_NONE,
+	E_FORECAST_UP,
+	E_FORECAST_DOWN,
+};
+
 enum StopLoss{
 	E_STOPLOSS_NO,
 	E_STOPLOSS_AVERAGE,
 	E_STOPLOSS_TICKBYTICK,
 };
+
 enum EDirection
 {
 
@@ -43,7 +52,7 @@ class Instrument
 public:
 	double priceTick;
 public:
-	Instrument(char*);
+	Instrument(char*, int vf=1, int mf=1);
 	void on_quote(Quote*);	
 	void on_match(Order*);	
 	void on_reject(Order*);	
@@ -57,6 +66,7 @@ public:
 	int	 CalcLockedPosition();
 	int	 CalcLockedPositionYesterday();
 	int	 CalcLockedPositionToday();
+	void CalcQuoteDirection();
 	void FullOpenLong(int lockedPosition);
 	void DoNotFullOpenLong();
 
@@ -69,6 +79,9 @@ public:
 	void FullCloseShort(int lockedPosition);
 	void DoNotFullCloseShort();
 
+	void ProcessOpenLong(int lockedPosition);
+	void ProcessOpenShort(int lockedPosition);
+
 	void UpdateLockedSpread(LockedSpread &lockedSpread, bool isStopLoss, bool isToday);
 	double GetAverageSpread();
 	double GetBadSpread();
@@ -79,11 +92,27 @@ public:
 	bool IsStopLoss(double tradedSpread);
 	bool IsForecast(EOpenClose oc, ELongShort ls);
 static void ShowLockedSpread();
+
+	const double MAIN_INS_GAP = 1.5;
+	const double SECOND_MAIN_INS_GAP = 2.5;
+
 	char 		name[64];
 	bool 		reached;
+	bool		rangeFirst=true;
 	InsType 	insType;
+
+	int volumeForecastBase;
+	int matchForecastBase;
+	ForecastType forecastByVolume;
+	int			volumeForecastCnt;
+	int			volumeForecastWin;
+	int			volumeScore=0;
+	ForecastType forecastByMatch;
+	int			matchForecastCnt;
+	int			matchForecastWin;
 	Instrument	*relativeIns;
-	Quote		*lastQuote;
+	Quote		*previousQuote;
+	Quote		*currentQuote;
 	int			cancelMax;
 
 	Trader		*trader;
@@ -100,6 +129,8 @@ static void ShowLockedSpread();
 	static Instrument*	secondCloseIns;
 	static Instrument*	mainIns;
 
+	static double		last_bidSpread;
+	static double		last_askSpread;
 	static double		bidSpread;
 	static double		askSpread;
 	static double		openThreshold;
@@ -118,5 +149,19 @@ static void ShowLockedSpread();
 	static bool			needToStopLoss;
 	static vector<int>	openTime;
 	static vector<int>	closeTime;
+	static int forecast_score_openlow;
+	static int forecast_score_openhigh;
+	static int forecast_score_closelow;
+	static int forecast_score_closehigh;
+
+	static int firstOpenInsSubmit;
+	static int firstOpenInsMatch;
+	static int secondOpenInsSubmit;
+	static int secondOpenInsMatch;
+
+	static int firstCloseInsSubmit;
+	static int firstCloseInsMatch;
+	static int secondCloseInsSubmit;
+	static int secondCloseInsMatch;
 };
 #endif /* INSTRUMENT_H__ */ 

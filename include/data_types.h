@@ -164,6 +164,7 @@ struct Quote : public Data
 	int AskVolume1;
 	char UpdateTime[24];
 	char LocalTime[24];
+	int TotalVolume;
 };
 
 struct Notify : public Data

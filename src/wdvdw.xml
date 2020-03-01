@@ -1,30 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <contract1>cu1909</contract1>
-    <contract2>cu1908</contract2>
+    <contract1>ni2002</contract1>
+    <contract2>ni2003</contract2>
+	<!-- 0 近期合约 1远期合约!-->
     <main_contract>1</main_contract>
     <open_with>1</open_with>
     <close_with>1</close_with>
-    <open_threshold>70</open_threshold>
-    <close_threshold>90</close_threshold>
-    <direction>0</direction>
-    <trigger_spread>0</trigger_spread>
-    <stop_loss>2</stop_loss>
-    <stop_loss_type>1</stop_loss_type>
-    <max_postion>30</max_postion>
-    <submit_max>2</submit_max>
-    <volume_ratio>0.8</volume_ratio>
-    <forward_cancel_max>400</forward_cancel_max>
-    <recent_cancel_max>400</recent_cancel_max>
+    <open_threshold>150</open_threshold>
+    <close_threshold>50</close_threshold>
+	<!-- 0看涨 1看跌!-->
+    <direction>1</direction>
+    <stop_loss>5</stop_loss>
+    <stop_loss_type>0</stop_loss_type>
+    <volume_ratio>0.95</volume_ratio>
     <open_time>21:00:00+10,09:00:00+10,10:30:00+10,13:30:00+30</open_time>
     <close_time>23:00:00-30,10:15:00-30,11:30:00-30,15:00:00-30</close_time>
+    <trigger_spread>0</trigger_spread>
+    <max_postion>50</max_postion>
+    <submit_max>5</submit_max>
+    <forward_cancel_max>400</forward_cancel_max>
+    <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>
-        <front>tcp://180.168.146.187:10111</front>
+        <front>tcp://180.168.146.187:10131</front>
         <user>wdvdw</user>
         <password>qwerty</password>
     </quote_channel>
     <trade_channel>
-        <front>tcp://180.168.146.187:10101</front>
+        <front>tcp://180.168.146.187:10130</front>
         <user>wdvdw</user>
         <password>qwerty</password>
         <auth_code>WZ8SXDW8ANHL2XFU</auth_code>

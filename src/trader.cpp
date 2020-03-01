@@ -8,12 +8,12 @@
 #include "../include/trader.h"
 
 using namespace std;
-Trader* Trader::instance_ = new Trader();
 
 //static
 Trader* Trader::GetTrader()
 {
-	return Trader::instance_;
+	static Trader* instance_ = new Trader();
+	return instance_;
 }
 
 //constructor
@@ -33,6 +33,11 @@ Trader::Trader()
 	startToTrade = false;
 
 	initscr();
+	if(LINES < 10 || COLS <80){
+		endwin();
+		cout<<"window is too small, resize it 10*80 or biger"<<endl;
+		exit(1);
+	}
 	quote_R_window = NULL;
 	quote_F_window = NULL;
 	config_window = NULL;
@@ -40,6 +45,10 @@ Trader::Trader()
 	notify_window = NULL;
 }
 
+void  Trader::log(const string &msg)
+{
+	log(msg.c_str());
+}
 void Trader::log(const char* msg,int type, bool instype)
 {
 //	cout<<msg<<std::flush;
@@ -58,8 +67,30 @@ void Trader::log(const char* msg,int type, bool instype)
 			wclear(config_window);	
 			mvwprintw(config_window, 0, 0, msg+4);
 			wrefresh(config_window);
+	}else if(strncmp(msg,"T I", 3)==0
+			|| strncmp(msg,"T O", 3)==0
+			|| strncmp(msg,"T C", 3)==0
+			|| strncmp(msg,"T K", 3)==0
+			|| strncmp(msg,"T M", 3)==0
+			){
+			if(trade_log.size()<=5){
+				trade_log.push_back(msg);
+			}else{
+				trade_log.pop_front();
+				trade_log.push_back(msg);
+			}
+			string tmp;
+			for(string l: trade_log){
+				tmp +=l;
+			}
+			mvwprintw(trade_window, 0, 0, tmp.c_str());
+			wrefresh(trade_window);
+			log_stream<<msg<<std::endl;
 	}else{
-		log_stream<<msg<<std::flush;
+		wclear(notify_window);	
+		mvwprintw(notify_window, 0, 0, msg);
+		wrefresh(notify_window);
+		log_stream<<msg<<std::endl;
 	}
 }
 //get handler, the main data center
@@ -71,7 +102,6 @@ Handler* Trader::get_handler()
 //collect user input
 void * user_command_fn(void* p)
 {
-
 	char *str;
 	cbreak();
 	while(1){
@@ -137,7 +167,10 @@ bool Trader::run(Strategy *s){
 	Order* tmp=NULL;
 	clear();
 	refresh();
-	log("input :s to start system\n");
+	//log("input :s to start system\n");
+	printw("%s","input :s to start system");
+	refresh();
+	
 	while(1){
 		//cout<<"#"<<c++<<" run running..."<<endl;
 		data = handler->pop();
@@ -201,13 +234,57 @@ void Trader::process_command(Command* cmd)
 	}
 	else if(strcmp(cmd->buffer,":s\n")==0){
 		if(startToTrade == false){
+/*
+ *			+---------------+
+ *			| Recent quote	|
+ *			+---------------+
+ *			| Forward quote	|
+ *			+---------------+
+ *			| ...			|
+ *			+---------------+
+ *			| Notify		|
+ *			+---------------+
+ *			| Nn ps 		|
+ *			| Recent 		|
+ *			| Forward 		|
+ *			+---------------+
+ *			| Config		|
+ *			+---------------+
+ *			| :user input	|
+ *			|              	|
+ *			+---------------+
+ * */
 			quote_R_window = newwin(1, 0, 0, 0);
 			quote_F_window = newwin(1, 0, 1, 0);
-			//wborder(quote_F_window, ' ', ' ', ' ',' ',' ',' ','-','-');
+
+			notify_window = newwin(1, 0, LINES-11, 0);
+
+			trade_window = newwin(5, 0, LINES-9, 0);
+
+			config_window = newwin(1, 0, LINES-3, 0);
 			user_input_window = newwin(2, 0, LINES-2, 0);
 
-			config_window = newwin(2, 0, LINES-5, 0);
-			//wborder(config_window, ' ', ' ', ' ',' ',' ',' ','-','-');
+			if(has_colors() == TRUE){
+				start_color();
+//COLOR_BLACK
+//COLOR_RED
+//COLOR_GREEN
+//COLOR_YELLOW
+//COLOR_BLUE
+//COLOR_MAGENTA
+//COLOR_CYAN
+//COLOR_WHITE
+
+				init_pair(1, COLOR_GREEN, COLOR_BLACK);
+				init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+				init_pair(3, COLOR_RED, COLOR_BLACK);
+				init_pair(4, COLOR_GREEN, COLOR_BLACK);
+				//wattron(quote_R_window, COLOR_PAIR(1));
+				//wattron(quote_F_window, COLOR_PAIR(1));
+				wattron(trade_window, COLOR_PAIR(2));
+				wattron(config_window, COLOR_PAIR(3));
+				wattron(user_input_window, COLOR_PAIR(4));
+			}
 			startToTrade = true;
 		}
 	}else if(strncmp(cmd->buffer, ":set ", 5)==0){
@@ -394,4 +471,8 @@ double Trader::GetHeadSpread(const char *forward, const char *recent,
 	spread = positionManager->GetHeadSpread(forward, recent, ls,
 											forwardIsMain);
 	return spread;
+}
+void Trader::quit()
+{
+	endwin();
 }

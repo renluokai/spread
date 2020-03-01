@@ -1,5 +1,6 @@
 #include <algorithm>    // std::for_each
 #include <iostream>
+#include <memory>
 #include "order_manager.h"
 #include "../include/trader.h"
 using namespace std;

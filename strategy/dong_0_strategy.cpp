@@ -15,7 +15,11 @@ using namespace std;
 using namespace tinyxml2;
 
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
-Dong0Strategy::Dong0Strategy(int argc, char** argv)
+Dong0Strategy::Dong0Strategy(int argc, char** argv):
+	openlow_ (0),
+	openhigh_(0),
+	closelow_(0),
+	closehigh_(0)
 {
 	argc_ = argc;
 	argv_ = argv;
@@ -70,10 +74,49 @@ bool Dong0Strategy::load_config()
 	element = root_element->FirstChildElement("contract1");
 	if(!element)PARSE_ERROR("contract1");
 	STRCPY(contract1,element->GetText());
+	const XMLAttribute *VF = element->FindAttribute("vf");
+
+	if(VF == NULL){
+		cout<<"contract1 has attribute vf"<<endl;
+		return false;
+	}
+	if(VF->QueryIntValue(&c1VF) != XML_SUCCESS){
+		cout<<"contract1 vf value error"<<endl;
+		return false;
+	};
+	const XMLAttribute *MF = element->FindAttribute("mf");
+	if(MF == NULL){
+		cout<<"contract1 has attribute mf"<<endl;
+		return false;
+	}
+	if(VF->QueryIntValue(&c1MF) != XML_SUCCESS){
+		cout<<"contract1 mf value error"<<endl;
+		return false;
+	};
 
 	element = root_element->FirstChildElement("contract2");
 	if(!element)PARSE_ERROR("contract2");
 	STRCPY(contract2,element->GetText());
+	VF = element->FindAttribute("vf");
+	if(VF == NULL){
+		cout<<"contract2 has attribute vf"<<endl;
+		return false;
+	}
+	if(VF->QueryIntValue(&c2VF) != XML_SUCCESS){
+		cout<<"contract2 vf value error"<<endl;
+		return false;
+	};
+
+	MF = element->FindAttribute("mf");
+	if(MF == NULL){
+		cout<<"contract2 has attribute mf"<<endl;
+		return false;
+	}
+	if(MF->QueryIntValue(&c2MF) != XML_SUCCESS){
+		cout<<"contract2 mf value error"<<endl;
+		return false;
+	};
+
 	int c1=0;
 	int c2=0;
 	for(int i=0;i<32;i++){
@@ -97,17 +140,28 @@ bool Dong0Strategy::load_config()
 		if(c1mon>c2mon){
 			STRCPY(forward_contract_, contract1);
 			STRCPY(recent_contract_, contract2);
+			fVF = c1VF; fMF = c1MF;
+			rVF = c2VF; rMF = c2MF;
 		}else{
 			STRCPY(forward_contract_, contract2);
 			STRCPY(recent_contract_, contract1);
+
+			fVF = c2VF; fMF = c2MF;
+			rVF = c1VF; rMF = c1MF;
 		}
 	}else{
 		if(c1year>c2year){
 			STRCPY(forward_contract_, contract1);
 			STRCPY(recent_contract_, contract2);
+
+			fVF = c1VF; fMF = c1MF;
+			rVF = c2VF; rMF = c2MF;
 		}else{
 			STRCPY(forward_contract_, contract2);
 			STRCPY(recent_contract_, contract1);
+
+			fVF = c2VF; fMF = c2MF;
+			rVF = c1VF; rMF = c1MF;
 		}
 	}
 	element = root_element->FirstChildElement("open_with");
@@ -117,6 +171,37 @@ bool Dong0Strategy::load_config()
 	element = root_element->FirstChildElement("open_threshold");
 	if(!element)PARSE_ERROR("open_threshold");
 	open_threshold_ = atoi(element->GetText());
+
+	element = root_element->FirstChildElement("main_contract");
+	if(!element)PARSE_ERROR("main_contract");
+	main_contract_ = atoi(element->GetText());
+
+	const XMLAttribute* openlow = element->FindAttribute("openlow");
+	const XMLAttribute* openhigh = element->FindAttribute("openhigh");
+	const XMLAttribute* closelow = element->FindAttribute("closelow");
+	const XMLAttribute* closehigh = element->FindAttribute("closehigh");
+	if(openlow && openhigh && closelow && closehigh){
+		if(openlow->QueryIntValue(&openlow_) != XML_SUCCESS){
+			cout<<"main contract attr [openlow] value error"<<endl;
+			return false;
+		};
+
+		if(openhigh->QueryIntValue(&openhigh_) != XML_SUCCESS){
+			cout<<"main contract attr [openhigh] value error"<<endl;
+			return false;
+		};
+		if(closelow->QueryIntValue(&closelow_) != XML_SUCCESS){
+			cout<<"main contract attr [closelow] value error"<<endl;
+			return false;
+		};
+		if(closehigh->QueryIntValue(&closehigh_) != XML_SUCCESS){
+			cout<<"main contract attr [closehigh] value error"<<endl;
+			return false;
+		};
+	}else{
+		cout<<"main_contract must has attr <open | close><low | high>"<<endl;
+		return false;
+	}
 
 	element = root_element->FirstChildElement("close_with");
 	if(!element)PARSE_ERROR("close_with");
@@ -238,8 +323,8 @@ bool Dong0Strategy::on_init()
 	trader_->RegisterQuoteChannel(quote_channel_,0);
 	trader_->RegisterTradeChannel(trade_channel_,0);
 
-	Instrument *forward_ins = new Instrument(forward_contract_);
-	Instrument *recent_ins = new Instrument(recent_contract_);
+	Instrument *forward_ins = new Instrument(forward_contract_, fVF, fMF);
+	Instrument *recent_ins = new Instrument(recent_contract_, rVF, rMF);
 	forward_ins->relativeIns = recent_ins;
 	recent_ins->relativeIns = forward_ins;
 
@@ -259,6 +344,12 @@ bool Dong0Strategy::on_init()
 	
 	Instrument::openThreshold =	open_threshold_;
 	Instrument::closeThreshold = close_threshold_;
+
+
+    Instrument::forecast_score_openlow = openlow_;
+    Instrument::forecast_score_openhigh = openhigh_;
+    Instrument::forecast_score_closelow = closelow_;
+    Instrument::forecast_score_closehigh = closehigh_;
 
 	Instrument::openWith = open_with_==0?E_INS_RECENT:E_INS_FORWARD;
 	Instrument::firstOpenIns = open_with_==0?recent_ins:forward_ins;

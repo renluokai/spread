@@ -154,9 +154,11 @@ STRCPY(qt.InstrumentID,pDepthMarketData->InstrumentID);
 	qt.BidVolume1	= pDepthMarketData->BidVolume1;
 	qt.AskPrice1	= pDepthMarketData->AskPrice1;
 	qt.AskVolume1	= pDepthMarketData->AskVolume1;
+	qt.TotalVolume	= pDepthMarketData->Volume;
 	sprintf(qt.UpdateTime,"%s.%03d",pDepthMarketData->UpdateTime,\
 		pDepthMarketData->UpdateMillisec);
 	Time::FullTime(qt.LocalTime);
+
 	Quote* q=&qt;
 	handler_->push(&qt);
 }

@@ -32,6 +32,11 @@ private:
 	TradeChannel* trade_channel_;
 	char *forward_contract_;
 	char *recent_contract_;
+	int c1VF, c1MF, c2VF, c2MF, fVF, fMF, rVF, rMF;
+	
+	//forecast score threshold
+	int openlow_, openhigh_, closelow_, closehigh_;
+
 	char open_time_[128]={0};
 	char close_time_[128]={0};
 	int main_contract_;
