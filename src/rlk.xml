@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <contract1 vf="65" mf="40">ni2007</contract1>
-    <contract2 vf="65" mf="40">ni2006</contract2>
+    <contract1 vf="65" mf="40">fu2005</contract1>
+    <contract2 vf="65" mf="40">fu2006</contract2>
 	<!-- 0 近期合约 1远期合约!-->
-    <main_contract openlow="2" openhigh="60" closelow="2" closehigh="60">0</main_contract>
-    <open_with radical="40">0</open_with>
-    <close_with radical="40">0</close_with>
-    <open_threshold>120</open_threshold>
-    <close_threshold>100</close_threshold>
+    <main_contract openlow="1" openhigh="37" closelow="1" closehigh="37">0</main_contract>
+    <open_with radical="37">0</open_with>
+    <close_with radical="37">0</close_with>
+    <open_threshold>26</open_threshold>
+    <close_threshold>23</close_threshold>
 	<!-- 0看涨 1看跌!-->
     <direction>1</direction>
     <stop_loss>4</stop_loss>
@@ -16,21 +16,21 @@
     <open_time>21:00:00+10,09:00:00+10,10:30:00+10,13:30:00+30</open_time>
     <close_time>23:00:00-30,10:15:00-30,11:30:00-30,15:00:00-30</close_time>
     <trigger_spread>0</trigger_spread>
-    <max_postion>40</max_postion>
-    <submit_max>3</submit_max>
+    <max_postion>2</max_postion>
+    <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
     <quote_channel>
-        <front>tcp://180.168.146.187:10131</front>
-        <user>115385</user>
+        <front>tcp://183.194.213.67:53313</front>
+        <user>08002212</user>
         <password>Rlk170310</password>
     </quote_channel>
     <trade_channel>
-        <front>tcp://180.168.146.187:10130</front>
-        <user>115385</user>
+        <front>tcp://183.194.213.67:53305</front>
+        <user>08002212</user>
         <password>Rlk170310</password>
-        <auth_code>WZ8SXDW8ANHL2XFU</auth_code>
-        <app_id>Client_HLTai_1.0</app_id>
-        <broker>9999</broker>
+        <auth_code>KR5IWMYUVVYN5L4M</auth_code>
+        <app_id>Client_luck100_1.0</app_id>
+        <broker>2016</broker>
     </trade_channel>
 </config>

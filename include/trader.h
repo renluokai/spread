@@ -32,8 +32,8 @@ public:
 public:
 	bool run(Strategy *s);
 	bool init();
-	bool submit_order(Order*, int channel_id=0);
-	bool cancel_order(Order*, int channel_id=0);
+	bool submit_order(shared_ptr<Order>, int channel_id=0);
+	bool cancel_order(shared_ptr<Order>, int channel_id=0);
 	bool RegisterQuoteChannel(QuoteChannel*, int id);
 	bool RegisterTradeChannel(TradeChannel*, int id);
 
@@ -58,9 +58,9 @@ public:
 	void UpdateQryMatch(string instrument, EOpenClose oc, ELongShort ls, int volume, double price);
 
 	void UpdateYesterdayPosition(string instrument, ELongShort ls, int volume, double price);
-	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec);
+	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<shared_ptr<Order>>& odVec);
 
-	Order* NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
+	shared_ptr<Order> NewOrder(const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 	//11 quote1;12 quote2; 21 trade1;22 trade2; 31 set 
 	void log(const char* msg,int wintype=11, bool instype=false);
 	void log(const string &msg);
@@ -70,7 +70,7 @@ public:
 	void add_instrument_info(InstrumentInfo*);
 	InstrumentInfo* get_instrument_info(const char* ins); 
 private:
-	void process_command(Command*);
+	void process_command(shared_ptr<Command>);
 
 private:
 	//manage all order

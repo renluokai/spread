@@ -5,7 +5,7 @@
 #include "../include/trader.h"
 using namespace std;
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
-Order* OrderManager::FillNewOrder(Order* o, const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls)
+shared_ptr<Order> OrderManager::FillNewOrder(shared_ptr<Order> o, const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls)
 {
 	strncpy(o->instrument, instrument, sizeof(o->instrument));
 	InstrumentInfo *insInfo;
@@ -23,9 +23,9 @@ Order* OrderManager::FillNewOrder(Order* o, const char* instrument, double price
 	return o;
 }
 
-Order* OrderManager::UpdateOrder(Order* o)
+shared_ptr<Order> OrderManager::UpdateOrder(shared_ptr<Order> o)
 {
-	Order *tmp = NULL;
+	shared_ptr<Order> tmp;
 	int id=0;
 	switch(o->state){
 		case E_ORIGINAL:
@@ -93,7 +93,7 @@ Order* OrderManager::UpdateOrder(Order* o)
 	}
 	return NULL;
 }
-void ShowOrder(std::pair<int, Order*> io)
+void ShowOrder(std::pair<int, shared_ptr<Order>> io)
 {
 	//cout<<io.first<<"\t";io.second->ShowOrder();
 }
@@ -131,26 +131,26 @@ int OrderManager::GetVolume(const char* ins, EOpenClose oc, ELongShort ls)
 	int volume = 0;
 	if(HaveOrder(ins)){
 		Orders* ods = instrument_order_info[ins];
-		map<int, Order*>::iterator odIter = ods->orders[oc][ls].begin();	
+		map<int, shared_ptr<Order>>::iterator odIter = ods->orders[oc][ls].begin();	
 		for(; odIter != ods->orders[oc][ls].end(); odIter++){
-			Order* tmp = odIter->second;
+			shared_ptr<Order> tmp = odIter->second;
 			volume += (tmp->submit_volume - tmp->total_matched);
 		}
 	}
 	return volume;
 }
-void OrderManager::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec)
+void OrderManager::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<shared_ptr<Order>>& odVec)
 {
 	if(HaveOrder(ins)){
 		Orders* ods = instrument_order_info[ins];
-		map<int, Order*>::iterator odIter = ods->orders[oc][ls].begin();
+		map<int, shared_ptr<Order>>::iterator odIter = ods->orders[oc][ls].begin();
 		for(; odIter != ods->orders[oc][ls].end(); odIter++){
-			Order* tmp = odIter->second;
+			shared_ptr<Order> tmp = odIter->second;
 			if(tmp==NULL)continue;
 			odVec.push_back(tmp);
 			{
 				char buffer[256]={0};
-				sprintf(buffer,"order pointer is:%p\n",tmp);
+				sprintf(buffer,"order pointer is:%p\n",tmp.get());
 				Trader::GetTrader()->log(buffer);
 			}
 		}

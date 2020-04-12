@@ -108,7 +108,7 @@ void * user_command_fn(void* p)
 		WINDOW *user_input_window = Trader::GetTrader()->get_user_input_window();
 RETRY:
 		wmove(user_input_window, 0, 0);
-		Command cmd;
+		shared_ptr<Command> cmd(new Command);
 		int pos = 0;
 		int c;
 		while(1){
@@ -116,8 +116,8 @@ RETRY:
 			//printw("%c",c);
 			waddch(user_input_window,c);
 			wrefresh(user_input_window);
-			cmd.buffer[pos++] = c;
-			if(pos==1 && cmd.buffer[0]!=':'){
+			cmd->buffer[pos++] = c;
+			if(pos==1 && cmd->buffer[0]!=':'){
 				mvwprintw(user_input_window,1, 0, "CMD must start with :");
 				goto RETRY;
 			}
@@ -126,9 +126,9 @@ RETRY:
 			}
 			//str = fgets(cmd.buffer, sizeof(cmd.buffer), stdin);
 		}
-		mvwprintw(user_input_window,1, 0, cmd.buffer);
+		mvwprintw(user_input_window,1, 0, cmd->buffer);
 		wrefresh(user_input_window);
-		Trader::GetTrader()->get_handler()->push(&cmd);
+		Trader::GetTrader()->get_handler()->push(cmd);
 	}
 }
 
@@ -162,9 +162,9 @@ bool Trader::run(Strategy *s){
 		return false;
 
 	size_t c=0;
-	Data *data = NULL;
-	Order* o = NULL;
-	Order* tmp=NULL;
+	shared_ptr<Data> data;
+	shared_ptr<Order> o = NULL;
+	shared_ptr<Order> tmp=NULL;
 	clear();
 	refresh();
 	//log("input :s to start system\n");
@@ -176,33 +176,23 @@ bool Trader::run(Strategy *s){
 		data = handler->pop();
 		switch(data->type){
 			case E_ORDER_TYPE:
-				o = (Order*)data;
-				{
-					tmp = orderManager->UpdateOrder(o);
-					if(tmp)
-						handler->back(tmp);
-				}
-				strategy->on_order((Order*)data);
-				handler->back(data);
+				strategy->on_order(std::dynamic_pointer_cast<Order>(data));
 				break;
 			case E_QUOTE_TYPE:
 				if(startToTrade == false){
 					break;
 				}
-				strategy->on_quote((Quote*)data);
+				strategy->on_quote(std::dynamic_pointer_cast<Quote>(data));
 				break;
 			case E_ERROR_TYPE:
-				strategy->on_error((Error*)data);
+				strategy->on_error(std::dynamic_pointer_cast<Error>(data));
 				break;
 			case E_NOTIFY_TYPE:
-				strategy->on_notify((Notify*)data);
+				strategy->on_notify(std::dynamic_pointer_cast<Notify>(data));
 				break;
 			case E_COMMAND:
-				process_command((Command*)data);
+				process_command(std::dynamic_pointer_cast<Command>(data));
 				break;
-		}
-		if(data->type != E_ORDER_TYPE){
-			handler->back(data);
 		}
 	}
 	return true;
@@ -212,7 +202,7 @@ void Trader::UpdatePosition(string instrument, EOpenClose oc, ELongShort ls, int
 {
 	positionManager->UpdatePosition(instrument, oc, ls, volume, price, pe);
 }
-void Trader::process_command(Command* cmd)
+void Trader::process_command(shared_ptr<Command> cmd)
 {
 	if(strcmp(cmd->buffer,":q\n") == 0){
 		cout<<"EXITING"<<endl;
@@ -298,9 +288,9 @@ void Trader::process_command(Command* cmd)
 	}
 }
 
-Order* Trader::NewOrder(const char* ins, double price, int volume, EOpenClose oc, ELongShort ls)
+shared_ptr<Order> Trader::NewOrder(const char* ins, double price, int volume, EOpenClose oc, ELongShort ls)
 {
-	Order* o = (Order*)handler->GetPlace(E_ORDER_TYPE);
+	shared_ptr<Order> o(new Order);
 	return orderManager->FillNewOrder(o, ins, price, volume, oc, ls);
 }
 
@@ -338,7 +328,7 @@ int Trader::GetTradingDay(int id)
 	return tradingDay;
 }
 
-bool Trader::submit_order(Order* o, int channel_id)
+bool Trader::submit_order(shared_ptr<Order> o, int channel_id)
 {
 	bool ret = tradeChannels[channel_id]->submit(o);
 	char buffer[256]={0};
@@ -364,7 +354,7 @@ bool Trader::submit_order(Order* o, int channel_id)
 	return ret;
 }
 
-bool Trader::cancel_order(Order* o, int channel_id)
+bool Trader::cancel_order(shared_ptr<Order> o, int channel_id)
 {
 	char buffer[256]={0};
 	const char* ocls = NULL;
@@ -392,7 +382,7 @@ bool Trader::cancel_order(Order* o, int channel_id)
 	return  ret;
 }
 
-void Trader::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*>& odVec)
+void Trader::GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<shared_ptr<Order>>& odVec)
 {
 	orderManager->GetOrder(ins, oc, ls, odVec);
 }

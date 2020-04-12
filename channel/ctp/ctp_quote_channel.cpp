@@ -3,8 +3,10 @@
 #include <errno.h>
 #include <stdio.h>
 #include <float.h>
+#include <memory>
 #include "ctp_quote_channel.h"
 #define STRCPY(a,b) strncpy((a),(b),sizeof(a))
+using std::shared_ptr;
 CtpQuoteChannel::CtpQuoteChannel()
 {
 	login_ok_ = false;
@@ -146,21 +148,20 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 
 <<pDepthMarketData->AveragePrice<<" "
 <<pDepthMarketData->ActionDay<<std::endl;
-Quote qt;
-STRCPY(qt.InstrumentID,pDepthMarketData->InstrumentID);
-	qt.LastPrice	= pDepthMarketData->LastPrice;
-	qt.AveragePrice	= pDepthMarketData->AveragePrice;
-	qt.BidPrice1	= pDepthMarketData->BidPrice1;
-	qt.BidVolume1	= pDepthMarketData->BidVolume1;
-	qt.AskPrice1	= pDepthMarketData->AskPrice1;
-	qt.AskVolume1	= pDepthMarketData->AskVolume1;
-	qt.TotalVolume	= pDepthMarketData->Volume;
-	sprintf(qt.UpdateTime,"%s.%03d",pDepthMarketData->UpdateTime,\
+shared_ptr<Quote> qt(new Quote);
+STRCPY(qt->InstrumentID,pDepthMarketData->InstrumentID);
+	qt->LastPrice	= pDepthMarketData->LastPrice;
+	qt->AveragePrice	= pDepthMarketData->AveragePrice;
+	qt->BidPrice1	= pDepthMarketData->BidPrice1;
+	qt->BidVolume1	= pDepthMarketData->BidVolume1;
+	qt->AskPrice1	= pDepthMarketData->AskPrice1;
+	qt->AskVolume1	= pDepthMarketData->AskVolume1;
+	qt->TotalVolume	= pDepthMarketData->Volume;
+	sprintf(qt->UpdateTime,"%s.%03d",pDepthMarketData->UpdateTime,\
 		pDepthMarketData->UpdateMillisec);
-	Time::FullTime(qt.LocalTime);
+	Time::FullTime(qt->LocalTime);
 
-	Quote* q=&qt;
-	handler_->push(&qt);
+	handler_->push(qt);
 }
 #if 0
 class CThostFtdcMdSpi

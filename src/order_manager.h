@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <memory>
 #include "../include/data_types.h"
 #include "../include/safe_list.h"
 
@@ -13,19 +14,19 @@ public:
 	OrderManager(){
 		order_local_id = 0;
 	}
-	Order* FillNewOrder(Order* o, const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
+	shared_ptr<Order> FillNewOrder(shared_ptr<Order> o, const char* instrument, double price, int volume, EOpenClose oc, ELongShort ls);
 
-	Order* UpdateOrder(Order* o);
+	shared_ptr<Order> UpdateOrder(shared_ptr<Order> o);
 	bool HaveOrder(const char* ins);
 
 	void ShowOrders(const char* ins=NULL);
-	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<Order*> &ods);
+	void GetOrder(const char* ins, EOpenClose oc, ELongShort ls, vector<shared_ptr<Order>> &ods);
 
 	int GetVolume(const char* ins, EOpenClose oc, ELongShort ls);
 	int GetOrderLocalId();
 
 	struct Orders{
-		map<int, Order*> orders[E_OPENCLOSE][E_LONGSHORT];
+		map<int, shared_ptr<Order>> orders[E_OPENCLOSE][E_LONGSHORT];
 	};
 	struct Ocls{
 		Ocls(){

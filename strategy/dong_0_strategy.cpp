@@ -168,6 +168,12 @@ bool Dong0Strategy::load_config()
 	if(!element)PARSE_ERROR("open_with");
 	open_with_ = atoi(element->GetText());
 
+	const XMLAttribute* second_open_radical = element->FindAttribute("radical");
+	if(second_open_radical->QueryIntValue(&second_open_radical_score_) != XML_SUCCESS){
+		cout<<"open_with must has attr [radical]"<<endl;
+		return false;
+	};
+
 	element = root_element->FirstChildElement("open_threshold");
 	if(!element)PARSE_ERROR("open_threshold");
 	open_threshold_ = atoi(element->GetText());
@@ -206,6 +212,11 @@ bool Dong0Strategy::load_config()
 	element = root_element->FirstChildElement("close_with");
 	if(!element)PARSE_ERROR("close_with");
 	close_with_ = atoi(element->GetText());
+	const XMLAttribute* second_close_radical = element->FindAttribute("radical");
+	if(second_close_radical->QueryIntValue(&second_close_radical_score_) != XML_SUCCESS){
+		cout<<"open_with must has attr [radical]"<<endl;
+		return false;
+	};
 
 	element = root_element->FirstChildElement("close_threshold");
 	if(!element)PARSE_ERROR("close_threshold");
@@ -350,6 +361,8 @@ bool Dong0Strategy::on_init()
     Instrument::forecast_score_openhigh = openhigh_;
     Instrument::forecast_score_closelow = closelow_;
     Instrument::forecast_score_closehigh = closehigh_;
+	Instrument::secondOpenRadicalScore = second_open_radical_score_;
+	Instrument::secondCloseRadicalScore = second_close_radical_score_;
 
 	Instrument::openWith = open_with_==0?E_INS_RECENT:E_INS_FORWARD;
 	Instrument::firstOpenIns = open_with_==0?recent_ins:forward_ins;
@@ -370,6 +383,8 @@ bool Dong0Strategy::on_init()
 	Instrument::secondCloseIns = Instrument::firstCloseIns->relativeIns;
 
 	Instrument::submitMax = submit_max_;
+	Instrument::secondPx1VolBase = submit_max_*2>10 ? submit_max_ * 2 : 10;
+
 	Instrument::maxPosition = max_position_;
 	Instrument::direction = direction_==0 ? E_DIR_UP : E_DIR_DOWN;
 	{
@@ -478,7 +493,7 @@ bool Dong0Strategy::on_init()
 	quote_channel_->subscribe(recent_contract_);
 	return true;
 }
-void Dong0Strategy::on_order(Order *o)
+void Dong0Strategy::on_order(shared_ptr<Order> o)
 {
 	if(instruments.count(o->instrument)==0)
 		return;
@@ -524,22 +539,22 @@ void Dong0Strategy::on_order(Order *o)
 			break;
 	}
 }
-void Dong0Strategy::on_quote(Quote *q)
+void Dong0Strategy::on_quote(shared_ptr<Quote> q)
 {
 	Instrument *ins = instruments[q->InstrumentID];
 	ins->on_quote(q);
 	static int i = 0;
 	if(i== 5){
-		Order* o = trader_->NewOrder(q->InstrumentID, q->AskPrice1, 1, E_OPEN, E_SHORT);
+		shared_ptr<Order> o = trader_->NewOrder(q->InstrumentID, q->AskPrice1, 1, E_OPEN, E_SHORT);
 		trader_->submit_order(o);	
 		cout<<"submit order"<<endl;
 	}
 }
-void Dong0Strategy::on_error(Error  *e)
+void Dong0Strategy::on_error(shared_ptr<Error> e)
 {
 	//cout<<"CALLING: "<<__FUNCTION__<<endl;
 }
-void Dong0Strategy::on_notify(Notify *n)
+void Dong0Strategy::on_notify(shared_ptr<Notify> n)
 {
 	//cout<<"CALLING: "<<__FUNCTION__<<endl;
 }

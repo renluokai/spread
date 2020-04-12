@@ -2,10 +2,13 @@
 #define FORECAST_H__
 #include "../include/data_types.h"
 
+#include <memory>
+using std::shared_ptr;
+
 class Forecast{
 public:
 static bool 
-	OrderWillSuccess(double price, Quote *qt, EOpenClose oc, ELongShort ls);
+	OrderWillSuccess(double price, shared_ptr<Quote> qt, EOpenClose oc, ELongShort ls);
 static void
 	QuoteDirection(Quote &qt);
 static double volumeRatio;

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <iostream>
+#include <memory>
 #include "ctp_trade_channel.h"
 #include "../../include/helper.h"
 
@@ -94,7 +95,7 @@ bool CtpTradeChannel::close()
 	return true;
 }
 
-bool CtpTradeChannel::submit(Order *o)
+bool CtpTradeChannel::submit(shared_ptr<Order> o)
 {
 	CThostFtdcInputOrderField new_order={0};
 	NewOrder(&new_order);
@@ -185,7 +186,7 @@ log_stream_<<buffer<<" [ ReqOrderInsert] "
 	return ret == 0 ? true : false;
 }
 
-bool CtpTradeChannel::cancel(Order *o)
+bool CtpTradeChannel::cancel(shared_ptr<Order> o)
 {
 	CThostFtdcInputOrderActionField a = { 0 };
 	STRCPY(a.BrokerID, cfg_->broker_id);
@@ -353,12 +354,12 @@ log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pInputOrder->BrokerI
 		log_stream_<<"ErrorID="<<pRspInfo->ErrorID<<" | "
 		<<"ErrorMsg="<<pRspInfo->ErrorMsg<<endl;
 	}
-	Order o;
-	STRCPY(o.instrument, pInputOrder->InstrumentID);
-	o.state = E_REJECT;
-	o.order_local_id = order_ref_2_order_local_id[pInputOrder->OrderRef];
-	STRCPY(o.state_msg, pRspInfo->ErrorMsg);
-	handler_->push(&o);
+	shared_ptr<Order> o(new Order);
+	STRCPY(o->instrument, pInputOrder->InstrumentID);
+	o->state = E_REJECT;
+	o->order_local_id = order_ref_2_order_local_id[pInputOrder->OrderRef];
+	STRCPY(o->state_msg, pRspInfo->ErrorMsg);
+	handler_->push(o);
 	log_stream_<<endl;
 }
 
@@ -429,57 +430,57 @@ log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pOrder->BrokerID<<" 
 <<"CurrencyID="<<pOrder->CurrencyID<<" | "
 <<"IPAddress="<<pOrder->IPAddress<<" | "
 <<"MacAddress="<<pOrder->MacAddress<<endl;
-		Order o;
+		shared_ptr<Order> o(new Order);
 
-		STRCPY(o.instrument, pOrder->InstrumentID);
+		STRCPY(o->instrument, pOrder->InstrumentID);
 		if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
-			o.open_close =  E_OPEN;
+			o->open_close =  E_OPEN;
 			if(pOrder->Direction == THOST_FTDC_D_Buy){
-				o.long_short = E_LONG;
+				o->long_short = E_LONG;
 			}else{
-				o.long_short = E_SHORT;
+				o->long_short = E_SHORT;
 			}
 		}else{
 			if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Close){
-				o.open_close = E_CLOSE;
+				o->open_close = E_CLOSE;
 			}else if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_CloseToday){
-				o.open_close = E_CLOSE_T;
+				o->open_close = E_CLOSE_T;
 			}else if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_CloseYesterday){
-				o.open_close = E_CLOSE_Y;
+				o->open_close = E_CLOSE_Y;
 			}else{
-				o.open_close = E_CLOSE;
+				o->open_close = E_CLOSE;
 			}
 
 			if(pOrder->Direction == THOST_FTDC_D_Buy){
-				o.long_short = E_SHORT;
+				o->long_short = E_SHORT;
 			}else{
-				o.long_short = E_LONG;
+				o->long_short = E_LONG;
 			}
 		}
-		o.submit_price = pOrder->LimitPrice;
-		o.order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
-		STRCPY(o.state_msg, pOrder->StatusMsg);
+		o->submit_price = pOrder->LimitPrice;
+		o->order_local_id = order_ref_2_order_local_id[pOrder->OrderRef];
+		STRCPY(o->state_msg, pOrder->StatusMsg);
 		if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertSubmitted
 		|| pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted)
 		&& (strlen(pOrder->OrderSysID) > 0)
 		&& (order_ref_has_inserted.count(pOrder->OrderRef) == 0)){
 			order_ref_has_inserted.insert(pOrder->OrderRef);
-			o.state = E_INSERT;
-			STRCPY(o.order_system_id, pOrder->OrderSysID);
-			o.submit_volume = pOrder->VolumeTotalOriginal;
+			o->state = E_INSERT;
+			STRCPY(o->order_system_id, pOrder->OrderSysID);
+			o->submit_volume = pOrder->VolumeTotalOriginal;
 			log_stream_<<"REPORT insert"<<endl;
 		}else if((pOrder->OrderSubmitStatus == THOST_FTDC_OSS_InsertRejected
 		||pOrder->OrderSubmitStatus ==THOST_FTDC_OSS_CancelRejected)
 		&& pOrder->OrderStatus == THOST_FTDC_OST_Canceled){
-			o.state = E_REJECT;
+			o->state = E_REJECT;
 			log_stream_<<"REPORT reject"<<endl;
 		}else if( pOrder->OrderSubmitStatus == THOST_FTDC_OSS_Accepted
 		&& pOrder->OrderStatus == THOST_FTDC_OST_Canceled){
-			o.state = E_CANCEL;
-			o.canceled_volume = pOrder->VolumeTotal - pOrder->VolumeTraded;
+			o->state = E_CANCEL;
+			o->canceled_volume = pOrder->VolumeTotal - pOrder->VolumeTraded;
 			log_stream_<<"REPORT cancel"<<endl;
 		}
-		handler_->push(&o);
+		handler_->push(o);
 }
 #if 1
 
@@ -518,44 +519,44 @@ log_stream_<<buffer<<" ["<<__FUNCTION__<<"] "<<"BrokerID="<<pTrade->BrokerID<<" 
 <<"BrokerOrderSeq="<<pTrade->BrokerOrderSeq<<" | "
 <<"TradeSource="<<pTrade->TradeSource<<endl;
 
-	Order o;
-	o.state = E_MATCH;
-	STRCPY(o.instrument, pTrade->InstrumentID);
-	o.order_local_id = order_ref_2_order_local_id[pTrade->OrderRef];	
-	o.match_volume = pTrade->Volume;
-	o.match_price = pTrade->Price;
-	o.date = atoi(pTrade->TradingDay);
+	shared_ptr<Order> o(new Order);
+	o->state = E_MATCH;
+	STRCPY(o->instrument, pTrade->InstrumentID);
+	o->order_local_id = order_ref_2_order_local_id[pTrade->OrderRef];	
+	o->match_volume = pTrade->Volume;
+	o->match_price = pTrade->Price;
+	o->date = atoi(pTrade->TradingDay);
 
 	if(pTrade->OffsetFlag == THOST_FTDC_OF_Open){
 		if(pTrade->Direction==THOST_FTDC_D_Buy){
-			o.long_short = E_LONG;
+			o->long_short = E_LONG;
 		}else{
-			o.long_short = E_SHORT;
+			o->long_short = E_SHORT;
 		}
 	}else{
 		if(pTrade->Direction==THOST_FTDC_D_Buy){
-			o.long_short = E_SHORT;
+			o->long_short = E_SHORT;
 		}else{
-			o.long_short = E_LONG;
+			o->long_short = E_LONG;
 		}
 	}
 	switch(pTrade->OffsetFlag){
 		case THOST_FTDC_OF_Open:
-			o.open_close = E_OPEN;
+			o->open_close = E_OPEN;
 			break;
 		case THOST_FTDC_OF_Close:
-			o.open_close = E_CLOSE;
+			o->open_close = E_CLOSE;
 			break;
 		case THOST_FTDC_OF_CloseToday:
-			o.open_close = E_CLOSE_T;
+			o->open_close = E_CLOSE_T;
 			break;
 		case THOST_FTDC_OF_CloseYesterday:
-			o.open_close = E_CLOSE_Y;
+			o->open_close = E_CLOSE_Y;
 			break;
 		default:
 			break;
 	}
-	handler_->push(&o);
+	handler_->push(o);
 	log_stream_<<"REPORT match"<<endl;
 }
 #endif
@@ -1144,33 +1145,33 @@ log_stream_<<"["<<__FUNCTION__<<"] "
 <<"MacAddress="<<pOrder->MacAddress<<endl;
 	if(pOrder->OrderStatus == THOST_FTDC_OST_PartTradedQueueing 
 	|| pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing){
-		Order o;
+		shared_ptr<Order> o(new Order);
 		//order_ref_has_inserted.insert(pOrder->OrderRef);
-		STRCPY(o.instrument, pOrder->InstrumentID);
+		STRCPY(o->instrument, pOrder->InstrumentID);
 		if(pOrder->Direction == THOST_FTDC_D_Buy){
 			if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
-				o.long_short = E_LONG;
+				o->long_short = E_LONG;
 			}else{
-				o.long_short = E_SHORT;
+				o->long_short = E_SHORT;
 			}
 		}else{
 			if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
-				o.long_short = E_SHORT;
+				o->long_short = E_SHORT;
 			}else{
-				o.long_short = E_LONG;
+				o->long_short = E_LONG;
 			}
 		}
 		if(pOrder->CombOffsetFlag[0] == THOST_FTDC_OF_Open){
-			o.open_close = E_OPEN;
+			o->open_close = E_OPEN;
 		}else{
-			o.open_close = E_CLOSE;
+			o->open_close = E_CLOSE;
 		}
-		o.state = E_INSERT;
-		o.order_local_id = -1;
-		STRCPY(o.order_system_id, pOrder->OrderSysID);
-		STRCPY(o.exchange_id, pOrder->ExchangeInstID);
-		STRCPY(o.state_msg, pOrder->StatusMsg);
-		handler_->push(&o);
+		o->state = E_INSERT;
+		o->order_local_id = -1;
+		STRCPY(o->order_system_id, pOrder->OrderSysID);
+		STRCPY(o->exchange_id, pOrder->ExchangeInstID);
+		STRCPY(o->state_msg, pOrder->StatusMsg);
+		handler_->push(o);
 	}
 }
 	if(bIsLast == true){

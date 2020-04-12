@@ -53,16 +53,16 @@ public:
 	double priceTick;
 public:
 	Instrument(char*, int vf=1, int mf=1);
-	void on_quote(Quote*);	
-	void on_match(Order*);	
-	void on_reject(Order*);	
-	void on_cancel(Order*);	
-	void on_insert(Order*);	
+	void on_quote(shared_ptr<Quote>);	
+	void on_match(shared_ptr<Order>);	
+	void on_reject(shared_ptr<Order>);	
+	void on_cancel(shared_ptr<Order>);	
+	void on_insert(shared_ptr<Order>);	
 	void ShowState();
 	void ShowQuote();
 	void CheckStopLoss();
 	void CalcSpread(bool rct=true);
-	void CancelOrders(vector<Order*> &ods);
+	void CancelOrders(vector<shared_ptr<Order>> &ods);
 	int	 CalcLockedPosition();
 	int	 CalcLockedPositionYesterday();
 	int	 CalcLockedPositionToday();
@@ -111,8 +111,8 @@ static void ShowLockedSpread();
 	int			matchForecastCnt;
 	int			matchForecastWin;
 	Instrument	*relativeIns;
-	Quote		*previousQuote;
-	Quote		*currentQuote;
+	shared_ptr<Quote>	previousQuote;
+	shared_ptr<Quote>	currentQuote;
 	int			cancelMax;
 
 	Trader		*trader;
@@ -145,6 +145,7 @@ static void ShowLockedSpread();
 	static int			maxPosition;
 	static int			openCount;
 	static int			submitMax;
+	static int			secondPx1VolBase;
 	static bool			loop;
 	static bool			needToStopLoss;
 	static vector<int>	openTime;
@@ -163,5 +164,8 @@ static void ShowLockedSpread();
 	static int firstCloseInsMatch;
 	static int secondCloseInsSubmit;
 	static int secondCloseInsMatch;
+
+	static int secondOpenRadicalScore;
+	static int secondCloseRadicalScore;
 };
 #endif /* INSTRUMENT_H__ */ 

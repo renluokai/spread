@@ -11,10 +11,10 @@ public:
 	Dong0Strategy(int argc, char** argv);
 public:
 	virtual bool on_init();
-	virtual void on_order(Order *o);
-	virtual void on_quote(Quote *q);
-	virtual void on_error(Error *e);
-	virtual void on_notify(Notify *n);
+	virtual void on_order(shared_ptr<Order>);
+	virtual void on_quote(shared_ptr<Quote>);
+	virtual void on_error(shared_ptr<Error>);
+	virtual void on_notify(shared_ptr<Notify>);
 	virtual void set_option(const char*);
 	virtual void get_option(char* buffer);
 private:
@@ -36,6 +36,8 @@ private:
 	
 	//forecast score threshold
 	int openlow_, openhigh_, closelow_, closehigh_;
+	int second_open_radical_score_;
+	int second_close_radical_score_;
 
 	char open_time_[128]={0};
 	char close_time_[128]={0};

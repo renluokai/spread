@@ -21,8 +21,8 @@ public:
 public:
 	virtual bool open(Config*, Handler*);
 	virtual bool close();
-	virtual bool submit(Order*);
-	virtual bool cancel(Order*);
+	virtual bool submit(shared_ptr<Order>);
+	virtual bool cancel(shared_ptr<Order>);
 	virtual int GetTradingDay(){return tradingDay;};
 
 private:

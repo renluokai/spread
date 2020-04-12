@@ -39,6 +39,7 @@ int					Instrument::openCount=0;
 int					Instrument::submitMax = 0;
 bool				Instrument::loop = true;
 bool				Instrument::needToStopLoss=false;
+int					Instrument::secondPx1VolBase = 0;
 
 int Instrument::forecast_score_openlow=0;
 int Instrument::forecast_score_openhigh=0;
@@ -56,14 +57,14 @@ int Instrument::firstCloseInsMatch=0;
 int Instrument::secondCloseInsSubmit=0;
 int Instrument::secondCloseInsMatch=0;
 
+int Instrument::secondOpenRadicalScore=0;
+int Instrument::secondCloseRadicalScore=0;
 Instrument::Instrument(char *ins_name, int vf, int mf)
 {
 	STRCPY(name, ins_name);
 	volumeForecastBase = vf;
 	matchForecastBase = mf;
 	reached = false;
-	currentQuote = new Quote;
-	previousQuote = new Quote;
 	trader = Trader::GetTrader();
 	priceTick = 0.0;
 
@@ -103,14 +104,13 @@ void Instrument::ProcessOpenShort(int lockedPosition)
 	}
 }
 
-void Instrument::on_quote(Quote *q)
+void Instrument::on_quote(shared_ptr<Quote> q)
 {
 	//save the last quote
-	Quote* qt = previousQuote;
 	previousQuote = currentQuote;
-	currentQuote = qt;
-	*currentQuote = *q;
-	if(previousQuote){
+	currentQuote = q;
+
+	if(previousQuote.get()){
 		if(previousQuote->AskPrice1 == currentQuote->AskPrice1
 		&& previousQuote->BidPrice1 == currentQuote->BidPrice1){
 			rangeFirst = false;
@@ -145,10 +145,7 @@ void Instrument::on_quote(Quote *q)
 			sprintf(buffer, "Locked position is %d\n", lockedPosition);
 			trader->log(buffer);
 		}
-		if(lockedPosition == 0){
-			ProcessOpenLong(lockedPosition);
-		}
-		else{
+		if(lockedPosition != 0){
 			//has locked position
 			//check stoploss and do respective action
 			CheckStopLoss();	
@@ -160,8 +157,8 @@ void Instrument::on_quote(Quote *q)
 				//don't full close condition, cancel close orders
 				DoNotFullCloseLong();
 			}
-			ProcessOpenLong(lockedPosition);
 		}
+		ProcessOpenLong(lockedPosition);
 	}else if(direction == E_DIR_DOWN){
 		//open short
 		int lockedPosition = CalcLockedPosition();
@@ -170,10 +167,7 @@ void Instrument::on_quote(Quote *q)
 			sprintf(buffer, "Locked position is %d\n", lockedPosition);
 			trader->log(buffer);
 		}
-		if(lockedPosition ==0){
-			ProcessOpenShort(lockedPosition);
-		}
-		else{
+		if(lockedPosition !=0){
 			//has locked position
 			//check stoploss and do respective action
 			CheckStopLoss();	
@@ -184,8 +178,8 @@ void Instrument::on_quote(Quote *q)
 			}else{
 				DoNotFullCloseShort();
 			}
-			ProcessOpenShort(lockedPosition);
 		}
+		ProcessOpenShort(lockedPosition);
 	}
 }
 
@@ -203,7 +197,7 @@ void Instrument::ShowQuote()
 			break;
 
 		case E_FORECAST_UP:
-			if(previousQuote){
+			if(previousQuote.get()){
 				if(currentQuote->AskPrice1 > previousQuote->AskPrice1){
 					volumeForecastWin++;	
 					forecastByVolume = E_FORECAST_NONE;
@@ -214,7 +208,7 @@ void Instrument::ShowQuote()
 			break;
 
 		case E_FORECAST_DOWN:
-			if(previousQuote){
+			if(previousQuote.get()){
 				if(currentQuote->BidPrice1 < previousQuote->BidPrice1){
 					volumeForecastWin++;
 					forecastByVolume = E_FORECAST_NONE;
@@ -230,21 +224,21 @@ void Instrument::ShowQuote()
 			break;
 
 		case E_FORECAST_UP:
-			if(previousQuote && currentQuote->BidPrice1 > previousQuote->BidPrice1){
+			if(previousQuote.get() && currentQuote->BidPrice1 > previousQuote->BidPrice1){
 				matchForecastWin++;	
 				forecastByMatch = E_FORECAST_NONE;
 			}
 			break;
 
 		case E_FORECAST_DOWN:
-			if(previousQuote && currentQuote->AskPrice1 < previousQuote->AskPrice1){
+			if(previousQuote.get() && currentQuote->AskPrice1 < previousQuote->AskPrice1){
 				matchForecastWin++;	
 				forecastByMatch = E_FORECAST_NONE;
 			}
 			break;
 	}
 	volumeScore = 0;
-	if(rangeFirst==false){
+	if(rangeFirst == false){
 		double rate = currentQuote->AskVolume1*1.0
 			/ (currentQuote->BidVolume1 + currentQuote->AskVolume1);
 		volumeScore = 400 * (rate-0.5)*(rate-0.5);
@@ -310,7 +304,7 @@ void Instrument::CalcSpread(bool rct)
 		askSpread = relativeIns->currentQuote->AskPrice1 - currentQuote->AskPrice1;
 	}
 }
-void Instrument::on_match(Order* o)
+void Instrument::on_match(shared_ptr<Order> o)
 {
 	if(o->open_close == E_OPEN){
 	//open 
@@ -322,7 +316,7 @@ void Instrument::on_match(Order* o)
 				const char* nm = secondOpenIns->name;
 				double px = o->long_short == E_LONG ? secondOpenIns->currentQuote->BidPrice1 :secondOpenIns->currentQuote->AskPrice1;
 				int vol = o->match_volume;
-				Order* new_order = trader->NewOrder(nm, px, vol, E_OPEN, o->long_short == E_LONG ? E_SHORT : E_LONG);
+				shared_ptr<Order> new_order = trader->NewOrder(nm, px, vol, E_OPEN, o->long_short == E_LONG ? E_SHORT : E_LONG);
 				trader->submit_order(new_order);
 			}
 
@@ -404,7 +398,7 @@ void Instrument::on_match(Order* o)
 				double px = o->long_short == E_LONG ? secondCloseIns->currentQuote->AskPrice1 :secondCloseIns->currentQuote->BidPrice1;
 				int vol = o->match_volume;
 
-				Order* new_order = trader->NewOrder(nm, px, vol, o->open_close, o->long_short == E_LONG ? E_SHORT : E_LONG);
+				shared_ptr<Order> new_order = trader->NewOrder(nm, px, vol, o->open_close, o->long_short == E_LONG ? E_SHORT : E_LONG);
 				new_order->stop_loss = o->stop_loss;
 				if(o->stop_loss == true){
 					openCount += o->match_volume;
@@ -472,7 +466,7 @@ void Instrument::on_match(Order* o)
 	}
 }
 
-void Instrument::on_reject(Order*)
+void Instrument::on_reject(shared_ptr<Order>)
 {
 	trader->log("***************************************\n");
 	trader->log("*  下单被拒绝，请检查配置或者资金     *\n");
@@ -486,7 +480,7 @@ void Instrument::on_reject(Order*)
 	exit(1);
 }
 
-void Instrument::on_cancel(Order* o)
+void Instrument::on_cancel(shared_ptr<Order> o)
 {
 	trader->log(__FUNCTION__);trader->log("\n");
 	if(secondOpenIns == this
@@ -506,7 +500,7 @@ void Instrument::on_cancel(Order* o)
 				price = currentQuote->AskPrice1;
 			}
 		}
-		Order* new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
+		shared_ptr<Order> new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
 		new_order->stop_loss = o->stop_loss;
 		trader->submit_order(new_order);
 	}else{
@@ -533,14 +527,14 @@ void Instrument::on_cancel(Order* o)
 					price = currentQuote->AskPrice1;
 				}
 			}
-			Order* new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
+			shared_ptr<Order> new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
 			new_order->stop_loss = o->stop_loss;
 			trader->submit_order(new_order);
 		}
 	}
 }
 
-void Instrument::on_insert(Order*)
+void Instrument::on_insert(shared_ptr<Order>)
 {
 }
 
@@ -592,9 +586,9 @@ int Instrument::CalcLockedPositionToday()
 	}
 	return t;
 }
-void Instrument::CancelOrders(vector<Order*> &ods)
+void Instrument::CancelOrders(vector<shared_ptr<Order>> &ods)
 {
-	vector<Order*>::iterator iter = ods.begin();
+	vector<shared_ptr<Order>>::iterator iter = ods.begin();
 	for(; iter != ods.end(); iter++){
 		if((*iter)->canceling == false
 		&& (*iter)->state != E_ORIGINAL){
@@ -608,8 +602,8 @@ void Instrument::FullOpenLong(int lockedPosition)
 	trader->log(__FUNCTION__);trader->log("\n");
 	if(E_INS_FORWARD == firstOpenIns->insType){
 		//open from forward instrument
-		vector<Order*> ods;
-		vector<Order*>::iterator iter;
+		vector<shared_ptr<Order>> ods;
+		vector<shared_ptr<Order>>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()!=0){
 			iter = ods.begin();
@@ -662,11 +656,11 @@ void Instrument::FullOpenLong(int lockedPosition)
 					firstOpenIns->currentQuote, E_OPEN, E_LONG);
 				}
 				if(forecast){
-					Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
+					shared_ptr<Order> o = trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
 					trader->submit_order(o);
 					firstOpenInsSubmit = vol;
 					if(mainIns->volumeScore >= forecast_score_openhigh){
-						Order* o = trader->NewOrder(secondOpenIns->name,
+						shared_ptr<Order> o = trader->NewOrder(secondOpenIns->name,
 										secondOpenIns->currentQuote->BidPrice1,
 										vol, E_OPEN, E_SHORT);
 						trader->submit_order(o);
@@ -679,8 +673,8 @@ void Instrument::FullOpenLong(int lockedPosition)
 		}
 	}else{
 		//open from recent instrument
-		vector<Order*> ods;
-		vector<Order*>::iterator iter;
+		vector<shared_ptr<Order>> ods;
+		vector<shared_ptr<Order>>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()!=0){
 			iter = ods.begin();
@@ -732,11 +726,11 @@ void Instrument::FullOpenLong(int lockedPosition)
 					firstOpenIns->currentQuote, E_OPEN, E_SHORT);
 				}
 				if(forecast){
-					Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
+					shared_ptr<Order> o =trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
 					trader->submit_order(o);
 					firstOpenInsSubmit = vol;
 					if(mainIns->volumeScore >= forecast_score_openhigh){
-						Order* o =trader->NewOrder(secondOpenIns->name, 
+						shared_ptr<Order> o =trader->NewOrder(secondOpenIns->name, 
 											secondOpenIns->currentQuote->AskPrice1,
 											vol, E_OPEN, E_LONG);
 						trader->submit_order(o);
@@ -753,7 +747,7 @@ void Instrument::FullOpenLong(int lockedPosition)
 void Instrument::DoNotFullOpenLong()
 {
 	if(E_INS_FORWARD==firstOpenIns->insType){
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()==0){
 			return;
@@ -761,7 +755,7 @@ void Instrument::DoNotFullOpenLong()
 			if(secondOpenInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -772,7 +766,7 @@ void Instrument::DoNotFullOpenLong()
 			}
 		}			
 	}else{
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()==0){
 			return;
@@ -780,7 +774,7 @@ void Instrument::DoNotFullOpenLong()
 			if(secondOpenInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -797,11 +791,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 {
 	if(E_INS_FORWARD==firstCloseIns->insType){
 		//close from forward instrument
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = secondCloseIns->currentQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
@@ -815,7 +809,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()>0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->currentQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
@@ -851,11 +845,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 					firstCloseIns->currentQuote, oc, E_LONG);
 				}
 				if(forecast){
-					Order* o =trader->NewOrder(nm, price, vol, oc, E_LONG);
+					shared_ptr<Order> o =trader->NewOrder(nm, price, vol, oc, E_LONG);
 					trader->submit_order(o);
 					firstCloseInsSubmit = vol;
 					if(mainIns->volumeScore >= forecast_score_closehigh){
-						Order* o =trader->NewOrder(secondCloseIns->name,
+						shared_ptr<Order> o =trader->NewOrder(secondCloseIns->name,
 											secondCloseIns->currentQuote->AskPrice1,
 											vol, oc, E_SHORT);
 						trader->submit_order(o);
@@ -868,11 +862,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 		}
 	}else{
 		//close from recent instrument
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()!=0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = secondCloseIns->currentQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
@@ -886,7 +880,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()>0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->currentQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
@@ -922,11 +916,11 @@ void Instrument::FullCloseLong(int lockedPosition)
 					firstCloseIns->currentQuote, oc, E_SHORT);
 				}
 				if(forecast){
-					Order* o = trader->NewOrder(nm, price, vol, oc, E_SHORT);
+					shared_ptr<Order> o = trader->NewOrder(nm, price, vol, oc, E_SHORT);
 					trader->submit_order(o);
 					firstCloseInsSubmit = vol;
 					if(mainIns->volumeScore >= forecast_score_closehigh){
-						Order* o =trader->NewOrder(secondCloseIns->name,
+						shared_ptr<Order> o =trader->NewOrder(secondCloseIns->name,
 											secondCloseIns->currentQuote->BidPrice1,
 											vol, oc, E_LONG);
 						trader->submit_order(o);
@@ -942,7 +936,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 void Instrument::DoNotFullCloseLong()
 {
 	if(E_INS_FORWARD==firstCloseIns->insType){
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()==0){
@@ -950,7 +944,7 @@ void Instrument::DoNotFullCloseLong()
 			if(secondCloseInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -961,7 +955,7 @@ void Instrument::DoNotFullCloseLong()
 			}
 		}			
 	}else{
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()==0){
@@ -969,7 +963,7 @@ void Instrument::DoNotFullCloseLong()
 			if(secondCloseInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -987,8 +981,8 @@ void Instrument::FullOpenShort(int lockedPosition)
 	trader->log(__FUNCTION__);trader->log("\n");
 	if(E_INS_FORWARD==firstOpenIns->insType){
 		//open from forward instrument
-		vector<Order*> ods;
-		vector<Order*>::iterator iter;
+		vector<shared_ptr<Order>> ods;
+		vector<shared_ptr<Order>>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()!=0){
 			iter = ods.begin();
@@ -1039,11 +1033,11 @@ void Instrument::FullOpenShort(int lockedPosition)
 					firstOpenIns->currentQuote, E_OPEN, E_SHORT);
 				}
 				if(forecast){
-					Order* o = trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
+					shared_ptr<Order> o = trader->NewOrder(nm, price, vol, E_OPEN, E_SHORT);
 					trader->submit_order(o);
 					firstOpenInsSubmit = vol;
 					if(mainIns->volumeScore >= forecast_score_openhigh){
-						Order* o = trader->NewOrder(secondOpenIns->name,
+						shared_ptr<Order> o = trader->NewOrder(secondOpenIns->name,
 									secondOpenIns->currentQuote->AskPrice1,
 									vol, E_OPEN, E_LONG);
 						trader->submit_order(o);
@@ -1056,8 +1050,8 @@ void Instrument::FullOpenShort(int lockedPosition)
 		}
 	}else{
 		//open from recent instrument
-		vector<Order*> ods;
-		vector<Order*>::iterator iter;
+		vector<shared_ptr<Order>> ods;
+		vector<shared_ptr<Order>>::iterator iter;
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()!=0){
 			iter = ods.begin();
@@ -1109,11 +1103,11 @@ void Instrument::FullOpenShort(int lockedPosition)
 					firstOpenIns->currentQuote, E_OPEN, E_LONG);
 				}
 				if(forecast){
-					Order* o =trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
+					shared_ptr<Order> o =trader->NewOrder(nm, price, vol, E_OPEN, E_LONG);
 					trader->submit_order(o);
 					firstOpenInsSubmit = vol;
 					if(mainIns->volumeScore >= forecast_score_openhigh){
-						Order* o = trader->NewOrder(secondOpenIns->name,
+						shared_ptr<Order> o = trader->NewOrder(secondOpenIns->name,
 									secondOpenIns->currentQuote->BidPrice1,
 									vol, E_OPEN, E_SHORT);
 						trader->submit_order(o);
@@ -1130,7 +1124,7 @@ void Instrument::FullOpenShort(int lockedPosition)
 void Instrument::DoNotFullOpenShort()
 {
 	if(E_INS_FORWARD==firstOpenIns->insType){
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()==0){
 			return;
@@ -1138,7 +1132,7 @@ void Instrument::DoNotFullOpenShort()
 			if(secondOpenInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -1149,7 +1143,7 @@ void Instrument::DoNotFullOpenShort()
 			}
 		}			
 	}else{
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()==0){
 			return;
@@ -1157,7 +1151,7 @@ void Instrument::DoNotFullOpenShort()
 			if(secondOpenInsSubmit==9){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -1174,11 +1168,11 @@ void Instrument::FullCloseShort(int lockedPosition)
 {
 	if(E_INS_FORWARD==firstCloseIns->insType){
 		//close from forward instrument
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()!=0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = secondCloseIns->currentQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
@@ -1192,7 +1186,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()>0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->currentQuote->BidPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
@@ -1228,7 +1222,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 					firstCloseIns->currentQuote, oc, E_SHORT);
 				}
 				if(forecast){
-					Order* o =trader->NewOrder(nm, price, vol, oc, E_SHORT);
+					shared_ptr<Order> o =trader->NewOrder(nm, price, vol, oc, E_SHORT);
 					trader->submit_order(o);
 				}else{
 					trader->log("Forecast the order will not success, don't submit it\n");
@@ -1237,11 +1231,11 @@ void Instrument::FullCloseShort(int lockedPosition)
 		}
 	}else{
 		//close from recent instrument
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = secondCloseIns->currentQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
@@ -1255,7 +1249,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()>0){
-			vector<Order*>::iterator iter = ods.begin();
+			vector<shared_ptr<Order>>::iterator iter = ods.begin();
 			double newPrice = firstCloseIns->currentQuote->AskPrice1; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
@@ -1291,7 +1285,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 					firstCloseIns->currentQuote, oc, E_LONG);
 				}
 				if(forecast){
-					Order* o = trader->NewOrder(nm, price, vol, oc, E_LONG);
+					shared_ptr<Order> o = trader->NewOrder(nm, price, vol, oc, E_LONG);
 					trader->submit_order(o);
 				}else{
 					trader->log("Forecast the order will not success, don't submit it\n");
@@ -1303,7 +1297,7 @@ void Instrument::FullCloseShort(int lockedPosition)
 void Instrument::DoNotFullCloseShort()
 {
 	if(E_INS_FORWARD==firstCloseIns->insType){
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()==0){
@@ -1311,7 +1305,7 @@ void Instrument::DoNotFullCloseShort()
 			if(firstCloseInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -1322,7 +1316,7 @@ void Instrument::DoNotFullCloseShort()
 			}
 		}			
 	}else{
-		vector<Order*> ods;
+		vector<shared_ptr<Order>> ods;
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
 		if(ods.size()==0){
@@ -1330,7 +1324,7 @@ void Instrument::DoNotFullCloseShort()
 			if(firstCloseInsSubmit==0){
 				CancelOrders(ods);
 			}else{
-				vector<Order*>::iterator iter = ods.begin();
+				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
 					if((*iter)->canceling == false
 					&& (*iter)->state != E_ORIGINAL
@@ -1357,8 +1351,8 @@ void Instrument::CheckStopLoss()
 		return;
 	}
 
-	vector<Order*> ods;
-	vector<Order*>::iterator iter;
+	vector<shared_ptr<Order>> ods;
+	vector<shared_ptr<Order>>::iterator iter;
 	if(direction == E_DIR_UP){
 		if(IsStopLoss(tradedSpread)){
 			trader->log("let's stop loss\n");
@@ -1402,7 +1396,7 @@ void Instrument::CheckStopLoss()
 				//if there is no close order,just submit it
 				if(ods.size()==0){
 					if(vol>0){
-						Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
+						shared_ptr<Order> new_order = trader->NewOrder(nm, px, vol, oc, ls);
 						trader->submit_order(new_order);
 						return;
 					}
@@ -1447,8 +1441,8 @@ void Instrument::CheckStopLoss()
 		if(IsStopLoss(tradedSpread)){
 			trader->log("let's stop loss\n");
 			needToStopLoss = true;
-			vector<Order*> ods;
-			vector<Order*>::iterator iter;
+			vector<shared_ptr<Order>> ods;
+			vector<shared_ptr<Order>>::iterator iter;
 
 			if(E_INS_RECENT == firstOpenIns->insType){
 				trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
@@ -1488,7 +1482,7 @@ void Instrument::CheckStopLoss()
 				trader->GetOrder(firstCloseIns->name, oc, ls, ods);
 				if(ods.size()==0){
 					if(vol>0){
-						Order* new_order = trader->NewOrder(nm, px, vol, oc, ls);
+						shared_ptr<Order> new_order = trader->NewOrder(nm, px, vol, oc, ls);
 						trader->submit_order(new_order);
 						return;
 					}
@@ -1638,151 +1632,293 @@ double Instrument::GetBadSpread()
 
 bool Instrument::IsOpenLong()
 {
-	Quote* mqt = mainIns->currentQuote;
-	Quote* sqt = mainIns->relativeIns->currentQuote;
+	shared_ptr<Quote> mqt = mainIns->currentQuote;
+	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 	if(mqt->AskPrice1 - mqt->BidPrice1 > (MAIN_INS_GAP*mainIns->priceTick)){
+		trader->log("主力合约盘口价差超过一跳");
 		return false;
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 
 		> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
 	if(firstOpenIns->insType==E_INS_FORWARD){
 		if(fabs(bidSpread - last_bidSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
 			return false;
 		}
 	}else{
 		if(fabs(askSpread - last_askSpread) > SECOND_MAIN_INS_GAP*priceTick){
-			return false;
-		}
-	}
-
-	if(firstOpenIns->insType==E_INS_FORWARD){
-		if((bidSpread==openThreshold && mainIns->volumeScore >= forecast_score_openlow)
-		 || bidSpread < openThreshold){
-			return true;
-		}
-	}else{
-		if((askSpread == openThreshold && mainIns->volumeScore>=forecast_score_openlow)
-		|| askSpread < openThreshold){
-			return true;
-		}
-	}
-	return false;
-}
-bool Instrument::IsOpenShort()
-{
-	;
-	Quote* mqt = mainIns->currentQuote;
-	Quote* sqt = mainIns->relativeIns->currentQuote;
-	if(mqt->AskPrice1 - mqt->BidPrice1 > MAIN_INS_GAP*mainIns->priceTick){
-		trader->log("not full open short");
-		return false;
-	}	
-	if(sqt->AskPrice1 - sqt->BidPrice1 
-	> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
-		trader->log("not full open short");
-		return false;
-	}	
-	if(firstOpenIns->insType==E_INS_FORWARD){
-		if(fabs(askSpread - last_askSpread) > SECOND_MAIN_INS_GAP*priceTick){
-			trader->log("not full open short");
-			return false;
-		}
-	}else{
-		if(fabs(bidSpread - last_bidSpread) > SECOND_MAIN_INS_GAP*priceTick){
-			trader->log("not full open short");
+			trader->log("价差与上次价差差额超过两跳");
 			return false;
 		}
 	}
 
 	if(firstOpenIns->insType == E_INS_FORWARD){
-		if((askSpread==openThreshold && mainIns->volumeScore >=forecast_score_openlow)
-		|| askSpread > openThreshold){
-			trader->log("full open short");
+		if(bidSpread == openThreshold){
+			if(mainIns->volumeScore >= forecast_score_openlow
+			&& mainIns->currentQuote->BidVolume1 > mainIns->currentQuote->AskVolume1){
+				if(secondOpenIns->currentQuote->BidVolume1 >= secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(bidSpread < openThreshold){
+			trader->log("价差优于开仓条件");
 			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
 		}
 	}else{
-		if((bidSpread==openThreshold && mainIns->volumeScore>=forecast_score_openlow)
-		|| bidSpread>openThreshold){
-			trader->log("full open short");
+		if(askSpread == openThreshold){
+			if(mainIns->volumeScore >= forecast_score_openlow
+			&& mainIns->currentQuote->BidVolume1 > mainIns->currentQuote->AskVolume1){
+				if(secondOpenIns->currentQuote->AskVolume1 >= secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if( askSpread < openThreshold){
+			trader->log("价差优于开仓条件");
 			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
 		}
 	}
-	trader->log("not full open short");
-	return false;
 }
-bool Instrument::IsCloseLong()
+bool Instrument::IsOpenShort()
 {
-	Quote* mqt = mainIns->currentQuote;
-	Quote* sqt = mainIns->relativeIns->currentQuote;
+	shared_ptr<Quote> mqt = mainIns->currentQuote;
+	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 	if(mqt->AskPrice1 - mqt->BidPrice1 > MAIN_INS_GAP*mainIns->priceTick){
+		trader->log("主力合约盘口价差超过一跳");
 		return false;
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 
 	> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
-	if(firstCloseIns->insType==E_INS_FORWARD){
+	if(firstOpenIns->insType==E_INS_FORWARD){
 		if(fabs(askSpread - last_askSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
 			return false;
 		}
 	}else{
 		if(fabs(bidSpread - last_bidSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
 			return false;
 		}
 	}
-	if(firstCloseIns->insType==E_INS_FORWARD){
-		if((askSpread==closeThreshold && mainIns->volumeScore>=forecast_score_closelow)
-		|| askSpread>closeThreshold){
+
+	if(firstOpenIns->insType == E_INS_FORWARD){
+		if(askSpread==openThreshold){
+			if(mainIns->volumeScore >=forecast_score_openlow
+			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+				if(secondOpenIns->currentQuote->AskVolume1 > secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(askSpread > openThreshold){
+			trader->log("价差优于开仓条件");
 			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
 		}
 	}else{
-		if((bidSpread==closeThreshold && mainIns->volumeScore>=forecast_score_closelow)
-		|| bidSpread>closeThreshold){
+		if(bidSpread == openThreshold){
+			if(mainIns->volumeScore >= forecast_score_openlow
+			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+				if(secondOpenIns->currentQuote->BidVolume1 > secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(bidSpread > openThreshold){
+			trader->log("价差优于开仓条件");
 			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
 		}
 	}
-	return false;
+}
+
+bool Instrument::IsCloseLong()
+{
+	shared_ptr<Quote> mqt = mainIns->currentQuote;
+	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
+	if(mqt->AskPrice1 - mqt->BidPrice1 > MAIN_INS_GAP*mainIns->priceTick){
+		trader->log("主力合约盘口价差超过一跳");
+		return false;
+	}	
+	if(sqt->AskPrice1 - sqt->BidPrice1 
+	> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+		trader->log("次主力合约盘口价差超过两跳");
+		return false;
+	}	
+	if(firstCloseIns->insType==E_INS_FORWARD){
+		if(fabs(askSpread - last_askSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
+			return false;
+		}
+	}else{
+		if(fabs(bidSpread - last_bidSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
+			return false;
+		}
+	}
+	if(firstCloseIns->insType == E_INS_FORWARD){
+		if(askSpread == closeThreshold){
+			if(mainIns->volumeScore >= forecast_score_closelow
+			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+				if(secondCloseIns->currentQuote->AskVolume1 > secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(askSpread > closeThreshold){
+			trader->log("价差优于平仓条件");
+			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
+		}
+	}else{
+		if(bidSpread == closeThreshold){
+			if(mainIns->volumeScore >= forecast_score_closelow
+			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+				if(secondCloseIns->currentQuote->BidVolume1 > secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(bidSpread>closeThreshold){
+			trader->log("价差优于平仓条件");
+			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
+		}
+	}
 }
 bool Instrument::IsCloseShort()
 {
-	Quote* mqt = mainIns->currentQuote;
-	Quote* sqt = mainIns->relativeIns->currentQuote;
+	shared_ptr<Quote> mqt = mainIns->currentQuote;
+	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 	if(mqt->AskPrice1 - mqt->BidPrice1 > mainIns->priceTick){
+		trader->log("主力合约盘口价差超过一跳");
 		return false;
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 > MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
 	if(firstCloseIns->insType==E_INS_FORWARD){
 		if(fabs(bidSpread - last_bidSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
 			return false;
 		}
 	}else{
 		if(fabs(askSpread - last_askSpread) > SECOND_MAIN_INS_GAP*priceTick){
+			trader->log("价差与上次价差差额超过两跳");
 			return false;
 		}
 	}
-	if(firstCloseIns->insType==E_INS_FORWARD){
-		if((bidSpread==closeThreshold && mainIns->volumeScore>=forecast_score_closelow)
-		|| bidSpread<closeThreshold){
+
+	if(firstCloseIns->insType == E_INS_FORWARD){
+		if(bidSpread == closeThreshold){
+			if(mainIns->volumeScore >= forecast_score_closelow
+			&& mainIns->currentQuote->BidVolume1 > mainIns->currentQuote->AskVolume1){
+				if(secondCloseIns->currentQuote->BidVolume1 >= secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(bidSpread<closeThreshold){
+			trader->log("价差优于平仓条件");
 			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
 		}
 	}else{
-		if((askSpread<=closeThreshold && mainIns->volumeScore>=forecast_score_closelow)
-		|| askSpread<closeThreshold){
+		if(askSpread==closeThreshold){
+			if(mainIns->volumeScore >= forecast_score_closelow
+			&& mainIns->currentQuote->BidVolume1 >= secondPx1VolBase){
+				if(secondCloseIns->currentQuote->AskVolume1 >= secondPx1VolBase){
+					trader->log("条件符合");
+					return true;
+				}else{
+					trader->log("第二腿可能打不到");
+					return false;
+				}
+			}else{
+				trader->log("主力评分不足");
+				return false;
+			}
+		}else if(askSpread < closeThreshold){
+			trader->log("价差优于平仓条件");
 			return true;
+		}else{
+			trader->log("价差不符合");
+			return false;
 		}
 	}
-	return false;
 }
 bool Instrument::IsStopLoss(double tradedSpread)
 {
 	if(direction==E_DIR_UP){
 
-		Quote* mqt = mainIns->currentQuote;
-		Quote* sqt = mainIns->relativeIns->currentQuote;
+		shared_ptr<Quote> mqt = mainIns->currentQuote;
+		shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 		if(mqt->AskPrice1 - mqt->BidPrice1 > mainIns->priceTick){
 			return false;
 		}	
@@ -1814,8 +1950,8 @@ bool Instrument::IsStopLoss(double tradedSpread)
 		}
 	}else{
 
-		Quote* mqt = mainIns->currentQuote;
-		Quote* sqt = mainIns->relativeIns->currentQuote;
+		shared_ptr<Quote> mqt = mainIns->currentQuote;
+		shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 		if(mqt->AskPrice1 - mqt->BidPrice1 > mainIns->priceTick){
 			return false;
 		}	
@@ -1900,6 +2036,5 @@ bool Instrument::IsForecast(EOpenClose oc, ELongShort ls)
 
 void Instrument::CalcQuoteDirection()
 {
-
 
 }
