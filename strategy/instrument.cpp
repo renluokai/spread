@@ -1981,6 +1981,7 @@ bool Instrument::IsCloseLong(int &postion)
 				triggerStopLoss = true;	
 				return true;
 			}else{
+				trader->log("价差未达到止损线");
 				triggerStopLoss = false;	
 			}
 		}
@@ -2084,7 +2085,40 @@ bool Instrument::IsCloseShort(int &position)
 		}
 	}
 
+
+	double tradedSpread = 0.0;
+	if(stopLossType == E_STOPLOSS_AVERAGE){
+		tradedSpread = GetAverageSpread();
+	}else if(stopLossType == E_STOPLOSS_TICKBYTICK){
+		tradedSpread = GetBadSpread();
+	}
+
 	if(firstCloseIns->insType == E_INS_FORWARD){
+		if(stopLossType != E_STOPLOSS_NO){
+			if(bidSpread == (tradedSpread+stopLoss*priceTick)){
+				if(mainIns->volumeScore >= forecast_score_closelow
+				&& mainIns->currentQuote->BidVolume1 < mainIns->currentQuote->AskVolume1){
+					if(secondCloseIns->currentQuote->BidVolume1 >= secondPx1VolBase){
+						trader->log("达到止损线，条件符合");
+						triggerStopLoss = true;						
+						return true;
+					}else{
+						trader->log("达到止损线，但第二腿可能打不到");
+						triggerStopLoss = false;	
+					}
+				}else{
+					trader->log("达到止损线，但主力评分不足");
+					triggerStopLoss = false;	
+				}
+			}else if(bidSpread > tradedSpread+stopLoss*priceTick){
+				trader->log("价差超过止损线");
+				triggerStopLoss = true;	
+				return true;
+			}else{
+				trader->log("价差未达到止损线");
+				triggerStopLoss = false;	
+			}
+		}
 		if(bidSpread == closeThreshold){
 			if(mainIns->volumeScore >= forecast_score_closelow
 			&& mainIns->currentQuote->BidVolume1 < mainIns->currentQuote->AskVolume1){
@@ -2107,6 +2141,31 @@ bool Instrument::IsCloseShort(int &position)
 			return false;
 		}
 	}else{
+		if(stopLossType !=E_STOPLOSS_NO){
+			if(askSpread==closeThreshold){
+				if(mainIns->volumeScore >= forecast_score_closelow
+				&& mainIns->currentQuote->BidVolume1 > secondPx1VolBase){
+					if(secondCloseIns->currentQuote->AskVolume1 >= secondPx1VolBase){
+						trader->log("达到止损线，条件符合");
+						triggerStopLoss = true;
+						return true;
+					}else{
+						trader->log("达到止损线，但第二腿可能打不到");
+						triggerStopLoss = false;
+					}
+				}else{
+					trader->log("达到止损线，但主力评分不足");
+					triggerStopLoss = false;
+				}
+			}else if(askSpread < closeThreshold){
+				trader->log("价差超过止损线");
+				triggerStopLoss = true;
+				return true;
+			}else{
+				trader->log("未达到止损线");
+				triggerStopLoss = false;
+			}
+		}
 		if(askSpread==closeThreshold){
 			if(mainIns->volumeScore >= forecast_score_closelow
 			&& mainIns->currentQuote->BidVolume1 > secondPx1VolBase){
