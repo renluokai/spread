@@ -1,12 +1,14 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <locale.h>
 #include "../include/trader.h"
 #include "../strategy/dong_0_strategy.h"
 using namespace std;
 
 int main(int argc, char **argv)
 {
+	setlocale(LC_ALL,"");
 
 	if(argc != 2){
 		cout<<"Usage: "<<argv[0]<<" <config-file> !";

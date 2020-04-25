@@ -87,8 +87,8 @@ public:
 	double GetBadSpread();
 	bool IsOpenLong();
 	bool IsOpenShort();
-	bool IsCloseLong();
-	bool IsCloseShort();
+	bool IsCloseLong(int &position);
+	bool IsCloseShort(int &position);
 	bool IsStopLoss(double tradedSpread);
 	bool IsForecast(EOpenClose oc, ELongShort ls);
 static void ShowLockedSpread();
@@ -123,6 +123,9 @@ static void ShowLockedSpread();
 	static list<MatchInfo> firstOpenMatch;
 	static list<MatchInfo> firstCloseMatch;
 
+	static list<MatchInfo> secondOpenMatch;
+	static list<MatchInfo> secondCloseMatch;
+
 	static Instrument*	firstOpenIns;
 	static Instrument*	firstCloseIns;
 	static Instrument*	secondOpenIns;
@@ -141,6 +144,7 @@ static void ShowLockedSpread();
 
 	static StopLoss		stopLossType;
 	static int			stopLoss;
+	static bool			has_stop_lossed;
 	static EDirection	direction;
 	static int			maxPosition;
 	static int			openCount;
@@ -167,5 +171,6 @@ static void ShowLockedSpread();
 
 	static int secondOpenRadicalScore;
 	static int secondCloseRadicalScore;
+	static bool triggerStopLoss;
 };
 #endif /* INSTRUMENT_H__ */ 

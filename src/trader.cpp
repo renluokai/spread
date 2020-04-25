@@ -176,6 +176,7 @@ bool Trader::run(Strategy *s){
 		data = handler->pop();
 		switch(data->type){
 			case E_ORDER_TYPE:
+				orderManager->UpdateOrder(std::dynamic_pointer_cast<Order>(data));
 				strategy->on_order(std::dynamic_pointer_cast<Order>(data));
 				break;
 			case E_QUOTE_TYPE:
@@ -290,7 +291,14 @@ void Trader::process_command(shared_ptr<Command> cmd)
 
 shared_ptr<Order> Trader::NewOrder(const char* ins, double price, int volume, EOpenClose oc, ELongShort ls)
 {
+	log(__func__);
 	shared_ptr<Order> o(new Order);
+	{
+		char buffer[124]={0};
+		sprintf(buffer,"\t create new order %p",o.get());
+		log(buffer);
+	}
+	
 	return orderManager->FillNewOrder(o, ins, price, volume, oc, ls);
 }
 

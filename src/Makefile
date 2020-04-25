@@ -10,7 +10,7 @@ channels := ../channel/ctp/ctp_quote_channel.o ../channel/ctp/ctp_trade_channel.
 objects := $(utility) helper.o handler.o $(channels) $(shangdong0) position_manager.o order_manager.o trader.o trade_main.o 
 t: $(objects)  
 	rm -rf *.log
-	g++  -lpthread -lcurses -L../channel/ctp/ -lthosttraderapi_se -lthostmduserapi_se -o $@ $^
+	g++  -lpthread -lncurses -L../channel/ctp/ -lthosttraderapi_se -lthostmduserapi_se -o $@ $^
 	rm -rf $(objects)
 *.o:*.cpp
 *.o:*.cpp

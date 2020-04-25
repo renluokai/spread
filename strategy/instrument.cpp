@@ -12,8 +12,13 @@ using namespace std;
 
 list<LockedSpread> 	Instrument::lockedSpreadY;
 list<LockedSpread> 	Instrument::lockedSpreadT;
+
 list<MatchInfo> 	Instrument::firstOpenMatch;
 list<MatchInfo> 	Instrument::firstCloseMatch;
+list<MatchInfo> 	Instrument::secondOpenMatch;
+list<MatchInfo> 	Instrument::secondCloseMatch;
+
+bool  				Instrument::triggerStopLoss = false;
 Instrument*			Instrument::firstOpenIns = NULL;
 Instrument*			Instrument::firstCloseIns = NULL;
 Instrument*			Instrument::secondOpenIns = NULL;
@@ -59,6 +64,8 @@ int Instrument::secondCloseInsMatch=0;
 
 int Instrument::secondOpenRadicalScore=0;
 int Instrument::secondCloseRadicalScore=0;
+
+bool Instrument::has_stop_lossed = false;
 Instrument::Instrument(char *ins_name, int vf, int mf)
 {
 	STRCPY(name, ins_name);
@@ -146,11 +153,8 @@ void Instrument::on_quote(shared_ptr<Quote> q)
 			trader->log(buffer);
 		}
 		if(lockedPosition != 0){
-			//has locked position
-			//check stoploss and do respective action
-			CheckStopLoss();	
 			//full the close condition
-			if(IsCloseLong())
+			if(IsCloseLong(lockedPosition))
 			{
 				FullCloseLong(lockedPosition);
 			}else{
@@ -168,11 +172,8 @@ void Instrument::on_quote(shared_ptr<Quote> q)
 			trader->log(buffer);
 		}
 		if(lockedPosition !=0){
-			//has locked position
-			//check stoploss and do respective action
-			CheckStopLoss();	
 			//full the close condition
-			if(IsCloseShort())
+			if(IsCloseShort(lockedPosition))
 			{
 				FullCloseShort(lockedPosition);
 			}else{
@@ -306,6 +307,10 @@ void Instrument::CalcSpread(bool rct)
 }
 void Instrument::on_match(shared_ptr<Order> o)
 {
+
+	const char *targetFile="position.cfg";
+	FILE *tmp=fopen(targetFile,"a");
+
 	if(o->open_close == E_OPEN){
 	//open 
 		if(firstOpenIns == this){
@@ -325,13 +330,59 @@ void Instrument::on_match(shared_ptr<Order> o)
 				firstOpenInsSubmit = secondOpenInsSubmit = 0;
 				firstOpenInsMatch = secondOpenInsMatch = 0;
 			}
-
-			MatchInfo matchInfo;
-			matchInfo.date = o->date;
-			matchInfo.volume = o->match_volume;
-			matchInfo.price = o->match_price;
-			firstOpenMatch.push_back(matchInfo);
 			openCount += o->match_volume;
+
+			if(secondOpenMatch.size()==0){
+				MatchInfo matchInfo;
+				matchInfo.date = o->date;
+				matchInfo.volume = o->match_volume;
+				matchInfo.price = o->match_price;
+				firstOpenMatch.push_back(matchInfo);
+			}else{
+				LockedSpread lockedSpread;
+				int reminder=o->match_volume;
+				while(reminder>0){
+					if(secondOpenMatch.front().volume > reminder){
+						secondOpenMatch.front().volume -= reminder;
+						lockedSpread.date = o->date;
+						lockedSpread.volume = reminder;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - secondOpenMatch.front().price;
+						}else{
+							spread = secondOpenMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+						lockedSpreadT.push_back(lockedSpread);
+					}else{
+						reminder -= secondOpenMatch.front().volume;
+						lockedSpread.date= o->date;
+						lockedSpread.volume = secondOpenMatch.front().volume;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - secondOpenMatch.front().price;
+						}else{
+							spread = secondOpenMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+						lockedSpreadT.push_back(lockedSpread);
+						char buffer[128]={0};
+						sprintf(buffer,"%d %f %d\n",lockedSpread.date, lockedSpread.spread, lockedSpread.volume);
+						trader->log(buffer);
+						fwrite(buffer, strlen(buffer),1,tmp);
+						fflush(tmp);
+						secondOpenMatch.pop_front();	
+						if(reminder>0 && secondOpenMatch.size()==0){
+							MatchInfo matchInfo;
+							matchInfo.date = o->date;
+							matchInfo.volume = o->match_volume;
+							matchInfo.price = o->match_price;
+							firstOpenMatch.push_back(matchInfo);
+						}
+					}
+				}
+				fclose(tmp);
+			}
 		}else{
 			//second leg, need to update lockedSpread
 			secondOpenInsMatch += o->match_volume;
@@ -342,45 +393,58 @@ void Instrument::on_match(shared_ptr<Order> o)
 				firstOpenInsMatch = secondOpenInsMatch = 0;
 			}
 
-			const char *targetFile="position.cfg";
-			FILE *tmp=fopen(targetFile,"a");
 
-			LockedSpread lockedSpread;
-			int reminder=o->match_volume;
-			while(reminder>0){
-				if(firstOpenMatch.front().volume > reminder){
-					firstOpenMatch.front().volume -= reminder;
-					lockedSpread.date = o->date;
-					lockedSpread.volume = reminder;
-					double spread=0.0;
-					if(insType==E_INS_FORWARD){
-						spread = o->match_price - firstOpenMatch.front().price;
+			if(firstOpenMatch.size()==0){
+				MatchInfo matchInfo;
+				matchInfo.date = o->date;
+				matchInfo.volume = o->match_volume;
+				matchInfo.price = o->match_price;
+				secondOpenMatch.push_back(matchInfo);
+			}else{
+				LockedSpread lockedSpread;
+				int reminder=o->match_volume;
+				while(reminder>0){
+					if(firstOpenMatch.front().volume > reminder){
+						firstOpenMatch.front().volume -= reminder;
+						lockedSpread.date = o->date;
+						lockedSpread.volume = reminder;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - firstOpenMatch.front().price;
+						}else{
+							spread = firstOpenMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+						lockedSpreadT.push_back(lockedSpread);
 					}else{
-						spread = firstOpenMatch.front().price - o->match_price;
+						reminder -= firstOpenMatch.front().volume;
+						lockedSpread.date= o->date;
+						lockedSpread.volume = firstOpenMatch.front().volume;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - firstOpenMatch.front().price;
+						}else{
+							spread = firstOpenMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+						lockedSpreadT.push_back(lockedSpread);
+						char buffer[128]={0};
+						sprintf(buffer,"%d %f %d\n",lockedSpread.date, lockedSpread.spread, lockedSpread.volume);
+						trader->log(buffer);
+						fwrite(buffer, strlen(buffer),1,tmp);
+						fflush(tmp);
+						firstOpenMatch.pop_front();	
+						if(reminder>0 && firstOpenMatch.size()==0){
+							MatchInfo matchInfo;
+							matchInfo.date = o->date;
+							matchInfo.volume = o->match_volume;
+							matchInfo.price = o->match_price;
+							secondOpenMatch.push_back(matchInfo);
+						}
 					}
-					lockedSpread.spread = spread;
-					lockedSpreadT.push_back(lockedSpread);
-				}else{
-					reminder -= firstOpenMatch.front().volume;
-					lockedSpread.date= o->date;
-					lockedSpread.volume = firstOpenMatch.front().volume;
-					double spread=0.0;
-					if(insType==E_INS_FORWARD){
-						spread = o->match_price - firstOpenMatch.front().price;
-					}else{
-						spread = firstOpenMatch.front().price - o->match_price;
-					}
-					lockedSpread.spread = spread;
-					lockedSpreadT.push_back(lockedSpread);
-					char buffer[128]={0};
-					sprintf(buffer,"%d %f %d\n",lockedSpread.date, lockedSpread.spread, lockedSpread.volume);
-					trader->log(buffer);
-					fwrite(buffer, strlen(buffer),1,tmp);
-					fflush(tmp);
-					firstOpenMatch.pop_front();	
 				}
+				fclose(tmp);
 			}
-			fclose(tmp);
 		}
 	}else{
 	//close
@@ -390,6 +454,9 @@ void Instrument::on_match(shared_ptr<Order> o)
 			trader->log("first close leg matched\n");
 			trader->log("***************************************************\n");
 			o->ShowOrder();
+			if(o->stop_loss == true){
+				has_stop_lossed = true;
+			}
 
 			firstCloseInsMatch += o->match_volume;
 			
@@ -412,11 +479,53 @@ void Instrument::on_match(shared_ptr<Order> o)
 				firstCloseInsMatch = secondCloseInsMatch = 0;
 			}
 
-			MatchInfo matchInfo;
-			matchInfo.date = o->date;
-			matchInfo.volume = o->match_volume;
-			matchInfo.price = o->match_price;
-			firstCloseMatch.push_back(matchInfo);
+			if(secondCloseMatch.size()==0){
+				MatchInfo matchInfo;
+				matchInfo.date = o->date;
+				matchInfo.volume = o->match_volume;
+				matchInfo.price = o->match_price;
+				firstCloseMatch.push_back(matchInfo);
+			}else{	
+				LockedSpread lockedSpread;
+				int reminder=o->match_volume;
+				while(reminder>0){
+					if(secondCloseMatch.front().volume > reminder){
+						secondCloseMatch.front().volume -= reminder;
+						lockedSpread.date = o->date;
+						lockedSpread.volume = reminder;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - secondCloseMatch.front().price;
+						}else{
+							spread = secondCloseMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+					}else{
+						reminder -= secondCloseMatch.front().volume;
+						lockedSpread.date= o->date;
+						lockedSpread.volume = secondCloseMatch.front().volume;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - secondCloseMatch.front().price;
+						}else{
+							spread = secondCloseMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+						secondCloseMatch.pop_front();	
+						if(reminder>0 && secondCloseMatch.size()==0){
+							MatchInfo matchInfo;
+							matchInfo.date = o->date;
+							matchInfo.volume = reminder;
+							matchInfo.price = o->match_price;
+							firstCloseMatch.push_back(matchInfo);
+							break;
+						}
+					}
+					UpdateLockedSpread(lockedSpread, 
+								o->stop_loss?true:false,
+								o->open_close==E_CLOSE_Y?false:true);
+				}
+			}
 		}else{
 			//second leg, need to update lockedSpread
 			secondCloseInsMatch += o->match_volume;
@@ -426,36 +535,61 @@ void Instrument::on_match(shared_ptr<Order> o)
 				firstCloseInsMatch = secondCloseInsMatch = 0;
 			}
 
-			LockedSpread lockedSpread;
-			int reminder=o->match_volume;
-			while(reminder>0){
-				if(firstCloseMatch.front().volume > reminder){
-					firstCloseMatch.front().volume -= reminder;
-					lockedSpread.date = o->date;
-					lockedSpread.volume = reminder;
-					double spread=0.0;
-					if(insType==E_INS_FORWARD){
-						spread = o->match_price - firstCloseMatch.front().price;
+
+#if 0
+			MatchInfo matchInfo;
+			matchInfo.date = o->date;
+			matchInfo.volume = o->match_volume;
+			matchInfo.price = o->match_price;
+			firstCloseMatch.push_back(matchInfo);
+#endif
+
+			if(firstCloseMatch.size()==0){
+				MatchInfo matchInfo;
+				matchInfo.date = o->date;
+				matchInfo.volume = o->match_volume;
+				matchInfo.price = o->match_price;
+				secondCloseMatch.push_back(matchInfo);
+			}else{	
+				LockedSpread lockedSpread;
+				int reminder=o->match_volume;
+				while(reminder>0){
+					if(firstCloseMatch.front().volume > reminder){
+						firstCloseMatch.front().volume -= reminder;
+						lockedSpread.date = o->date;
+						lockedSpread.volume = reminder;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - firstCloseMatch.front().price;
+						}else{
+							spread = firstCloseMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
 					}else{
-						spread = firstCloseMatch.front().price - o->match_price;
+						reminder -= firstCloseMatch.front().volume;
+						lockedSpread.date= o->date;
+						lockedSpread.volume = firstCloseMatch.front().volume;
+						double spread=0.0;
+						if(insType==E_INS_FORWARD){
+							spread = o->match_price - firstCloseMatch.front().price;
+						}else{
+							spread = firstCloseMatch.front().price - o->match_price;
+						}
+						lockedSpread.spread = spread;
+						firstCloseMatch.pop_front();	
+						if(reminder>0 && firstCloseMatch.size()==0){
+							MatchInfo matchInfo;
+							matchInfo.date = o->date;
+							matchInfo.volume = reminder;
+							matchInfo.price = o->match_price;
+							secondCloseMatch.push_back(matchInfo);
+							break;
+						}
 					}
-					lockedSpread.spread = spread;
-				}else{
-					reminder -= firstCloseMatch.front().volume;
-					lockedSpread.date= o->date;
-					lockedSpread.volume = firstCloseMatch.front().volume;
-					double spread=0.0;
-					if(insType==E_INS_FORWARD){
-						spread = o->match_price - firstCloseMatch.front().price;
-					}else{
-						spread = firstCloseMatch.front().price - o->match_price;
-					}
-					lockedSpread.spread = spread;
-					firstCloseMatch.pop_front();	
-				}
-				UpdateLockedSpread(lockedSpread, 
+					UpdateLockedSpread(lockedSpread, 
 								o->stop_loss?true:false,
 								o->open_close==E_CLOSE_Y?false:true);
+				}
 			}
 
 			int lockedPosition = CalcLockedPosition();
@@ -489,15 +623,15 @@ void Instrument::on_cancel(shared_ptr<Order> o)
 		double price = 0.0; 
 		if(o->open_close == E_OPEN){
 			if(o->long_short == E_LONG){
-				price = currentQuote->AskPrice1;
+				price = currentQuote->BidPrice1+priceTick;
 			}else{
-				price = currentQuote->BidPrice1;
+				price = currentQuote->AskPrice1-priceTick ;
 			}
 		}else{
 			if(o->long_short == E_LONG){
-				price = currentQuote->BidPrice1;
+				price = currentQuote->AskPrice1-priceTick ;
 			}else{
-				price = currentQuote->AskPrice1;
+				price = currentQuote->BidPrice1+priceTick;
 			}
 		}
 		shared_ptr<Order> new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
@@ -516,15 +650,15 @@ void Instrument::on_cancel(shared_ptr<Order> o)
 			double price = 0.0; 
 			if(o->open_close == E_OPEN){
 				if(o->long_short == E_LONG){
-					price = currentQuote->AskPrice1;
+					price = currentQuote->BidPrice1+priceTick;
 				}else{
-					price = currentQuote->BidPrice1;
+					price = currentQuote->AskPrice1-priceTick;
 				}
 			}else{
 				if(o->long_short == E_LONG){
-					price = currentQuote->BidPrice1;
+					price = currentQuote->AskPrice1-priceTick;
 				}else{
-					price = currentQuote->AskPrice1;
+					price = currentQuote->BidPrice1+priceTick;
 				}
 			}
 			shared_ptr<Order> new_order = trader->NewOrder(name, price, o->canceled_volume, o->open_close, o->long_short);
@@ -607,7 +741,7 @@ void Instrument::FullOpenLong(int lockedPosition)
 		trader->GetOrder(secondOpenIns->name, E_OPEN, E_SHORT, ods);
 		if(ods.size()!=0){
 			iter = ods.begin();
-			double newPrice = secondOpenIns->currentQuote->BidPrice1; 
+			double newPrice = secondOpenIns->currentQuote->AskPrice1 + secondOpenIns->priceTick; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price > newPrice 
 				&& (*iter)->state != E_ORIGINAL
@@ -615,7 +749,6 @@ void Instrument::FullOpenLong(int lockedPosition)
 					trader->cancel_order(*iter);
 				}
 			}
-			return;
 		}
 
 		{
@@ -686,7 +819,6 @@ void Instrument::FullOpenLong(int lockedPosition)
 					trader->cancel_order(*iter);
 				}
 			}
-			return;
 		}
 
 		{
@@ -804,7 +936,6 @@ void Instrument::FullCloseLong(int lockedPosition)
 					trader->cancel_order(*iter);
 				}
 			}
-			return;
 		}
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_LONG, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_LONG, ods);
@@ -994,7 +1125,6 @@ void Instrument::FullOpenShort(int lockedPosition)
 					trader->cancel_order(*iter);
 				}
 			}
-			return;
 		}
 		{
 			char buffer[256]={0};
@@ -1063,7 +1193,6 @@ void Instrument::FullOpenShort(int lockedPosition)
 					trader->cancel_order(*iter);
 				}
 			}
-			return;
 		}
 
 		{
@@ -1181,7 +1310,6 @@ void Instrument::FullCloseShort(int lockedPosition)
 					trader->cancel_order(*iter);
 				}
 			}
-			return;
 		}
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_T, E_SHORT, ods);
 		trader->GetOrder(firstCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
@@ -1421,7 +1549,7 @@ void Instrument::CheckStopLoss()
 			}else{
 				//cancel open orders to prepare to stoploss	
 				CancelOrders(ods);
-			}			
+			}
 		}else{
 			if(needToStopLoss == true){
 				if(E_INS_FORWARD == firstCloseIns->insType){
@@ -1632,6 +1760,11 @@ double Instrument::GetBadSpread()
 
 bool Instrument::IsOpenLong()
 {
+	if(has_stop_lossed == true)
+	{
+		trader->log("已经触发过止损，不再开新仓");
+		return false;
+	}
 	shared_ptr<Quote> mqt = mainIns->currentQuote;
 	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 	if(mqt->AskPrice1 - mqt->BidPrice1 > (MAIN_INS_GAP*mainIns->priceTick)){
@@ -1640,6 +1773,12 @@ bool Instrument::IsOpenLong()
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 
 		> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+
+		char buffer[256]={0};
+		sprintf(buffer,"%f-%f=%f > %f*%f=%f",sqt->AskPrice1,sqt->BidPrice1, sqt->AskPrice1 - sqt->BidPrice1,
+			SECOND_MAIN_INS_GAP , mainIns->relativeIns->priceTick,
+			SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick);
+		trader->log(buffer);
 		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
@@ -1658,7 +1797,7 @@ bool Instrument::IsOpenLong()
 	if(firstOpenIns->insType == E_INS_FORWARD){
 		if(bidSpread == openThreshold){
 			if(mainIns->volumeScore >= forecast_score_openlow
-			&& mainIns->currentQuote->BidVolume1 > mainIns->currentQuote->AskVolume1){
+			&& mainIns->currentQuote->BidVolume1 < mainIns->currentQuote->AskVolume1){
 				if(secondOpenIns->currentQuote->BidVolume1 >= secondPx1VolBase){
 					trader->log("条件符合");
 					return true;
@@ -1703,6 +1842,10 @@ bool Instrument::IsOpenLong()
 }
 bool Instrument::IsOpenShort()
 {
+	if(has_stop_lossed == true){
+		trader->log("已经出发过止损，不再开新仓");
+		return false;
+	}
 	shared_ptr<Quote> mqt = mainIns->currentQuote;
 	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 	if(mqt->AskPrice1 - mqt->BidPrice1 > MAIN_INS_GAP*mainIns->priceTick){
@@ -1711,6 +1854,11 @@ bool Instrument::IsOpenShort()
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 
 	> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+		char buffer[256]={0};
+		sprintf(buffer,"%f-%f=%f > %f*%f=%f",sqt->AskPrice1,sqt->BidPrice1, sqt->AskPrice1 - sqt->BidPrice1,
+			SECOND_MAIN_INS_GAP , mainIns->relativeIns->priceTick,
+			SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick);
+		trader->log(buffer);
 		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
@@ -1729,7 +1877,7 @@ bool Instrument::IsOpenShort()
 	if(firstOpenIns->insType == E_INS_FORWARD){
 		if(askSpread==openThreshold){
 			if(mainIns->volumeScore >=forecast_score_openlow
-			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+			&& mainIns->currentQuote->AskVolume1 < mainIns->currentQuote->BidVolume1){
 				if(secondOpenIns->currentQuote->AskVolume1 > secondPx1VolBase){
 					trader->log("条件符合");
 					return true;
@@ -1773,8 +1921,9 @@ bool Instrument::IsOpenShort()
 	}
 }
 
-bool Instrument::IsCloseLong()
+bool Instrument::IsCloseLong(int &postion)
 {
+
 	shared_ptr<Quote> mqt = mainIns->currentQuote;
 	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
 	if(mqt->AskPrice1 - mqt->BidPrice1 > MAIN_INS_GAP*mainIns->priceTick){
@@ -1783,6 +1932,11 @@ bool Instrument::IsCloseLong()
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 
 	> SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+		char buffer[256]={0};
+		sprintf(buffer,"%f-%f=%f > %f*%f=%f",sqt->AskPrice1,sqt->BidPrice1, sqt->AskPrice1 - sqt->BidPrice1,
+			SECOND_MAIN_INS_GAP , mainIns->relativeIns->priceTick,
+			SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick);
+		trader->log(buffer);
 		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
@@ -1797,10 +1951,42 @@ bool Instrument::IsCloseLong()
 			return false;
 		}
 	}
+
+	double tradedSpread = 0.0;
+	if(stopLossType == E_STOPLOSS_AVERAGE){
+		tradedSpread = GetAverageSpread();
+	}else if(stopLossType == E_STOPLOSS_TICKBYTICK){
+		tradedSpread = GetBadSpread();
+	}
+
 	if(firstCloseIns->insType == E_INS_FORWARD){
+		if(stopLossType != E_STOPLOSS_NO){
+			if(askSpread == tradedSpread - stopLoss*priceTick){
+				if(mainIns->volumeScore >= forecast_score_closelow
+				&& mainIns->currentQuote->AskVolume1 < mainIns->currentQuote->BidVolume1){
+					if(secondCloseIns->currentQuote->AskVolume1 > secondPx1VolBase){
+						trader->log("达到止损线，条件符合");
+						triggerStopLoss = true;						
+						return true;
+					}else{
+						trader->log("达到止损线，但第二腿可能打不到");
+						triggerStopLoss = false;	
+					}
+				}else{
+					trader->log("达到止损线，但主力评分不足");
+					triggerStopLoss = false;	
+				}
+			}else if(askSpread < tradedSpread - stopLoss*priceTick){
+				trader->log("价差超过止损线");
+				triggerStopLoss = true;	
+				return true;
+			}else{
+				triggerStopLoss = false;	
+			}
+		}
 		if(askSpread == closeThreshold){
 			if(mainIns->volumeScore >= forecast_score_closelow
-			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+			&& mainIns->currentQuote->AskVolume1 < mainIns->currentQuote->BidVolume1){
 				if(secondCloseIns->currentQuote->AskVolume1 > secondPx1VolBase){
 					trader->log("条件符合");
 					return true;
@@ -1820,6 +2006,31 @@ bool Instrument::IsCloseLong()
 			return false;
 		}
 	}else{
+		if(stopLossType != E_STOPLOSS_NO){
+			if(bidSpread == tradedSpread - stopLoss*priceTick){
+				if(mainIns->volumeScore >= forecast_score_closelow
+				&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
+					if(secondCloseIns->currentQuote->BidVolume1 > secondPx1VolBase){
+						trader->log("达到止损线，条件符合");
+						triggerStopLoss = true;
+						return true;
+					}else{
+						trader->log("达到止损线，但第二腿可能打不到");
+						triggerStopLoss = false;
+					}
+				}else{
+					trader->log("达到止损线，但主力评分不足");
+					triggerStopLoss = false;
+				}
+			}else if(bidSpread < (tradedSpread - stopLoss*priceTick)){
+				trader->log("价差超过止损线");
+				triggerStopLoss = true;
+				return true;
+			}else{
+				trader->log("未达到止损线");
+				triggerStopLoss = false;
+			}
+		}
 		if(bidSpread == closeThreshold){
 			if(mainIns->volumeScore >= forecast_score_closelow
 			&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1){
@@ -1843,7 +2054,7 @@ bool Instrument::IsCloseLong()
 		}
 	}
 }
-bool Instrument::IsCloseShort()
+bool Instrument::IsCloseShort(int &position)
 {
 	shared_ptr<Quote> mqt = mainIns->currentQuote;
 	shared_ptr<Quote> sqt = mainIns->relativeIns->currentQuote;
@@ -1852,6 +2063,12 @@ bool Instrument::IsCloseShort()
 		return false;
 	}	
 	if(sqt->AskPrice1 - sqt->BidPrice1 > MAIN_INS_GAP * mainIns->relativeIns->priceTick){
+
+		char buffer[256]={0};
+		sprintf(buffer,"%f-%f=%f > %f*%f=%f",sqt->AskPrice1,sqt->BidPrice1, sqt->AskPrice1 - sqt->BidPrice1,
+			SECOND_MAIN_INS_GAP , mainIns->relativeIns->priceTick,
+			SECOND_MAIN_INS_GAP * mainIns->relativeIns->priceTick);
+		trader->log(buffer);
 		trader->log("次主力合约盘口价差超过两跳");
 		return false;
 	}	
@@ -1870,7 +2087,7 @@ bool Instrument::IsCloseShort()
 	if(firstCloseIns->insType == E_INS_FORWARD){
 		if(bidSpread == closeThreshold){
 			if(mainIns->volumeScore >= forecast_score_closelow
-			&& mainIns->currentQuote->BidVolume1 > mainIns->currentQuote->AskVolume1){
+			&& mainIns->currentQuote->BidVolume1 < mainIns->currentQuote->AskVolume1){
 				if(secondCloseIns->currentQuote->BidVolume1 >= secondPx1VolBase){
 					trader->log("条件符合");
 					return true;
@@ -1892,7 +2109,7 @@ bool Instrument::IsCloseShort()
 	}else{
 		if(askSpread==closeThreshold){
 			if(mainIns->volumeScore >= forecast_score_closelow
-			&& mainIns->currentQuote->BidVolume1 >= secondPx1VolBase){
+			&& mainIns->currentQuote->BidVolume1 > secondPx1VolBase){
 				if(secondCloseIns->currentQuote->AskVolume1 >= secondPx1VolBase){
 					trader->log("条件符合");
 					return true;
@@ -1937,12 +2154,14 @@ bool Instrument::IsStopLoss(double tradedSpread)
 
 		if(firstCloseIns->insType==E_INS_FORWARD){
 			if((askSpread+stopLoss*priceTick) <= tradedSpread){
+has_stop_lossed=true;
 				return true;
 			}else{
 				return false;
 			}
 		}else{
 			if((bidSpread+stopLoss*priceTick) <= tradedSpread){
+has_stop_lossed=true;
 				return true;
 			}else{
 				return false;
@@ -1970,12 +2189,14 @@ bool Instrument::IsStopLoss(double tradedSpread)
 
 		if(firstCloseIns->insType==E_INS_FORWARD){
 			if((bidSpread-stopLoss*priceTick) >= tradedSpread){
+has_stop_lossed=true;
 				return true;
 			}else{
 				return false;
 			}
 		}else{
 			if((askSpread-stopLoss*priceTick) >= tradedSpread){
+has_stop_lossed=true;
 				return true;
 			}else{
 				return false;
