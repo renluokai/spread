@@ -3,20 +3,20 @@
     <contract1 vf="65" mf="40">fu2008</contract1>
     <contract2 vf="65" mf="40">fu2009</contract2>
 	<!-- 0 近期合约 1远期合约!-->
-    <main_contract openlow="1" openhigh="37" closelow="1" closehigh="37">0</main_contract>
-    <open_with radical="37">0</open_with>
-    <close_with radical="37">0</close_with>
-    <open_threshold>103</open_threshold>
-    <close_threshold>98</close_threshold>
+    <main_contract openlow="1" openhigh="37" closelow="1" closehigh="37">1</main_contract>
+    <open_with radical="37">1</open_with>
+    <close_with radical="37">1</close_with>
+    <open_threshold>99</open_threshold>
+    <close_threshold>108</close_threshold>
 	<!-- 0看涨 1看跌!-->
-    <direction>1</direction>
+    <direction>0</direction>
     <stop_loss>15</stop_loss>
     <stop_loss_type>0</stop_loss_type>
     <volume_ratio>0.95</volume_ratio>
     <open_time>21:00:00+10,09:00:00+10,10:30:00+10,13:30:00+30</open_time>
     <close_time>23:00:00-30,10:15:00-30,11:30:00-30,15:00:00-30</close_time>
-    <trigger_spread>0</trigger_spread>
-    <max_postion>1</max_postion>
+    <trigger_spread>1</trigger_spread>
+    <max_postion>9</max_postion>
     <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>

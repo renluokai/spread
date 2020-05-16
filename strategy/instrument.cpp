@@ -762,7 +762,7 @@ void Instrument::FullOpenLong(int lockedPosition)
 		trader->GetOrder(firstOpenIns->name, E_OPEN, E_LONG, ods);
 		if(ods.size()>0){
 			iter = ods.begin();
-			double newPrice = firstOpenIns->currentQuote->BidPrice1; 
+			double newPrice = firstOpenIns->currentQuote->BidPrice1;
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
 				&& (*iter)->state != E_ORIGINAL
@@ -889,9 +889,11 @@ void Instrument::DoNotFullOpenLong()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price < firstOpenIns->currentQuote->BidPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price < firstOpenIns->currentQuote->BidPrice1)
+						|| ((*iter)->submit_price == firstOpenIns->currentQuote->BidPrice1
+							&& mainIns->volumeScore > forecast_score_openhigh 
+							&& mainIns->currentQuote->AskVolume1 < mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -908,9 +910,11 @@ void Instrument::DoNotFullOpenLong()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price > firstOpenIns->currentQuote->AskPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price > firstOpenIns->currentQuote->AskPrice1)
+						|| ((*iter)->submit_price == firstOpenIns->currentQuote->AskPrice1
+							&& mainIns->volumeScore > forecast_score_openhigh
+							&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -928,7 +932,7 @@ void Instrument::FullCloseLong(int lockedPosition)
 		trader->GetOrder(secondCloseIns->name, E_CLOSE_Y, E_SHORT, ods);
 		if(ods.size()!=0){
 			vector<shared_ptr<Order>>::iterator iter = ods.begin();
-			double newPrice = secondCloseIns->currentQuote->AskPrice1; 
+			double newPrice = secondCloseIns->currentQuote->BidPrice1 + secondCloseIns->priceTick; 
 			for(; iter != ods.end(); iter++){
 				if((*iter)->submit_price < newPrice 
 				&& (*iter)->state != E_ORIGINAL
@@ -1077,9 +1081,11 @@ void Instrument::DoNotFullCloseLong()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price > firstCloseIns->currentQuote->AskPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price > firstCloseIns->currentQuote->AskPrice1)
+						|| ((*iter)->submit_price > firstCloseIns->currentQuote->AskPrice1 
+							&& mainIns->volumeScore == forecast_score_closehigh
+							&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -1096,9 +1102,11 @@ void Instrument::DoNotFullCloseLong()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price < firstCloseIns->currentQuote->BidPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price < firstCloseIns->currentQuote->BidPrice1)
+						||((*iter)->submit_price == firstCloseIns->currentQuote->BidPrice1
+							&& mainIns->volumeScore > forecast_score_closehigh
+							&& mainIns->currentQuote->AskVolume1 < mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -1263,9 +1271,11 @@ void Instrument::DoNotFullOpenShort()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price > firstOpenIns->currentQuote->AskPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price > firstOpenIns->currentQuote->AskPrice1)
+						|| ((*iter)->submit_price == firstOpenIns->currentQuote->AskPrice1 
+							&& mainIns->volumeScore > forecast_score_openhigh
+							&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -1282,9 +1292,11 @@ void Instrument::DoNotFullOpenShort()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price < firstOpenIns->currentQuote->BidPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price < firstOpenIns->currentQuote->BidPrice1)
+						|| ((*iter)->submit_price == firstOpenIns->currentQuote->BidPrice1
+							&& mainIns->volumeScore > forecast_score_openhigh
+							&& mainIns->currentQuote->AskVolume1 < mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -1435,9 +1447,11 @@ void Instrument::DoNotFullCloseShort()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price < firstOpenIns->currentQuote->BidPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price < firstOpenIns->currentQuote->BidPrice1)
+						||((*iter)->submit_price == firstOpenIns->currentQuote->BidPrice1
+							&& mainIns->volumeScore > forecast_score_closehigh
+							&& mainIns->currentQuote->BidVolume1 > mainIns->currentQuote->AskVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}
@@ -1454,9 +1468,11 @@ void Instrument::DoNotFullCloseShort()
 			}else{
 				vector<shared_ptr<Order>>::iterator iter = ods.begin();
 				for(; iter != ods.end(); iter++){
-					if((*iter)->canceling == false
-					&& (*iter)->state != E_ORIGINAL
-					&& (*iter)->submit_price > firstOpenIns->currentQuote->AskPrice1){
+					if((*iter)->canceling == false && (*iter)->state != E_ORIGINAL
+					&& (((*iter)->submit_price > firstOpenIns->currentQuote->AskPrice1)
+						||((*iter)->submit_price == firstOpenIns->currentQuote->AskPrice1
+							&& mainIns->volumeScore > forecast_score_closehigh
+							&& mainIns->currentQuote->AskVolume1 > mainIns->currentQuote->BidVolume1))){
 						trader->cancel_order(*iter);
 					}
 				}

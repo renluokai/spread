@@ -168,7 +168,7 @@ bool Trader::run(Strategy *s){
 	clear();
 	refresh();
 	//log("input :s to start system\n");
-	printw("%s","input :s to start system");
+	printw("%s","输入 :s 开始交易");
 	refresh();
 	
 	while(1){

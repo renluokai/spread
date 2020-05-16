@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <contract1 vf="70" mf="40">ag2004</contract1>
-    <contract2 vf="70" mf="40">ag2006</contract2>
+    <contract1 vf="70" mf="40">fu2006</contract1>
+    <contract2 vf="70" mf="40">fu2007</contract2>
     <!-- 0 近期合约 1远期合约!-->
-    <main_contract>1</main_contract>
-    <open_with>1</open_with>
-    <close_with>1</close_with>
-    <open_threshold>900</open_threshold>
-    <close_threshold>-100</close_threshold>
+    <main_contract openlow="1" openhigh="37" closelow="1" closehigh="37">0</main_contract>
+    <open_with radical="37">0</open_with>
+    <close_with radical="37">0</close_with>
+    <open_threshold>51</open_threshold>
+    <close_threshold>57</close_threshold>
     <!-- 0看涨 1看跌!-->
-    <direction>1</direction>
-    <stop_loss>3</stop_loss>
+    <direction>0</direction>
+    <stop_loss>5</stop_loss>
     <stop_loss_type>0</stop_loss_type>
     <trigger_spread>0</trigger_spread>
     <volume_ratio>0.95</volume_ratio>
-    <max_postion>2</max_postion>
+    <max_postion>10</max_postion>
     <submit_max>1</submit_max>
     <forward_cancel_max>400</forward_cancel_max>
     <recent_cancel_max>400</recent_cancel_max>
